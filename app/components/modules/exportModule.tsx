@@ -1,14 +1,223 @@
 "use client";
-// Required imports
 import { saveAs } from "file-saver";
-import { Document, Packer, Paragraph, TextRun } from "docx";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+import { Document as DocxDocument, Packer, Paragraph, TextRun } from "docx";
+import {
+  Document,
+  Page,
+  Text,
+  View,
+  StyleSheet,
+  pdf,
+  Font,
+} from "@react-pdf/renderer";
 
-// Type definitions
 import type { ExportFunctionProps } from "../../types/global";
 
-// Export to Word (.docx)
+Font.register({
+  family: "Mulish",
+  fonts: [
+    {
+      src: "https://fonts.gstatic.com/s/mulish/v1/6XLGOuZN2ST0lHO3VzlKDN4.woff2",
+    },
+    {
+      src: "https://fonts.gstatic.com/s/mulish/v1/6XLGOuZN2ST0lHO3VzlKDZ4.woff2",
+    },
+  ],
+});
+
+// PDF Styles
+const styles = StyleSheet.create({
+  page: {
+    padding: 40,
+    fontSize: 11,
+    fontFamily: "Mulish",
+  },
+  header: {
+    marginBottom: 20,
+    borderBottom: "2 solid #333",
+    paddingBottom: 10,
+  },
+  name: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 5,
+  },
+  title: {
+    fontSize: 14,
+    color: "#555",
+    marginBottom: 8,
+  },
+  contactInfo: {
+    fontSize: 10,
+    color: "#666",
+  },
+  section: {
+    marginTop: 15,
+    marginBottom: 10,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: "bold",
+    marginBottom: 8,
+    borderBottom: "1 solid #ddd",
+    paddingBottom: 3,
+  },
+  text: {
+    fontSize: 11,
+    lineHeight: 1.5,
+    marginBottom: 5,
+  },
+  bulletPoint: {
+    fontSize: 11,
+    marginLeft: 15,
+    marginBottom: 3,
+  },
+  experienceItem: {
+    marginBottom: 12,
+  },
+  experienceHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 3,
+  },
+  companyRole: {
+    fontSize: 12,
+    fontWeight: "bold",
+  },
+  period: {
+    fontSize: 10,
+    color: "#666",
+  },
+  details: {
+    fontSize: 10,
+    lineHeight: 1.4,
+    color: "#444",
+  },
+});
+
+// PDF Document Component
+const CVDocument = ({
+  personal,
+  profile,
+  skills,
+  experiences,
+  education,
+  references,
+}: Omit<ExportFunctionProps, "previewRef">) => (
+  <Document>
+    <Page size="A4" style={styles.page}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.name}>{personal.fullName || "Your Name"}</Text>
+        <Text style={styles.title}>
+          {personal.title || "Your Professional Title"}
+        </Text>
+        <Text style={styles.contactInfo}>
+          {[personal.phone, personal.email, personal.location]
+            .filter(Boolean)
+            .join(" | ")}
+        </Text>
+      </View>
+
+      {/* Profile Section */}
+      {profile && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Profile</Text>
+          <Text style={styles.text}>{profile}</Text>
+        </View>
+      )}
+
+      {/* Skills Section */}
+      {skills.filter(Boolean).length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Key Skills</Text>
+          {skills.filter(Boolean).map((skill, idx) => (
+            <Text key={idx} style={styles.bulletPoint}>
+              • {skill}
+            </Text>
+          ))}
+        </View>
+      )}
+
+      {/* Experience Section */}
+      {experiences.some((exp) => exp.company || exp.role) && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Career History</Text>
+          {experiences
+            .filter((exp) => exp.company || exp.role)
+            .map((exp) => (
+              <View key={exp.id} style={styles.experienceItem}>
+                <View style={styles.experienceHeader}>
+                  <Text style={styles.companyRole}>
+                    {exp.company || "Company"} — {exp.role || "Position"}
+                  </Text>
+                  <Text style={styles.period}>{exp.period}</Text>
+                </View>
+                {exp.details && (
+                  <Text style={styles.details}>{exp.details}</Text>
+                )}
+              </View>
+            ))}
+        </View>
+      )}
+
+      {/* Education Section */}
+      {education.some((ed) => ed.institution || ed.qualification) && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Education & Qualifications</Text>
+          {education
+            .filter((ed) => ed.institution || ed.qualification)
+            .map((ed) => (
+              <View key={ed.id} style={styles.experienceItem}>
+                <View style={styles.experienceHeader}>
+                  <Text style={styles.companyRole}>
+                    {ed.institution || "Institution"} —{" "}
+                    {ed.qualification || "Qualification"}
+                  </Text>
+                  <Text style={styles.period}>{ed.period}</Text>
+                </View>
+              </View>
+            ))}
+        </View>
+      )}
+
+      {/* References Section */}
+      {references.filter(Boolean).length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>References</Text>
+          {references.filter(Boolean).map((ref, idx) => (
+            <Text key={idx} style={styles.text}>
+              {ref}
+            </Text>
+          ))}
+        </View>
+      )}
+    </Page>
+  </Document>
+);
+
+// Export to PDF using @react-pdf/renderer
+export const exportToPdf = async (props: ExportFunctionProps) => {
+  try {
+    const fileName = `${(props.personal.fullName || "CV").replace(
+      /\s+/g,
+      "_"
+    )}_CV.pdf`;
+
+    // Generate PDF blob
+    const blob = await pdf(<CVDocument {...props} />).toBlob();
+
+    // Save the file
+    saveAs(blob, fileName);
+
+    console.log("PDF exported successfully!");
+  } catch (error) {
+    console.error("Error exporting to PDF:", error);
+    alert("Failed to export to PDF. Please try again.");
+  }
+};
+
+// Export to Word (.docx) - Keep existing implementation
 export const exportToDocx = async ({
   personal,
   profile,
@@ -18,7 +227,7 @@ export const exportToDocx = async ({
   references,
 }: ExportFunctionProps) => {
   try {
-    const doc = new Document({
+    const doc = new DocxDocument({
       sections: [
         {
           properties: {},
@@ -218,230 +427,5 @@ export const exportToDocx = async ({
   }
 };
 
-// Export to PDF using jsPDF and html2canvas
-export const exportToPdf = async ({
-  previewRef,
-  personal,
-}: ExportFunctionProps) => {
-  try {
-    if (!previewRef?.current) {
-      console.error("Preview reference not available");
-      alert(
-        "Preview content not available for PDF export. Make sure the CV preview is visible."
-      );
-      return;
-    }
-
-    const element = previewRef.current;
-    const fileName = `${(personal.fullName || "CV").replace(
-      /\s+/g,
-      "_"
-    )}_CV.pdf`;
-
-    // Create a temporary clone to avoid CSS issues
-    const clonedElement = element.cloneNode(true) as HTMLElement;
-
-    // Apply inline styles to avoid CSS parsing issues
-    const applyInlineStyles = (elem: HTMLElement) => {
-      const computedStyle = window.getComputedStyle(elem);
-
-      // Convert computed styles to inline styles
-      elem.style.cssText = "";
-      for (let i = 0; i < computedStyle.length; i++) {
-        const property = computedStyle[i];
-        const value = computedStyle.getPropertyValue(property);
-
-        // Skip problematic CSS functions
-        if (
-          value.includes("lab(") ||
-          value.includes("oklch(") ||
-          value.includes("color(")
-        ) {
-          continue;
-        }
-
-        elem.style.setProperty(property, value);
-      }
-
-      // Process all child elements
-      Array.from(elem.children).forEach((child) => {
-        if (child instanceof HTMLElement) {
-          applyInlineStyles(child);
-        }
-      });
-    };
-
-    // Append clone to body temporarily
-    document.body.appendChild(clonedElement);
-    clonedElement.style.position = "absolute";
-    clonedElement.style.left = "-9999px";
-    clonedElement.style.top = "0";
-
-    // Apply inline styles to avoid CSS parsing issues
-    applyInlineStyles(clonedElement);
-
-    // Configure html2canvas options to avoid CSS parsing issues
-    const canvas = await html2canvas(clonedElement, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: "#ffffff",
-      logging: false,
-      ignoreElements: (element) => {
-        // Ignore elements with problematic CSS
-        const style = window.getComputedStyle(element);
-        const color = style.color;
-        const backgroundColor = style.backgroundColor;
-
-        return (
-          color.includes("lab(") ||
-          color.includes("oklch(") ||
-          backgroundColor.includes("lab(") ||
-          backgroundColor.includes("oklch(")
-        );
-      },
-      onclone: (clonedDoc) => {
-        // Additional cleanup in the cloned document
-        const clonedElements = clonedDoc.querySelectorAll("*");
-        clonedElements.forEach((el) => {
-          if (el instanceof HTMLElement) {
-            const style = el.style;
-            // Remove problematic CSS properties
-            ["color", "background-color", "border-color"].forEach((prop) => {
-              const value = style.getPropertyValue(prop);
-              if (
-                value &&
-                (value.includes("lab(") || value.includes("oklch("))
-              ) {
-                style.removeProperty(prop);
-              }
-            });
-          }
-        });
-      },
-    });
-
-    // Remove the temporary clone
-    document.body.removeChild(clonedElement);
-
-    const imgData = canvas.toDataURL("image/png");
-
-    // Calculate dimensions to fit A4
-    const imgWidth = 210; // A4 width in mm
-    const pageHeight = 297; // A4 height in mm
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    let heightLeft = imgHeight;
-
-    // Create PDF
-    const pdf = new jsPDF("portrait", "mm", "a4");
-    let position = 0;
-
-    // Add first page
-    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
-
-    // Add additional pages if content is longer than one page
-    while (heightLeft >= 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-    }
-
-    // Save the PDF
-    pdf.save(fileName);
-    console.log("PDF exported successfully!");
-  } catch (error) {
-    console.error("Error exporting to PDF:", error);
-    alert("Failed to export to PDF. Please try again.");
-  }
-};
-
-// Alternative PDF export with better page handling
-export const exportToPdfAdvanced = async ({
-  previewRef,
-  personal,
-}: ExportFunctionProps) => {
-  try {
-    if (!previewRef?.current) {
-      console.error("Preview reference not available");
-      alert("Preview content not available for PDF export.");
-      return;
-    }
-
-    const element = previewRef.current;
-    const fileName = `${(personal.fullName || "CV").replace(
-      /\s+/g,
-      "_"
-    )}_CV.pdf`;
-
-    // Create canvas with high quality settings
-    const canvas = await html2canvas(element, {
-      scale: 3,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: "#ffffff",
-      logging: false,
-      scrollX: 0,
-      scrollY: 0,
-    });
-
-    const imgData = canvas.toDataURL("image/jpeg", 0.95);
-
-    // PDF dimensions (A4)
-    const pdfWidth = 210;
-    const pdfHeight = 297;
-
-    // Calculate image dimensions to fit PDF width
-    const imgWidth = pdfWidth;
-    const imgHeight = (canvas.height * pdfWidth) / canvas.width;
-
-    const pdf = new jsPDF({
-      orientation: imgHeight > pdfHeight ? "portrait" : "portrait",
-      unit: "mm",
-      format: "a4",
-    });
-
-    // If image height is less than PDF height, center it
-    if (imgHeight <= pdfHeight) {
-      const yOffset = (pdfHeight - imgHeight) / 2;
-      pdf.addImage(imgData, "JPEG", 0, yOffset, imgWidth, imgHeight);
-    } else {
-      // If image is taller, split across pages
-      let yPosition = 0;
-      let remainingHeight = imgHeight;
-
-      while (remainingHeight > 0) {
-        const pageHeight = Math.min(pdfHeight, remainingHeight);
-
-        if (yPosition > 0) {
-          pdf.addPage();
-        }
-
-        pdf.addImage(imgData, "JPEG", 0, -yPosition, imgWidth, imgHeight);
-
-        yPosition += pdfHeight;
-        remainingHeight -= pdfHeight;
-      }
-    }
-
-    pdf.save(fileName);
-    console.log("Advanced PDF exported successfully!");
-  } catch (error) {
-    console.error("Error exporting to PDF:", error);
-    alert("Failed to export to PDF. Please try again.");
-  }
-};
-
-// Demo versions (when packages aren't installed)
-export const exportToDocxDemo = () => {
-  alert(
-    "Word export feature requires 'docx' and 'file-saver' packages to be installed.\n\nRun: npm install docx file-saver"
-  );
-};
-
-export const exportToPdfDemo = () => {
-  alert(
-    "PDF export feature requires 'jspdf' and 'html2canvas' packages to be installed.\n\nRun: npm install jspdf html2canvas"
-  );
-};
+// Keep the advanced export as a fallback (not used by default)
+export const exportToPdfAdvanced = exportToPdf;
