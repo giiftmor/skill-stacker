@@ -89,6 +89,7 @@ type CVPreviewProps = {
   experiences: Experience[];
   education: Education[];
   references: string[];
+  className?: string;
   previewRef?: React.Ref<HTMLDivElement>;
 };
 
@@ -115,25 +116,26 @@ type CVBuilderFormProps = {
   experiences: any[];
   addExperience: () => void;
   updateExperience: (
-    id: string,
+    id: string | number,
     field: keyof Experience,
     value: string
   ) => void;
-  removeExperience: (id: string) => void;
+  removeExperience: (id: string | number) => void;
   education: any[];
   addEducation: () => void;
   updateEducation: (
-    id: string,
+    id: string | number,
     field: keyof Education,
     value: string
   ) => void;
-  removeEducation: (id: string) => void;
+  removeEducation: (id: string | number) => void;
   references: any[];
   updateReference: (idx: number, value: string) => void;
   addReference: () => void;
   removeReference: (idx: number) => void;
   exportToDocx: () => void;
   exportToPdf: () => void;
+  className?: string;
 };
 
 export type { 

@@ -19,15 +19,15 @@ const CVPreview = ({
   previewRef,
 }: CVPreviewProps) => (
   <div
-    className="lg:col-span-2 bg-white p-8 rounded-lg shadow"
+    className="lg:col-span-2 bg-white p-8 rounded-lg shadow hidden"
     ref={previewRef}
   >
     <div className="max-w-3xl mx-auto">
-      <header className="border-b-2 border-gray-200 pb-4 mb-6">
+      <header className="border-b-2 border-gray-200 pb-4 mb-6 flex flex-col items-center">
         <h1 className="text-3xl font-bold text-gray-900">
           {personal.fullName || "Your Name"}
         </h1>
-        <p className="text-lg text-gray-600 italic mt-1">
+        <p className="text-lg text-gray-600 mt-1">
           {personal.title || "Your Professional Title"}
         </p>
         <div className="text-sm text-gray-700 mt-2 space-x-2">
