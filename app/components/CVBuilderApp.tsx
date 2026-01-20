@@ -4,8 +4,15 @@ import CVBuilderForm from "./CVBuilderForm";
 import CVPreview from "./CVPreview";
 import CVListManager from "./CVListManager";
 import { exportToDocx, exportToPdf } from "./modules/exportModule";
+import { ArrowLeft } from "lucide-react";
+import NotificationModal from "./NotificationModal";
+import { useNotification } from "../hooks/useNotification";
 
 export default function CVBuilderApp() {
+  const [showCVList, setShowCVList] = useState(false);
+
+  console.log("🟡 CVBuilderApp rendered, showCVList:", showCVList);
+
   const [personal, setPersonal] = useState({
     fullName: "",
     title: "",
@@ -17,33 +24,52 @@ export default function CVBuilderApp() {
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
   const [profile, setProfile] = useState("");
-  const [skills, setSkills] = useState([""]);
+  const [skill, setSkills] = useState([""]);
   const [experiences, setExperiences] = useState([
     { id: generateId(), company: "", role: "", period: "", details: "" },
   ]);
   const [education, setEducation] = useState([
     { id: generateId(), institution: "", qualification: "", period: "" },
   ]);
-  const [references, setReferences] = useState([""]);
+  const [certificate, setCertificate] = useState([
+    { id: generateId(), name: "", date: "" },
+  ]);
+  const [reference, setReference] = useState([
+    { id: generateId(), name: "", company: "", role: "", email: "", phone: "" },
+  ]);
+
+  const [additionalInfo, setAdditionalInfo] = useState([""]);
+
   const [currentCvId, setCurrentCvId] = useState<number | null>(null);
+  const {
+    notification,
+    closeNotification,
+    showSuccess,
+    showError,
+    showInfo,
+    showSaving,
+    showWarning,
+  } = useNotification();
   const [saveStatus, setSaveStatus] = useState<
     "idle" | "saving" | "success" | "error"
   >("idle");
-  const [showCVList, setShowCVList] = useState(false);
 
   const previewRef = useRef<HTMLDivElement>(null);
 
-  // Handlers
+  /***************************************************/
+  /******************** Handlers *********************/
+  /***************************************************/
+  // Personal Information handlers
   const updatePersonal = (field: any, value: any) =>
     setPersonal((p) => ({ ...p, [field]: value }));
 
   // Skills handlers
+  const addSkill = () => setSkills((s) => [...s, ""]);
   const updateSkill = (index: any, value: any) => {
-    const s = [...skills];
+    const s = [...skill];
     s[index] = value;
     setSkills(s);
   };
-  const addSkill = () => setSkills((s) => [...s, ""]);
   const removeSkill = (i: number) =>
     setSkills((s) => s.filter((_, idx) => idx !== i));
 
@@ -56,10 +82,10 @@ export default function CVBuilderApp() {
   const updateExperience = (
     id: string | number,
     field: keyof (typeof experiences)[0],
-    value: string
+    value: string,
   ) =>
     setExperiences((e) =>
-      e.map((item) => (item.id === id ? { ...item, [field]: value } : item))
+      e.map((item) => (item.id === id ? { ...item, [field]: value } : item)),
     );
   const removeExperience = (id: string | number) =>
     setExperiences((e) => e.filter((item) => item.id !== id));
@@ -72,26 +98,60 @@ export default function CVBuilderApp() {
     ]);
   const updateEducation = (id: string | number, field: any, value: any) =>
     setEducation((ed) =>
-      ed.map((item) => (item.id === id ? { ...item, [field]: value } : item))
+      ed.map((item) => (item.id === id ? { ...item, [field]: value } : item)),
     );
   const removeEducation = (id: string | number) =>
     setEducation((ed) => ed.filter((item) => item.id !== id));
 
+  // Education handlers
+  const addCertificate = () =>
+    setCertificate((cert) => [
+      ...cert,
+      { id: generateId(), name: "", date: "" },
+    ]);
+  const updateCertificate = (id: string | number, field: any, value: any) =>
+    setCertificate((cert) =>
+      cert.map((item) => (item.id === id ? { ...item, [field]: value } : item)),
+    );
+  const removeCertificate = (id: string | number) =>
+    setCertificate((cert) => cert.filter((item) => item.id !== id));
+
   // References handlers
-  const updateReference = (index: number, value: string) => {
-    const r = [...references];
-    r[index] = value;
-    setReferences(r);
+  const addReference = () =>
+    setReference((ref) => [
+      ...ref,
+      {
+        id: generateId(),
+        name: "",
+        company: "",
+        role: "",
+        email: "",
+        phone: "",
+      },
+    ]);
+  const updateReference = (id: string | number, field: any, value: any) => {
+    setReference((ref) =>
+      ref.map((item) => (item.id === id ? { ...item, [field]: value } : item)),
+    );
   };
-  const addReference = () => setReferences((r) => [...r, ""]);
-  const removeReference = (i: number) =>
-    setReferences((r) => r.filter((_, idx) => idx !== i));
+  const removeReference = (id: string | number) =>
+    setReference((ref) => ref.filter((item) => item.id !== id));
+
+  // Additional Information handlers
+  const addAdditionalInfo = () => setAdditionalInfo((info) => [...info, ""]);
+  const updateAdditionalInfo = (idx: any, value: any) => {
+    const info = [...additionalInfo];
+    info[idx] = value;
+    setAdditionalInfo(info);
+  };
+  const removeAdditionalInfo = (i: number) =>
+    setAdditionalInfo((info) => info.filter((_, idx) => idx !== i));
 
   // Create new CV (clear form)
   const handleNewCV = () => {
     if (
       confirm(
-        "Are you sure you want to create a new CV? Any unsaved changes will be lost."
+        "Are you sure you want to create a new CV? Any unsaved changes will be lost.",
       )
     ) {
       setPersonal({
@@ -109,7 +169,17 @@ export default function CVBuilderApp() {
       setEducation([
         { id: generateId(), institution: "", qualification: "", period: "" },
       ]);
-      setReferences([""]);
+      setCertificate([{ id: generateId(), name: "", date: "" }]);
+      setReference([
+        {
+          id: generateId(),
+          name: "",
+          company: "",
+          role: "",
+          email: "",
+          phone: "",
+        },
+      ]);
       setCurrentCvId(null);
       setSaveStatus("idle");
     }
@@ -117,16 +187,16 @@ export default function CVBuilderApp() {
 
   // Save to database
   const handleSaveToDatabase = async () => {
+    showSaving("Saving...", "Hold on while we save your CV");
     setSaveStatus("saving");
-
     try {
       const cvData = {
         personal,
         profile,
-        skills,
+        skill,
         experiences: experiences.map(({ id, ...rest }) => rest),
         education: education.map(({ id, ...rest }) => rest),
-        references,
+        reference: reference.map(({ id, ...rest }) => rest),
       };
 
       const url = currentCvId ? `/api/cv/${currentCvId}` : "/api/cv";
@@ -144,16 +214,17 @@ export default function CVBuilderApp() {
 
       if (result.success) {
         setCurrentCvId(result.cvId);
-        setSaveStatus("success");
-        setTimeout(() => setSaveStatus("idle"), 3000);
+        showSuccess("Success!", "CV saved successfully");
+
+        setTimeout(() => setSaveStatus("idle"), 300);
       } else {
         setSaveStatus("error");
-        alert(`Failed to save CV: ${result.message}`);
+        showError("error!", `Failed to save CV: ${result.message}`);
       }
     } catch (error) {
       console.error("Error saving CV:", error);
       setSaveStatus("error");
-      alert("Failed to save CV. Please try again.");
+      showWarning("warning!", "Failed to save CV. Please try again.");
     }
   };
 
@@ -179,7 +250,7 @@ export default function CVBuilderApp() {
                   period: "",
                   details: "",
                 },
-              ]
+              ],
         );
         setEducation(
           cv.education.length > 0
@@ -191,18 +262,45 @@ export default function CVBuilderApp() {
                   qualification: "",
                   period: "",
                 },
-              ]
+              ],
         );
-        setReferences(cv.references.length > 0 ? cv.references : [""]);
+        setCertificate(
+          cv.certificate.length > 0
+            ? cv.certificate.map((cert: any) => ({ ...cert, id: generateId() }))
+            : [
+                {
+                  id: generateId(),
+                  name: "",
+                  period: "",
+                },
+              ],
+        );
+        setReference(
+          cv.reference.length > 0
+            ? cv.reference.map((ref: any) => ({ ...ref, id: generateId() }))
+            : [
+                {
+                  id: generateId(),
+                  name: "",
+                  role: "",
+                  company: "",
+                  email: "",
+                  phone: "",
+                },
+              ],
+        );
+        setAdditionalInfo(
+          cv.additionalInfo.length > 0 ? cv.additionalInfo : [""],
+        );
         setCurrentCvId(cvId);
         setShowCVList(false); // Close the CV list after loading
-        setSaveStatus("idle");
+        showInfo("CV Loaded", "CV loaded successfully from database");
       } else {
-        alert(`Failed to load CV: ${result.message}`);
+        showError("Error", "Failed to load CV from database");
       }
     } catch (error) {
       console.error("Error loading CV:", error);
-      alert("Failed to load CV. Please try again.");
+      showError("Error", "Failed to load CV from database");
     }
   };
 
@@ -211,10 +309,10 @@ export default function CVBuilderApp() {
     exportToDocx({
       personal,
       profile,
-      skills,
+      skill,
       experiences,
       education,
-      references,
+      reference,
     });
   };
 
@@ -222,25 +320,32 @@ export default function CVBuilderApp() {
     exportToPdf({
       personal,
       profile,
-      skills,
+      skill,
       experiences,
       education,
-      references,
+      reference,
       previewRef,
     });
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-400 p-6">
+      <button
+        className="bg-gray-800 text-white flex hidden items-center justify-center rounded-full size-9 cursor-pointer absolute top-[50%] left-6 hover:bg-gray-900  hover:transform hover:size-11 transition-all duration-300"
+        type="submit"
+        onClick={() => setShowCVList(!showCVList)}
+      >
+        <ArrowLeft />
+      </button>
       {/* Header with actions */}
-      <div className="max-w-7xl mx-auto mb-6">
+      <div className="max-w-8xl mx-auto mb-6">
         <div className="bg-white rounded-lg shadow p-4 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
               Spectres | Skill Stack
             </h1>
             <p className="text-sm text-gray-600 mt-1">
-              Professional CV Builder
+              Thembi's AI-Powered CV Builder
             </p>
           </div>
           <div className="flex gap-3">
@@ -248,7 +353,7 @@ export default function CVBuilderApp() {
               onClick={handleNewCV}
               className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium"
             >
-              ➕ New CV
+              New CV
             </button>
             <button
               onClick={() => setShowCVList(!showCVList)}
@@ -263,8 +368,17 @@ export default function CVBuilderApp() {
           </div>
         </div>
       </div>
+      <div>
+        <NotificationModal
+          isOpen={notification.isOpen}
+          onClose={closeNotification}
+          type={notification.type}
+          title={notification.title}
+          message={notification.message}
+        />
+      </div>
 
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-8xl mx-auto">
         {showCVList ? (
           // CV List View
           <CVListManager
@@ -273,13 +387,13 @@ export default function CVBuilderApp() {
           />
         ) : (
           // Editor View
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <CVBuilderForm
               personal={personal}
               updatePersonal={updatePersonal}
               profile={profile}
               setProfile={setProfile}
-              skills={skills}
+              skill={skill}
               updateSkill={updateSkill}
               addSkill={addSkill}
               removeSkill={removeSkill}
@@ -291,10 +405,18 @@ export default function CVBuilderApp() {
               addEducation={addEducation}
               updateEducation={updateEducation}
               removeEducation={removeEducation}
-              references={references}
+              certificate={certificate}
+              addCertificate={addCertificate}
+              updateCertificate={updateCertificate}
+              removeCertificate={removeCertificate}
+              reference={reference}
               updateReference={updateReference}
               addReference={addReference}
               removeReference={removeReference}
+              additionalInfo={additionalInfo}
+              addAdditionalInfo={addAdditionalInfo}
+              updateAdditionalInfo={updateAdditionalInfo}
+              removeAdditionalInfo={removeAdditionalInfo}
               exportToDocx={handleExportToDocx}
               exportToPdf={handleExportToPdf}
               saveToDatabase={handleSaveToDatabase}
@@ -305,10 +427,12 @@ export default function CVBuilderApp() {
             <CVPreview
               personal={personal}
               profile={profile}
-              skills={skills}
+              skill={skill}
               experiences={experiences}
               education={education}
-              references={references}
+              certificate={certificate}
+              reference={reference}
+              additionalInfo={additionalInfo}
               previewRef={previewRef}
             />
           </div>

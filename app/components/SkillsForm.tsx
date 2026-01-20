@@ -3,7 +3,7 @@ import React from "react";
 import type { SkillsFormProps } from "../types/global";
 
 const SkillsForm: React.FC<SkillsFormProps> = ({
-  skills,
+  skill,
   updateSkill,
   addSkill,
   removeSkill,
@@ -11,7 +11,7 @@ const SkillsForm: React.FC<SkillsFormProps> = ({
   <div>
     <label className="block text-sm font-medium text-gray-700">Skills</label>
     <div className="space-y-2 mt-2">
-      {skills.map((skill, idx) => (
+      {skill.map((skill, idx) => (
         <div key={idx} className="flex gap-2">
           <input
             className="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"

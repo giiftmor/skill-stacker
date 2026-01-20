@@ -41,7 +41,7 @@ const ExperienceForm = ({
           />
           <textarea
             placeholder="Details / Achievements"
-            className="mt-2 px-3 py-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="mt-2 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             rows={3}
             value={exp.details}
             onChange={(e) =>

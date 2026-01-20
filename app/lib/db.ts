@@ -1,17 +1,18 @@
-// app/lib/db.ts - MySQL Version 2.0
-import mysql from 'mysql2/promise';
+// app/lib/db.ts - MySQL Version
+import { info } from "console";
+import mysql from "mysql2/promise";
 
 let pool: mysql.Pool | null = null;
 
 // Database configuration
 const dbConfig = {
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'cvbuilder',
+  host: process.env.DB_HOST || "localhost",
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "",
+  database: process.env.DB_NAME || "cvbuilder",
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
 };
 
 // Initialize database connection pool
@@ -22,35 +23,15 @@ export function getPool() {
   return pool;
 }
 
-// Track if database has been initialized
-let isInitialized = false;
-
 // Initialize database tables
 export async function initDb() {
-   console.log('🔴 initDb() STARTED');
-  console.log('🔴 Current isInitialized:', isInitialized);
-  // If already initialized, skip
-  if (isInitialized) {
-     console.log('🔴 Already initialized, returning early');
-    return;
-  }
-  console.log('🔴 Creating initPromise...');
-  // Create a special connection without specifying database (for creation)
-  const initConnection = await mysql.createConnection({
-    host: dbConfig.host,
-    user: dbConfig.user,
-    password: dbConfig.password,
-  });
-  
-  let connection: mysql.PoolConnection | null = null;
+  const connection = await getPool().getConnection();
+
   try {
     // Create database if it doesn't exist
-    await initConnection.query(`CREATE DATABASE IF NOT EXISTS ${dbConfig.database}`);
-    console.log(`✅ Database '${dbConfig.database}' ready`);
-
-    // Now get regular connection with database selected
-    connection = await getPool().getConnection();
-    
+    await connection.query(
+      `CREATE DATABASE IF NOT EXISTS ${dbConfig.database}`,
+    );
     await connection.query(`USE ${dbConfig.database}`);
 
     // Create CVs table
@@ -62,6 +43,7 @@ export async function initDb() {
         phone VARCHAR(50),
         email VARCHAR(255),
         location VARCHAR(255),
+        linkedin VARCHAR(255),
         profile TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -108,28 +90,50 @@ export async function initDb() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
+    // Create Certificates table
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS certificates (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        cv_id INT NOT NULL,
+        name VARCHAR(255),
+        date VARCHAR(255),
+        FOREIGN KEY (cv_id) REFERENCES cvs(id) ON DELETE CASCADE,
+        INDEX idx_cv_id (cv_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+
     // Create References table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS reference_list (
         id INT AUTO_INCREMENT PRIMARY KEY,
         cv_id INT NOT NULL,
-        reference TEXT NOT NULL,
+        name VARCHAR(255),
+        company VARCHAR(255),
+        role VARCHAR(255),
+        email VARCHAR(255),
+        phone VARCHAR(50),
         FOREIGN KEY (cv_id) REFERENCES cvs(id) ON DELETE CASCADE,
         INDEX idx_cv_id (cv_id)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
-        
-    // Close init connection
-    await initConnection.end();
 
-    console.log('Database tables initialized successfully');
+    // Create References table
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS additional_info (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        cv_id INT NOT NULL,
+        info TEXT NOT NULL,
+        FOREIGN KEY (cv_id) REFERENCES cvs(id) ON DELETE CASCADE,
+        INDEX idx_cv_id (cv_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+
+    console.log("Database tables initialized successfully");
   } catch (error) {
-    console.error('Error initializing database:', error);
+    console.error("Error initializing database:", error);
     throw error;
   } finally {
-    if (connection) {
-      connection.release();
-    }
+    connection.release();
   }
 }
 
@@ -141,6 +145,7 @@ export async function saveCV(data: {
     phone: string;
     email: string;
     location: string;
+    linkedin: string;
   };
   profile: string;
   skills: string[];
@@ -155,7 +160,18 @@ export async function saveCV(data: {
     qualification: string;
     period: string;
   }>;
-  references: string[];
+  certificate: Array<{
+    name: string;
+    date: string;
+  }>;
+  reference: Array<{
+    name: string;
+    company: string;
+    role: string;
+    email: string;
+    phone: string;
+  }>;
+  additionalInfo: string[];
 }) {
   const connection = await getPool().getConnection();
 
@@ -164,7 +180,7 @@ export async function saveCV(data: {
 
     // Insert CV personal information
     const [result] = await connection.query(
-      `INSERT INTO cvs (full_name, title, phone, email, location, profile)
+      `INSERT INTO cvs (full_name, title, phone, email, location, linkedin, profile)
        VALUES (?, ?, ?, ?, ?, ?)`,
       [
         data.personal.fullName,
@@ -172,8 +188,9 @@ export async function saveCV(data: {
         data.personal.phone,
         data.personal.email,
         data.personal.location,
-        data.profile
-      ]
+        data.personal.linkedin,
+        data.profile,
+      ],
     );
 
     const cvId = (result as mysql.ResultSetHeader).insertId;
@@ -182,58 +199,96 @@ export async function saveCV(data: {
     if (data.skills.filter(Boolean).length > 0) {
       const skillValues = data.skills
         .filter(Boolean)
-        .map(skill => [cvId, skill]);
-      
-      await connection.query(
-        'INSERT INTO skills (cv_id, skill) VALUES ?',
-        [skillValues]
-      );
+        .map((skill) => [cvId, skill]);
+
+      await connection.query("INSERT INTO skills (cv_id, skill) VALUES ?", [
+        skillValues,
+      ]);
     }
 
     // Insert experiences
-    const validExperiences = data.experiences.filter(e => e.company || e.role);
+    const validExperiences = data.experiences.filter(
+      (e) => e.company || e.role,
+    );
     if (validExperiences.length > 0) {
-      const expValues = validExperiences.map(exp => [
+      const expValues = validExperiences.map((exp) => [
         cvId,
         exp.company,
         exp.role,
         exp.period,
-        exp.details
+        exp.details,
       ]);
-      
+
       await connection.query(
         `INSERT INTO experiences (cv_id, company, role, period, details)
          VALUES ?`,
-        [expValues]
+        [expValues],
       );
     }
 
     // Insert education
-    const validEducation = data.education.filter(e => e.institution || e.qualification);
+    const validEducation = data.education.filter(
+      (e) => e.institution || e.qualification,
+    );
     if (validEducation.length > 0) {
-      const eduValues = validEducation.map(edu => [
+      const eduValues = validEducation.map((edu) => [
         cvId,
         edu.institution,
         edu.qualification,
-        edu.period
+        edu.period,
       ]);
-      
+
       await connection.query(
         `INSERT INTO education (cv_id, institution, qualification, period)
          VALUES ?`,
-        [eduValues]
+        [eduValues],
       );
     }
 
     // Insert references
-    if (data.references.filter(Boolean).length > 0) {
-      const refValues = data.references
-        .filter(Boolean)
-        .map(ref => [cvId, ref]);
-      
+    const validCertificate = data.certificate.filter(
+      (e: any) => e.name || e.date,
+    );
+    if (validCertificate.length > 0) {
+      const certValues = validCertificate.map((cert: any) => [
+        cvId,
+        cert.name,
+        cert.date,
+      ]);
+
       await connection.query(
-        'INSERT INTO reference_list (cv_id, reference) VALUES ?',
-        [refValues]
+        `INSERT INTO certificate (cv_id, name, period)
+         VALUES ?`,
+        [certValues],
+      );
+    }
+
+    const validReference = data.reference.filter((e: any) => e.name || e.role);
+    if (validReference.length > 0) {
+      const refValues = validReference.map((ref: any) => [
+        cvId,
+        ref.name,
+        ref.company,
+        ref.role,
+        ref.email,
+        ref.phone,
+      ]);
+
+      await connection.query(
+        `INSERT INTO education (cv_id, name, company, role, email, phone )
+         VALUES ?`,
+        [refValues],
+      );
+    }
+
+    if (data.additionalInfo.filter(Boolean).length > 0) {
+      const infoValues = data.additionalInfo
+        .filter(Boolean)
+        .map((info: string) => [cvId, info]);
+
+      await connection.query(
+        "INSERT INTO additional_info (cv_id, info) VALUES ?",
+        [infoValues],
       );
     }
 
@@ -241,7 +296,7 @@ export async function saveCV(data: {
     return { success: true, cvId };
   } catch (error) {
     await connection.rollback();
-    console.error('Error saving CV:', error);
+    console.error("Error saving CV:", error);
     throw error;
   } finally {
     connection.release();
@@ -259,7 +314,7 @@ export async function updateCV(cvId: number, data: any) {
     await connection.query(
       `UPDATE cvs 
        SET full_name = ?, title = ?, phone = ?, email = ?, location = ?, 
-           profile = ?, updated_at = CURRENT_TIMESTAMP
+       linkedin = ?, profile = ?, updated_at = CURRENT_TIMESTAMP
        WHERE id = ?`,
       [
         data.personal.fullName,
@@ -267,70 +322,111 @@ export async function updateCV(cvId: number, data: any) {
         data.personal.phone,
         data.personal.email,
         data.personal.location,
+        data.personal.linkedin,
         data.profile,
-        cvId
-      ]
+        cvId,
+      ],
     );
 
     // Delete existing related records
-    await connection.query('DELETE FROM skills WHERE cv_id = ?', [cvId]);
-    await connection.query('DELETE FROM experiences WHERE cv_id = ?', [cvId]);
-    await connection.query('DELETE FROM education WHERE cv_id = ?', [cvId]);
-    await connection.query('DELETE FROM reference_list WHERE cv_id = ?', [cvId]);
+    await connection.query("DELETE FROM skills WHERE cv_id = ?", [cvId]);
+    await connection.query("DELETE FROM experiences WHERE cv_id = ?", [cvId]);
+    await connection.query("DELETE FROM education WHERE cv_id = ?", [cvId]);
+    await connection.query("DELETE FROM reference_list WHERE cv_id = ?", [
+      cvId,
+    ]);
 
     // Re-insert new data
     if (data.skills.filter(Boolean).length > 0) {
       const skillValues = data.skills
         .filter(Boolean)
         .map((skill: string) => [cvId, skill]);
-      
-      await connection.query(
-        'INSERT INTO skills (cv_id, skill) VALUES ?',
-        [skillValues]
-      );
+
+      await connection.query("INSERT INTO skills (cv_id, skill) VALUES ?", [
+        skillValues,
+      ]);
     }
 
-    const validExperiences = data.experiences.filter((e: any) => e.company || e.role);
+    const validExperiences = data.experiences.filter(
+      (e: any) => e.company || e.role,
+    );
     if (validExperiences.length > 0) {
       const expValues = validExperiences.map((exp: any) => [
         cvId,
         exp.company,
         exp.role,
         exp.period,
-        exp.details
+        exp.details,
       ]);
-      
+
       await connection.query(
         `INSERT INTO experiences (cv_id, company, role, period, details)
          VALUES ?`,
-        [expValues]
+        [expValues],
       );
     }
 
-    const validEducation = data.education.filter((e: any) => e.institution || e.qualification);
+    const validEducation = data.education.filter(
+      (e: any) => e.institution || e.qualification,
+    );
     if (validEducation.length > 0) {
       const eduValues = validEducation.map((edu: any) => [
         cvId,
         edu.institution,
         edu.qualification,
-        edu.period
+        edu.period,
       ]);
-      
+
       await connection.query(
         `INSERT INTO education (cv_id, institution, qualification, period)
          VALUES ?`,
-        [eduValues]
+        [eduValues],
       );
     }
 
-    if (data.references.filter(Boolean).length > 0) {
-      const refValues = data.references
-        .filter(Boolean)
-        .map((ref: string) => [cvId, ref]);
-      
+    const validCertificate = data.certificate.filter(
+      (e: any) => e.name || e.date,
+    );
+    if (validCertificate.length > 0) {
+      const certValues = validCertificate.map((cert: any) => [
+        cvId,
+        cert.name,
+        cert.date,
+      ]);
+
       await connection.query(
-        'INSERT INTO reference_list (cv_id, reference) VALUES ?',
-        [refValues]
+        `INSERT INTO certificate (cv_id, name, period)
+         VALUES ?`,
+        [certValues],
+      );
+    }
+
+    const validReference = data.reference.filter((e: any) => e.name || e.role);
+    if (validReference.length > 0) {
+      const refValues = validReference.map((ref: any) => [
+        cvId,
+        ref.name,
+        ref.company,
+        ref.role,
+        ref.email,
+        ref.phone,
+      ]);
+
+      await connection.query(
+        `INSERT INTO education (cv_id, name, company, role, email, phone )
+         VALUES ?`,
+        [refValues],
+      );
+    }
+
+    if (data.additionalInfo.filter(Boolean).length > 0) {
+      const infoValues = data.additionalInfo
+        .filter(Boolean)
+        .map((info: string) => [cvId, info]);
+
+      await connection.query(
+        "INSERT INTO additional_info (cv_id, info) VALUES ?",
+        [infoValues],
       );
     }
 
@@ -338,7 +434,7 @@ export async function updateCV(cvId: number, data: any) {
     return { success: true, cvId };
   } catch (error) {
     await connection.rollback();
-    console.error('Error updating CV:', error);
+    console.error("Error updating CV:", error);
     throw error;
   } finally {
     connection.release();
@@ -350,34 +446,41 @@ export async function getCV(cvId: number) {
   const connection = await getPool().getConnection();
 
   try {
-    const [cvRows] = await connection.query(
-      'SELECT * FROM cvs WHERE id = ?',
-      [cvId]
-    );
-    
+    const [cvRows] = await connection.query("SELECT * FROM cvs WHERE id = ?", [
+      cvId,
+    ]);
+
     const cvArray = cvRows as mysql.RowDataPacket[];
     if (cvArray.length === 0) return null;
-    
+
     const cv = cvArray[0];
 
     const [skillRows] = await connection.query(
-      'SELECT skill FROM skills WHERE cv_id = ? ORDER BY id',
-      [cvId]
+      "SELECT skill FROM skills WHERE cv_id = ? ORDER BY id",
+      [cvId],
     );
 
     const [experienceRows] = await connection.query(
-      'SELECT company, role, period, details FROM experiences WHERE cv_id = ? ORDER BY id',
-      [cvId]
+      "SELECT company, role, period, details FROM experiences WHERE cv_id = ? ORDER BY id",
+      [cvId],
     );
 
     const [educationRows] = await connection.query(
-      'SELECT institution, qualification, period FROM education WHERE cv_id = ? ORDER BY id',
-      [cvId]
+      "SELECT institution, qualification, period FROM education WHERE cv_id = ? ORDER BY id",
+      [cvId],
+    );
+    const [certificateRows] = await connection.query(
+      "SELECT name, date FROM certificates WHERE cv_id = ? ORDER BY id",
+      [cvId],
     );
 
     const [referenceRows] = await connection.query(
-      'SELECT reference FROM reference_list WHERE cv_id = ? ORDER BY id',
-      [cvId]
+      "SELECT name, company, role, email, phone FROM reference_list WHERE cv_id = ? ORDER BY id",
+      [cvId],
+    );
+    const [additionalInfoRows] = await connection.query(
+      "SELECT info FROM additional_info WHERE cv_id = ? ORDER BY id",
+      [cvId],
     );
 
     return {
@@ -386,15 +489,20 @@ export async function getCV(cvId: number) {
         title: cv.title,
         phone: cv.phone,
         email: cv.email,
-        location: cv.location
+        location: cv.location,
+        linkedin: cv.linkedin,
       },
       profile: cv.profile,
-      skills: (skillRows as mysql.RowDataPacket[]).map(s => s.skill),
+      skills: (skillRows as mysql.RowDataPacket[]).map((s) => s.skill),
       experiences: experienceRows as mysql.RowDataPacket[],
       education: educationRows as mysql.RowDataPacket[],
-      references: (referenceRows as mysql.RowDataPacket[]).map(r => r.reference),
+      certificate: certificateRows as mysql.RowDataPacket[],
+      reference: referenceRows as mysql.RowDataPacket[],
+      additionalInfo: (additionalInfoRows as mysql.RowDataPacket[]).map(
+        (info) => info.additionalInfo,
+      ),
       createdAt: cv.created_at,
-      updatedAt: cv.updated_at
+      updatedAt: cv.updated_at,
     };
   } finally {
     connection.release();
@@ -407,16 +515,16 @@ export async function getAllCVs() {
 
   try {
     const [rows] = await connection.query(
-      'SELECT id, full_name, title, email, created_at, updated_at FROM cvs ORDER BY updated_at DESC'
+      "SELECT id, full_name, title, email, created_at, updated_at FROM cvs ORDER BY updated_at DESC",
     );
 
-    return (rows as mysql.RowDataPacket[]).map(cv => ({
+    return (rows as mysql.RowDataPacket[]).map((cv) => ({
       id: cv.id,
       fullName: cv.full_name,
       title: cv.title,
       email: cv.email,
       createdAt: cv.created_at,
-      updatedAt: cv.updated_at
+      updatedAt: cv.updated_at,
     }));
   } finally {
     connection.release();
@@ -428,10 +536,10 @@ export async function deleteCV(cvId: number) {
   const connection = await getPool().getConnection();
 
   try {
-    await connection.query('DELETE FROM cvs WHERE id = ?', [cvId]);
+    await connection.query("DELETE FROM cvs WHERE id = ?", [cvId]);
     return { success: true };
   } catch (error) {
-    console.error('Error deleting CV:', error);
+    console.error("Error deleting CV:", error);
     throw error;
   } finally {
     connection.release();
@@ -444,10 +552,10 @@ export async function testConnection() {
     const connection = await getPool().getConnection();
     await connection.ping();
     connection.release();
-    console.log('Database connection successful');
+    console.log("Database connection successful");
     return true;
   } catch (error) {
-    console.error('Database connection failed:', error);
+    console.error("Database connection failed:", error);
     return false;
   }
 }

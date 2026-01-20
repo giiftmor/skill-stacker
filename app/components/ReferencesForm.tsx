@@ -1,35 +1,64 @@
 // References Component
 import React from "react";
 import type { ReferencesFormProps } from "../types/global";
-const ReferencesForm = ({
-  references,
+const ReferencesForm: React.FC<ReferencesFormProps> = ({
+  reference,
   updateReference,
   addReference,
   removeReference,
-}: ReferencesFormProps) => (
+}) => (
   <div>
-    <label className="block text-sm font-medium text-gray-700">
+    <label className="block text-sm font-mrefium text-gray-700">
       References
     </label>
-    <div className="space-y-2 mt-2">
-      {references.map((ref, idx) => (
-        <div key={idx} className="flex gap-2">
+    <div className="space-y-3 mt-2">
+      {reference.map((ref) => (
+        <div
+          key={ref.id}
+          className="border border-gray-200 p-3 roundref-md bg-gray-50"
+        >
           <input
-            className="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            value={ref}
-            onChange={(e) => updateReference(idx, e.target.value)}
-            placeholder="Reference details"
+            placeholder="Full Name"
+            className="px-3 py-2 border border-gray-300 roundref-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            value={ref.name}
+            onChange={(e) => updateReference(ref.id, "name", e.target.value)}
           />
-          <button
-            className="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-            onClick={() => removeReference(idx)}
-          >
-            -
-          </button>
+          <input
+            placeholder="Role / Job Title"
+            className="mt-2 px-3 py-2 border border-gray-300 roundref-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            value={ref.role}
+            onChange={(e) => updateReference(ref.id, "role", e.target.value)}
+          />
+          <input
+            placeholder="Company"
+            className="mt-2 px-3 py-2 border border-gray-300 roundref-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            value={ref.company}
+            onChange={(e) => updateReference(ref.id, "company", e.target.value)}
+          />
+          <input
+            placeholder="Email Address"
+            className="mt-2 px-3 py-2 border border-gray-300 roundref-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            value={ref.email}
+            onChange={(e) => updateReference(ref.id, "email", e.target.value)}
+          />
+          <input
+            placeholder="Phone number"
+            className="mt-2 px-3 py-2 border border-gray-300 roundref-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            value={ref.phone}
+            onChange={(e) => updateReference(ref.id, "phone", e.target.value)}
+          />
+          <div className="mt-2">
+            <button
+              className="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors "
+              onClick={() => removeReference(ref.id)}
+            >
+              Remove
+            </button>
+          </div>
         </div>
       ))}
       <button
-        className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+        className="px-4 py-2 bg-blue-600 text-white roundref-md hover:bg-blue-700 transition-colors"
         onClick={addReference}
       >
         Add Reference

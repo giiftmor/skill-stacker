@@ -47,6 +47,7 @@ export default function CVListManager({
   };
 
   useEffect(() => {
+    console.log("🔵 CVListManager useEffect running");
     fetchCVs();
   }, []);
 

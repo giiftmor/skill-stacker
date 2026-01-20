@@ -1,5 +1,3 @@
-
-import type {ReactNode} from "react";
 // Personal Information Types
 type PersonalInfo = {
   fullName: string;
@@ -7,6 +5,7 @@ type PersonalInfo = {
   phone: string;
   email: string;
   location: string;
+  linkedin: string;
 };
 
 type PersonalInfoFormProps = {
@@ -22,9 +21,9 @@ type ProfileFormProps = {
 
 // Skills Types
 type SkillsFormProps = {
-  skills: string[];
-  updateSkill: (idx: number, value: string) => void;
+  skill: string[];
   addSkill: () => void;
+  updateSkill: (idx: number, value: string) => void;
   removeSkill: (idx: number) => void;
 };
 
@@ -43,7 +42,7 @@ type ExperienceFormProps = {
   updateExperience: (
     id: string | number,
     field: keyof Experience,
-    value: string
+    value: string,
   ) => void;
   removeExperience: (id: string | number) => void;
 };
@@ -62,17 +61,54 @@ type EducationFormProps = {
   updateEducation: (
     id: string | number,
     field: keyof Education,
-    value: string
+    value: string,
   ) => void;
   removeEducation: (id: string | number) => void;
 };
 
+type Reference = {
+  id: string | number;
+  name: string;
+  company: string;
+  role: string;
+  email: string;
+  phone: string;
+};
+
 // References Types
 type ReferencesFormProps = {
-  references: string[];
-  updateReference: (idx: number, value: string) => void;
+  reference: Reference[];
   addReference: () => void;
-  removeReference: (idx: number) => void;
+  updateReference: (
+    id: string | number,
+    field: keyof Reference,
+    value: string,
+  ) => void;
+  removeReference: (id: string | number) => void;
+};
+
+type Certificate = {
+  id: string | number;
+  name: string;
+  date: string;
+};
+
+type CertificatesFormProps = {
+  certificate: Certificate[];
+  addCertificate: () => void;
+  updateCertificate: (
+    id: number | string,
+    field: keyof Certificate,
+    value: string,
+  ) => void;
+  removeCertificate: (id: string | number) => void;
+};
+
+type AdditionalInfoFormProps = {
+  additionalInfo: string[];
+  addAdditionalInfo: () => void;
+  updateAdditionalInfo: (idx: number, value: string) => void;
+  removeAdditionalInfo: (idx: number) => void;
 };
 
 // Export Buttons Types
@@ -85,69 +121,107 @@ type ExportButtonsProps = {
 type CVPreviewProps = {
   personal: PersonalInfo;
   profile?: string;
-  skills: string[];
+  skill: string[];
   experiences: Experience[];
   education: Education[];
-  references: string[];
+  certificate: Certificate[];
+  reference: Reference[];
+  additionalInfo: string[];
   className?: string;
   previewRef?: React.Ref<HTMLDivElement>;
 };
 
+// Export Function Props
 type ExportFunctionProps = {
   personal: PersonalInfo;
   profile: string;
-  skills: string[];
+  skill: string[];
   experiences: Experience[];
   education: Education[];
-  references: string[];
+  // certificate: Certificate[];
+  reference: Reference[];
+  // additionalInfo: string[];
   previewRef?: React.RefObject<HTMLDivElement | null>;
 };
 
 //Main CV Builder Form Props
 type CVBuilderFormProps = {
+  ///////////----- Personal Information and Profile Summary ------/////////////
   personal: any;
-   updatePersonal: (field: keyof PersonalInfo, value: string) => void;
+  updatePersonal: (field: keyof PersonalInfo, value: string) => void;
   profile: any;
-    setProfile: (value: string) => void;
-  skills: any[];
-  updateSkill: (idx: number, value: string) => void;
+  setProfile: (value: string) => void;
+
+  ///////////----- Skills ------/////////////
+  skill: any[];
   addSkill: () => void;
+  updateSkill: (idx: number, value: string) => void;
   removeSkill: (idx: number) => void;
+
+  ///////////----- Experience ------/////////////
   experiences: any[];
   addExperience: () => void;
   updateExperience: (
     id: string | number,
     field: keyof Experience,
-    value: string
+    value: string,
   ) => void;
   removeExperience: (id: string | number) => void;
+
+  ///////////----- Education ------/////////////
   education: any[];
   addEducation: () => void;
   updateEducation: (
     id: string | number,
     field: keyof Education,
-    value: string
+    value: string,
   ) => void;
   removeEducation: (id: string | number) => void;
-  references: any[];
-  updateReference: (idx: number, value: string) => void;
+
+  ///////////----- References ------/////////////
+  reference: any[];
   addReference: () => void;
-  removeReference: (idx: number) => void;
+  updateReference: (
+    id: string | number,
+    field: keyof Reference,
+    value: string,
+  ) => void;
+  removeReference: (id: string | number) => void;
+
+  ///////////----- Certificates ------/////////////
+  certificate: any[];
+  addCertificate: () => void;
+  updateCertificate: (
+    id: string | number,
+    field: keyof Certificate,
+    value: string,
+  ) => void;
+  removeCertificate: (id: string | number) => void;
+
+  ///////////----- Addtional Info ------/////////////
+  additionalInfo: any[];
+  addAdditionalInfo: () => void;
+  updateAdditionalInfo: (idx: number, value: string) => void;
+  removeAdditionalInfo: (idx: number) => void;
+
+  ///////////----- Education ------/////////////
   exportToDocx: () => void;
   exportToPdf: () => void;
   className?: string;
 };
 
-export type { 
-  PersonalInfo,
+export type {
+  //Form Props
   PersonalInfoFormProps,
   ProfileFormProps,
   SkillsFormProps,
-  Experience,
   ExperienceFormProps,
-  Education,
   EducationFormProps,
+  CertificatesFormProps,
   ReferencesFormProps,
+  AdditionalInfoFormProps,
+
+  //Function/Component Props
   ExportButtonsProps,
   CVPreviewProps,
   CVBuilderFormProps,

@@ -53,11 +53,12 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   name: {
-    fontSize: 24,
+    fontSize: 48,
     fontWeight: "bold",
     marginBottom: 5,
   },
   title: {
+    textTransform: "uppercase",
     fontSize: 14,
     color: "#555",
     marginBottom: 8,
@@ -71,6 +72,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   sectionTitle: {
+    textTransform: "uppercase",
     fontSize: 14,
     fontWeight: "bold",
     marginBottom: 8,
@@ -93,11 +95,17 @@ const styles = StyleSheet.create({
   experienceHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 3,
+  },
+  companyName: {
+    fontSize: 12,
+    fontWeight: "bold",
+    textTransform: "uppercase",
   },
   companyRole: {
     fontSize: 12,
-    fontWeight: "bold",
+    fontWeight: "normal",
+    color: "#666",
+    marginBottom: 3,
   },
   period: {
     fontSize: 10,
@@ -108,16 +116,27 @@ const styles = StyleSheet.create({
     lineHeight: 1.4,
     color: "#444",
   },
+  gridContainer: {
+    display: "grid",
+    gridTemplateColumns: "repeat(1, minmax(250px, 1fr))",
+    gap: 6,
+    "@sm": {
+      gridTemplateColumns: "repeat(2, minmax(250px, 1fr))",
+    },
+    "@md": {
+      gridTemplateColumns: "repeat(3, minmax(250px, 1fr))",
+    },
+  },
 });
 
 // PDF Document Component
 const CVDocument = ({
   personal,
   profile,
-  skills,
+  skill,
   experiences,
   education,
-  references,
+  reference,
 }: Omit<ExportFunctionProps, "previewRef">) => (
   <Document>
     <Page size="A4" style={styles.page}>
@@ -143,14 +162,32 @@ const CVDocument = ({
       )}
 
       {/* Skills Section */}
-      {skills.filter(Boolean).length > 0 && (
+      {skill.filter(Boolean).length > 0 && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Key Skills</Text>
-          {skills.filter(Boolean).map((skill, idx) => (
-            <Text key={idx} style={styles.bulletPoint}>
-              • {skill}
-            </Text>
-          ))}
+          {(() => {
+            const validSkills = skill.filter(Boolean);
+            const numColumns = Math.min(Math.ceil(validSkills.length / 5), 3);
+
+            return (
+              <View style={styles.gridContainer}>
+                {Array.from({ length: numColumns }).map((_, colIdx) => (
+                  <View key={colIdx} style={{ marginBottom: 5 }}>
+                    {validSkills
+                      .slice(colIdx * 5, colIdx * 5 + 5)
+                      .map((skill, idx) => (
+                        <Text
+                          key={`${skill}-${idx}`}
+                          style={styles.bulletPoint}
+                        >
+                          • {skill}
+                        </Text>
+                      ))}
+                  </View>
+                ))}
+              </View>
+            );
+          })()}
         </View>
       )}
 
@@ -163,11 +200,12 @@ const CVDocument = ({
             .map((exp) => (
               <View key={exp.id} style={styles.experienceItem}>
                 <View style={styles.experienceHeader}>
-                  <Text style={styles.companyRole}>
-                    {exp.company || "Company"} — {exp.role || "Position"}
+                  <Text style={styles.companyName}>
+                    {exp.company || "Company"}
                   </Text>
                   <Text style={styles.period}>{exp.period}</Text>
                 </View>
+                <Text style={styles.companyRole}>{exp.role || "Position"}</Text>
                 {exp.details && (
                   <Text style={styles.details}>{exp.details}</Text>
                 )}
@@ -196,15 +234,39 @@ const CVDocument = ({
         </View>
       )}
 
+      {/* Certificate Section */}
+      {/* {education.some((ed) => ed.institution || ed.qualification) && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Education & Qualifications</Text>
+          {education
+            .filter((ed) => ed.institution || ed.qualification)
+            .map((ed) => (
+              <View key={ed.id} style={styles.experienceItem}>
+                <View style={styles.experienceHeader}>
+                  <Text style={styles.companyRole}>
+                    {ed.institution || "Certificate"} —{" "}
+                    {ed.qualification || "Year Obtained"}
+                  </Text>
+                  <Text style={styles.period}>{ed.period}</Text>
+                </View>
+              </View>
+            ))}
+        </View>
+      )} */}
+
       {/* References Section */}
-      {references.filter(Boolean).length > 0 && (
+      {reference.some((ref) => ref.name || ref.company) && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>References</Text>
-          {references.filter(Boolean).map((ref, idx) => (
-            <Text key={idx} style={styles.text}>
-              {ref}
-            </Text>
-          ))}
+          {reference
+            .filter((ref) => ref.name || ref.company)
+            .map((ref) => (
+              <Text key={ref.id} style={styles.text}>
+                {ref.name || "Full name"} -{ref.company || "Company"} -
+                {ref.role || "Role"} -{ref.email || "Email"} -{" "}
+                {ref.phone || "Phone number"}
+              </Text>
+            ))}
         </View>
       )}
     </Page>
@@ -236,10 +298,10 @@ export const exportToPdf = async (props: ExportFunctionProps) => {
 export const exportToDocx = async ({
   personal,
   profile,
-  skills,
+  skill,
   experiences,
   education,
-  references,
+  reference,
 }: ExportFunctionProps) => {
   try {
     const doc = new DocxDocument({
@@ -297,14 +359,14 @@ export const exportToDocx = async ({
               : []),
 
             // Skills Section
-            ...(skills.filter(Boolean).length > 0
+            ...(skill.filter(Boolean).length > 0
               ? [
                   new Paragraph({
                     children: [
                       new TextRun({ text: "Key Skills", bold: true, size: 28 }),
                     ],
                   }),
-                  ...skills.filter(Boolean).map(
+                  ...skill.filter(Boolean).map(
                     (skill) =>
                       new Paragraph({
                         children: [
@@ -408,14 +470,14 @@ export const exportToDocx = async ({
               : []),
 
             // References Section
-            ...(references.filter(Boolean).length > 0
+            ...(reference.filter(Boolean).length > 0
               ? [
                   new Paragraph({
                     children: [
                       new TextRun({ text: "References", bold: true, size: 28 }),
                     ],
                   }),
-                  ...references.filter(Boolean).map(
+                  ...reference.filter(Boolean).map(
                     (ref) =>
                       new Paragraph({
                         children: [new TextRun({ text: ref, size: 22 })],

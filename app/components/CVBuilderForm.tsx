@@ -10,6 +10,8 @@ import ReferencesForm from "./ReferencesForm";
 import ExportButtons from "./ExportButtons";
 
 import type { CVBuilderFormProps } from "../types/global";
+import CertificatesForm from "./CertificatesForm";
+import AdditionalInfoForm from "./AdditionalInfoForm";
 
 interface ExtendedCVBuilderFormProps extends CVBuilderFormProps {
   saveToDatabase: () => void;
@@ -22,7 +24,7 @@ const CVBuilderForm: React.FC<ExtendedCVBuilderFormProps> = ({
   updatePersonal,
   profile,
   setProfile,
-  skills,
+  skill,
   updateSkill,
   addSkill,
   removeSkill,
@@ -34,10 +36,18 @@ const CVBuilderForm: React.FC<ExtendedCVBuilderFormProps> = ({
   addEducation,
   updateEducation,
   removeEducation,
-  references,
+  certificate,
+  addCertificate,
+  updateCertificate,
+  removeCertificate,
+  reference,
   updateReference,
   addReference,
   removeReference,
+  additionalInfo,
+  addAdditionalInfo,
+  updateAdditionalInfo,
+  removeAdditionalInfo,
   exportToDocx,
   exportToPdf,
   saveToDatabase,
@@ -46,23 +56,6 @@ const CVBuilderForm: React.FC<ExtendedCVBuilderFormProps> = ({
 }) => (
   <div className="lg:col-span-1 bg-white p-6 rounded-lg shadow">
     <h2 className="text-xl font-semibold mb-4">Spectres | Skill Stack</h2>
-
-    {/* Save Status Indicator */}
-    {saveStatus !== "idle" && (
-      <div
-        className={`mb-4 p-3 rounded-md ${
-          saveStatus === "saving"
-            ? "bg-blue-50 text-blue-800"
-            : saveStatus === "success"
-            ? "bg-green-50 text-green-800"
-            : "bg-red-50 text-red-800"
-        }`}
-      >
-        {saveStatus === "saving" && "💾 Saving CV..."}
-        {saveStatus === "success" && "✅ CV saved successfully!"}
-        {saveStatus === "error" && "❌ Failed to save CV"}
-      </div>
-    )}
 
     {/* Current CV ID Indicator */}
     {currentCvId && (
@@ -75,7 +68,7 @@ const CVBuilderForm: React.FC<ExtendedCVBuilderFormProps> = ({
       <PersonalInfoForm personal={personal} updatePersonal={updatePersonal} />
       <ProfileForm profile={profile} setProfile={setProfile} />
       <SkillsForm
-        skills={skills}
+        skill={skill}
         updateSkill={updateSkill}
         addSkill={addSkill}
         removeSkill={removeSkill}
@@ -92,11 +85,24 @@ const CVBuilderForm: React.FC<ExtendedCVBuilderFormProps> = ({
         updateEducation={updateEducation}
         removeEducation={removeEducation}
       />
+      <CertificatesForm
+        certificate={certificate}
+        addCertificate={addCertificate}
+        updateCertificate={updateCertificate}
+        removeCertificate={removeCertificate}
+      />
       <ReferencesForm
-        references={references}
+        reference={reference}
         updateReference={updateReference}
         addReference={addReference}
         removeReference={removeReference}
+      />
+
+      <AdditionalInfoForm
+        additionalInfo={additionalInfo}
+        addAdditionalInfo={addAdditionalInfo}
+        updateAdditionalInfo={updateAdditionalInfo}
+        removeAdditionalInfo={removeAdditionalInfo}
       />
 
       {/* Save to Database Button */}
@@ -113,8 +119,8 @@ const CVBuilderForm: React.FC<ExtendedCVBuilderFormProps> = ({
           {saveStatus === "saving"
             ? "Saving..."
             : currentCvId
-            ? "Update CV in Database"
-            : "Save CV to Database"}
+              ? "Update CV in Database"
+              : "Save CV to Database"}
         </button>
       </div>
 
