@@ -181,7 +181,7 @@ export async function saveCV(data: {
     // Insert CV personal information
     const [result] = await connection.query(
       `INSERT INTO cvs (full_name, title, phone, email, location, linkedin, profile)
-       VALUES (?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
         data.personal.fullName,
         data.personal.title,
@@ -245,7 +245,7 @@ export async function saveCV(data: {
       );
     }
 
-    // Insert references
+    // Insert certificates
     const validCertificate = data.certificate.filter(
       (e: any) => e.name || e.date,
     );
@@ -257,7 +257,7 @@ export async function saveCV(data: {
       ]);
 
       await connection.query(
-        `INSERT INTO certificate (cv_id, name, period)
+        `INSERT INTO certificates (cv_id, name, date)
          VALUES ?`,
         [certValues],
       );
@@ -275,7 +275,7 @@ export async function saveCV(data: {
       ]);
 
       await connection.query(
-        `INSERT INTO education (cv_id, name, company, role, email, phone )
+        `INSERT INTO reference_list (cv_id, name, company, role, email, phone )
          VALUES ?`,
         [refValues],
       );
@@ -395,7 +395,7 @@ export async function updateCV(cvId: number, data: any) {
       ]);
 
       await connection.query(
-        `INSERT INTO certificate (cv_id, name, period)
+        `INSERT INTO certificates (cv_id, name, date)
          VALUES ?`,
         [certValues],
       );
@@ -413,7 +413,7 @@ export async function updateCV(cvId: number, data: any) {
       ]);
 
       await connection.query(
-        `INSERT INTO education (cv_id, name, company, role, email, phone )
+        `INSERT INTO reference_list (cv_id, name, company, role, email, phone )
          VALUES ?`,
         [refValues],
       );

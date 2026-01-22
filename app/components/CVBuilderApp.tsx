@@ -19,6 +19,7 @@ export default function CVBuilderApp() {
     phone: "",
     email: "",
     location: "",
+    linkedin: "",
   });
 
   const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -160,6 +161,7 @@ export default function CVBuilderApp() {
         phone: "",
         email: "",
         location: "",
+        linkedin: "",
       });
       setProfile("");
       setSkills([""]);
