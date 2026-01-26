@@ -9,8 +9,8 @@ const SkillsForm: React.FC<SkillsFormProps> = ({
   removeSkill,
 }) => (
   <div>
-    {/* <label className="block text-sm font-medium text-gray-700">Skills</label> */}
-    <div className="space-y-2 mt-2 mx-1">
+    <label className="block text-sm font-medium text-gray-700">Skills</label>
+    <div className="space-y-2 mt-2">
       {skill.map((skill, idx) => (
         <div key={idx} className="flex gap-2">
           <input

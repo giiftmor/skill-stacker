@@ -1,12 +1,12 @@
 // app/components/CVBuilderApp.tsx - Final Version with CV Manager
 import React, { useState, useRef } from "react";
 import CVBuilderForm from "./CVBuilderForm";
-import CVPreview from "./CVPreview";
 import CVListManager from "./CVListManager";
 import { exportToDocx, exportToPdf } from "./modules/exportModule";
 import { ArrowLeft } from "lucide-react";
 import NotificationModal from "./NotificationModal";
 import { useNotification } from "../hooks/useNotification";
+import CVPreviewWrapper from "./CVPreviewWrapper";
 
 export default function CVBuilderApp() {
   const [showCVList, setShowCVList] = useState(false);
@@ -25,7 +25,7 @@ export default function CVBuilderApp() {
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
   const [profile, setProfile] = useState("");
-  const [skill, setSkills] = useState([""]);
+  const [competency, setCompetencies] = useState([""]);
   const [experiences, setExperiences] = useState([
     { id: generateId(), company: "", role: "", period: "", details: "" },
   ]);
@@ -35,13 +35,14 @@ export default function CVBuilderApp() {
   const [certificate, setCertificate] = useState([
     { id: generateId(), name: "", date: "" },
   ]);
+  const [skill, setSkills] = useState([""]);
   const [reference, setReference] = useState([
     { id: generateId(), name: "", company: "", role: "", email: "", phone: "" },
   ]);
 
   const [additionalInfo, setAdditionalInfo] = useState([""]);
 
-  const [currentCvId, setCurrentCvId] = useState<number | null>(null);
+  const [currentCvId, setCurrentCvId] = useState<string | number | null>(null);
   const {
     notification,
     closeNotification,
@@ -65,14 +66,14 @@ export default function CVBuilderApp() {
     setPersonal((p) => ({ ...p, [field]: value }));
 
   // Skills handlers
-  const addSkill = () => setSkills((s) => [...s, ""]);
-  const updateSkill = (index: any, value: any) => {
-    const s = [...skill];
+  const addCompetency = () => setCompetencies((s) => [...s, ""]);
+  const updateCompetency = (index: any, value: any) => {
+    const s = [...competency];
     s[index] = value;
-    setSkills(s);
+    setCompetencies(s);
   };
-  const removeSkill = (i: number) =>
-    setSkills((s) => s.filter((_, idx) => idx !== i));
+  const removeCompetency = (i: number) =>
+    setCompetencies((s) => s.filter((_, idx) => idx !== i));
 
   // Experiences handlers
   const addExperience = () =>
@@ -116,6 +117,16 @@ export default function CVBuilderApp() {
     );
   const removeCertificate = (id: string | number) =>
     setCertificate((cert) => cert.filter((item) => item.id !== id));
+
+  // Skills handlers
+  const addSkill = () => setSkills((s) => [...s, ""]);
+  const updateSkill = (index: any, value: any) => {
+    const s = [...skill];
+    s[index] = value;
+    setSkills(s);
+  };
+  const removeSkill = (i: number) =>
+    setSkills((s) => s.filter((_, idx) => idx !== i));
 
   // References handlers
   const addReference = () =>
@@ -164,7 +175,7 @@ export default function CVBuilderApp() {
         linkedin: "",
       });
       setProfile("");
-      setSkills([""]);
+      setCompetencies([""]);
       setExperiences([
         { id: generateId(), company: "", role: "", period: "", details: "" },
       ]);
@@ -172,6 +183,7 @@ export default function CVBuilderApp() {
         { id: generateId(), institution: "", qualification: "", period: "" },
       ]);
       setCertificate([{ id: generateId(), name: "", date: "" }]);
+      setSkills([""]);
       setReference([
         {
           id: generateId(),
@@ -182,6 +194,7 @@ export default function CVBuilderApp() {
           phone: "",
         },
       ]);
+      setAdditionalInfo([""]);
       setCurrentCvId(null);
       setSaveStatus("idle");
     }
@@ -195,10 +208,13 @@ export default function CVBuilderApp() {
       const cvData = {
         personal,
         profile,
-        skill,
+        competency,
         experiences: experiences.map(({ id, ...rest }) => rest),
         education: education.map(({ id, ...rest }) => rest),
+        skill,
+        certificate: certificate.map(({ id, ...rest }) => rest),
         reference: reference.map(({ id, ...rest }) => rest),
+        additionalInfo,
       };
 
       const url = currentCvId ? `/api/cv/${currentCvId}` : "/api/cv";
@@ -212,17 +228,29 @@ export default function CVBuilderApp() {
         body: JSON.stringify(cvData),
       });
 
+      // Check if response status is ok
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      // Check if response is JSON
+      const contentType = response.headers.get("content-type");
+      if (!contentType?.includes("application/json")) {
+        throw new Error("Invalid response format: expected JSON");
+      }
+
       const result = await response.json();
 
-      if (result.success) {
-        setCurrentCvId(result.cvId);
-        showSuccess("Success!", "CV saved successfully");
-
-        setTimeout(() => setSaveStatus("idle"), 300);
-      } else {
-        setSaveStatus("error");
-        showError("error!", `Failed to save CV: ${result.message}`);
+      // Validate required fields in response
+      if (!result.success || !result.cvId) {
+        throw new Error(
+          result.message || "Invalid response: missing required fields",
+        );
       }
+
+      setCurrentCvId(result.cvId);
+      showSuccess("Success!", "CV saved successfully");
+      setTimeout(() => setSaveStatus("idle"), 300);
     } catch (error) {
       console.error("Error saving CV:", error);
       setSaveStatus("error");
@@ -240,7 +268,7 @@ export default function CVBuilderApp() {
         const cv = result.cv;
         setPersonal(cv.personal);
         setProfile(cv.profile);
-        setSkills(cv.skills.length > 0 ? cv.skills : [""]);
+        setCompetencies(cv.competency.length > 0 ? cv.competency : [""]);
         setExperiences(
           cv.experiences.length > 0
             ? cv.experiences.map((exp: any) => ({ ...exp, id: generateId() }))
@@ -273,10 +301,11 @@ export default function CVBuilderApp() {
                 {
                   id: generateId(),
                   name: "",
-                  period: "",
+                  date: "",
                 },
               ],
         );
+        setSkills(cv.skill.length > 0 ? cv.skill : [""]);
         setReference(
           cv.reference.length > 0
             ? cv.reference.map((ref: any) => ({ ...ref, id: generateId() }))
@@ -311,10 +340,13 @@ export default function CVBuilderApp() {
     exportToDocx({
       personal,
       profile,
-      skill,
+      competency,
       experiences,
       education,
+      certificate,
+      skill,
       reference,
+      additionalInfo,
     });
   };
 
@@ -322,23 +354,26 @@ export default function CVBuilderApp() {
     exportToPdf({
       personal,
       profile,
-      skill,
+      competency,
       experiences,
       education,
+      certificate,
+      skill,
       reference,
+      additionalInfo,
       previewRef,
     });
   };
 
   return (
     <div className="min-h-screen bg-gray-400 p-6">
-      <button
+      {/* <button
         className="bg-gray-800 text-white flex hidden items-center justify-center rounded-full size-9 cursor-pointer absolute top-[50%] left-6 hover:bg-gray-900  hover:transform hover:size-11 transition-all duration-300"
         type="submit"
         onClick={() => setShowCVList(!showCVList)}
       >
         <ArrowLeft />
-      </button>
+      </button> */}
       {/* Header with actions */}
       <div className="max-w-8xl mx-auto mb-6">
         <div className="bg-white rounded-lg shadow p-4 flex items-center justify-between">
@@ -411,6 +446,9 @@ export default function CVBuilderApp() {
               addCertificate={addCertificate}
               updateCertificate={updateCertificate}
               removeCertificate={removeCertificate}
+              updateCompetency={updateCompetency}
+              addCompetency={addCompetency}
+              removeCompetency={removeCompetency}
               reference={reference}
               updateReference={updateReference}
               addReference={addReference}
@@ -426,13 +464,14 @@ export default function CVBuilderApp() {
               currentCvId={currentCvId}
             />
 
-            <CVPreview
+            <CVPreviewWrapper
               personal={personal}
               profile={profile}
-              skill={skill}
+              competency={competency}
               experiences={experiences}
               education={education}
               certificate={certificate}
+              skill={skill}
               reference={reference}
               additionalInfo={additionalInfo}
               previewRef={previewRef}

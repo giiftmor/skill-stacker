@@ -278,7 +278,7 @@ export const exportToPdf = async (props: ExportFunctionProps) => {
   try {
     const fileName = `${(props.personal.fullName || "CV").replace(
       /\s+/g,
-      "_"
+      "_",
     )}_CV.pdf`;
 
     // Generate PDF blob
@@ -298,10 +298,13 @@ export const exportToPdf = async (props: ExportFunctionProps) => {
 export const exportToDocx = async ({
   personal,
   profile,
-  skill,
+  competency,
   experiences,
   education,
+  certificate,
+  skill,
   reference,
+  additionalInfo,
 }: ExportFunctionProps) => {
   try {
     const doc = new DocxDocument({
@@ -358,21 +361,25 @@ export const exportToDocx = async ({
                 ]
               : []),
 
-            // Skills Section
-            ...(skill.filter(Boolean).length > 0
+            // Competencies Section
+            ...(competency.filter(Boolean).length > 0
               ? [
                   new Paragraph({
                     children: [
-                      new TextRun({ text: "Key Skills", bold: true, size: 28 }),
+                      new TextRun({
+                        text: "Key Competencies",
+                        bold: true,
+                        size: 28,
+                      }),
                     ],
                   }),
-                  ...skill.filter(Boolean).map(
-                    (skill) =>
+                  ...competency.filter(Boolean).map(
+                    (competency) =>
                       new Paragraph({
                         children: [
-                          new TextRun({ text: `• ${skill}`, size: 22 }),
+                          new TextRun({ text: `• ${competency}`, size: 22 }),
                         ],
-                      })
+                      }),
                   ),
                   new Paragraph({ children: [new TextRun(" ")] }),
                 ]
@@ -469,6 +476,26 @@ export const exportToDocx = async ({
                 ]
               : []),
 
+            // Skills Section
+            ...(skill.filter(Boolean).length > 0
+              ? [
+                  new Paragraph({
+                    children: [
+                      new TextRun({ text: "Key Skills", bold: true, size: 28 }),
+                    ],
+                  }),
+                  ...skill.filter(Boolean).map(
+                    (skill) =>
+                      new Paragraph({
+                        children: [
+                          new TextRun({ text: `• ${skill}`, size: 22 }),
+                        ],
+                      }),
+                  ),
+                  new Paragraph({ children: [new TextRun(" ")] }),
+                ]
+              : []),
+
             // References Section
             ...(reference.filter(Boolean).length > 0
               ? [
@@ -481,7 +508,7 @@ export const exportToDocx = async ({
                     (ref) =>
                       new Paragraph({
                         children: [new TextRun({ text: ref, size: 22 })],
-                      })
+                      }),
                   ),
                 ]
               : []),
@@ -493,7 +520,7 @@ export const exportToDocx = async ({
     const blob = await Packer.toBlob(doc);
     const fileName = `${(personal.fullName || "CV").replace(
       /\s+/g,
-      "_"
+      "_",
     )}_CV.docx`;
     saveAs(blob, fileName);
 

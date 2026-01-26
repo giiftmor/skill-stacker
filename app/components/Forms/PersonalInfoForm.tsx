@@ -9,9 +9,9 @@ const PersonalInfoForm = ({
   personal,
   updatePersonal,
 }: PersonalInfoFormProps) => (
-  <div className="space-y-3 mt-2 mx-2">
+  <div className="space-y-3 ">
     <div>
-      <label className="block text-sm font-medium text-gray-700 ">
+      <label className="block text-sm font-medium text-gray-700">
         Full name
       </label>
       <input

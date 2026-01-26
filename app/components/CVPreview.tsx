@@ -1,24 +1,26 @@
 import type { ReactNode, Key } from "react";
 import type { CVPreviewProps } from "../types/global";
+import FormattedText from "./FormattedText";
 
 // CV Preview Component
 const CVPreview = ({
   personal,
   profile,
-  skill,
+  competency,
   experiences,
   education,
   certificate,
+  skill,
   reference,
   additionalInfo,
   previewRef,
 }: CVPreviewProps) => (
   <div
-    className="lg:col-span-2 bg-white py-15 rounded-lg shadow"
+    className="bg-white py-15 rounded-lg shadow w-{240mm} min-h-{297mm} mb-10"
     ref={previewRef}
   >
     <div className="max-w-3xl mx-auto font-family-{century-gothic} px-6 ">
-      <header className=" pb-4 my-6 flex flex-col items-center">
+      <header className=" pb-4 mt-6 flex flex-col items-center">
         <h1 className="user-name">{personal.fullName || "Your Name"}</h1>
         <p className="professional-title">
           {personal.title || "Your Professional Title"}
@@ -46,32 +48,16 @@ const CVPreview = ({
         </section>
       )}
 
-      {skill.filter(Boolean).length > 0 && (
+      {competency.filter(Boolean).length > 0 && (
         <section className="mb-6">
-          <h2 className="heading_1">Key Skills</h2>
-          {/* Multi-column layout: Each column shows up to 5 skills */}
-          {(() => {
-            const validSkills = skill.filter(Boolean);
-            const numColumns = Math.ceil(validSkills.length / 5);
-
-            return (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                {Array.from({ length: numColumns }, (_, colIdx) => (
-                  <div key={colIdx}>
-                    <ul className="list-disc pl-5 space-y-1 text-gray-700">
-                      {validSkills
-                        .slice(colIdx * 5, colIdx * 5 + 5)
-                        .map((skill, idx) => (
-                          <li className="normal-text" key={`${skill}-${idx}`}>
-                            {skill}
-                          </li>
-                        ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            );
-          })()}
+          <h2 className="heading_1">Core Competencies</h2>
+          <ul className="list-disc pl-5 space-y-1 text-gray-700">
+            {competency.filter(Boolean).map((competency, idx) => (
+              <li className="normal-text" key={`${competency}-${idx}`}>
+                {competency}
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 
@@ -102,7 +88,11 @@ const CVPreview = ({
                 <h4 className=" text-gray-800 mb-3">
                   {exp.role || "Job Title"}
                 </h4>
-                {exp.details && <p className="normal-text">{exp.details}</p>}
+                {exp.details && (
+                  <FormattedText className="normal-text">
+                    {String(exp.details)}
+                  </FormattedText>
+                )}
               </div>
             ),
           )}
@@ -156,13 +146,27 @@ const CVPreview = ({
                   <h3 className="font-semibold text-gray-900 uppercase">
                     {cert.name || "Institution"}
                   </h3>
-                  <span className="text-sm text-gray-600 font-medium">
-                    {cert.date}
+                  <span className="mx-1 text-sm text-gray-600 font-medium">
+                    ({cert.date})
                   </span>
                 </div>
               </div>
             ),
           )}
+        </section>
+      )}
+
+      {skill.filter(Boolean).length > 0 && (
+        <section className="mb-6">
+          <h2 className="heading_1">Technical Skills</h2>
+          {/* Multi-column layout: Each column shows up to 5 skills */}
+          <ul className="list-disc pl-5 space-y-1 text-gray-700">
+            {skill.filter(Boolean).map((skill, idx) => (
+              <li className="normal-text" key={`${skill}-${idx}`}>
+                {skill}
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 

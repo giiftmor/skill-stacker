@@ -24,8 +24,7 @@ const CertificatesForm = ({
         />
 
         <input
-          placeholder="YYYY"
-          type="text"
+          placeholder="Date"
           className="mt-2 px-3 py-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           value={cert.date}
           onChange={(e) => updateCertificate(cert.id, "date", e.target.value)}

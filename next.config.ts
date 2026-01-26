@@ -28,7 +28,7 @@ module.exports = {
       // other headers
     ];
   },
-  async webpack(config, options) {
+  async webpack(config: any, options: any) {
     // other webpack configuration
     return config;
   },

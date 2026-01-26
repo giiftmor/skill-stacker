@@ -8,9 +8,9 @@ const ReferencesForm: React.FC<ReferencesFormProps> = ({
   removeReference,
 }) => (
   <div>
-    {/* <label className="block text-sm font-mrefium text-gray-700">
+    <label className="block text-sm font-mrefium text-gray-700">
       References
-    </label> */}
+    </label>
     <div className="space-y-3 mt-2">
       {reference.map((ref) => (
         <div

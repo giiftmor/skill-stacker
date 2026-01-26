@@ -19,12 +19,12 @@ type ProfileFormProps = {
   setProfile: (value: string) => void;
 };
 
-// Skills Types
-type SkillsFormProps = {
-  skill: string[];
-  addSkill: () => void;
-  updateSkill: (idx: number, value: string) => void;
-  removeSkill: (idx: number) => void;
+// Competencies Types
+type CompetenciesFormProps = {
+  competency: string[];
+  addCompetency: () => void;
+  updateCompetency: (idx: number, value: string) => void;
+  removeCompetency: (idx: number) => void;
 };
 
 //Experience Form Types
@@ -66,6 +66,32 @@ type EducationFormProps = {
   removeEducation: (id: string | number) => void;
 };
 
+// Certificates Types
+type Certificate = {
+  id: string | number;
+  name: string;
+  date: string;
+};
+
+type CertificatesFormProps = {
+  certificate: Certificate[];
+  addCertificate: () => void;
+  updateCertificate: (
+    id: number | string,
+    field: keyof Certificate,
+    value: string,
+  ) => void;
+  removeCertificate: (id: string | number) => void;
+};
+
+// Skills Types
+type SkillsFormProps = {
+  skill: string[];
+  addSkill: () => void;
+  updateSkill: (idx: number, value: string) => void;
+  removeSkill: (idx: number) => void;
+};
+
 type Reference = {
   id: string | number;
   name: string;
@@ -87,23 +113,6 @@ type ReferencesFormProps = {
   removeReference: (id: string | number) => void;
 };
 
-type Certificate = {
-  id: string | number;
-  name: string;
-  date: string;
-};
-
-type CertificatesFormProps = {
-  certificate: Certificate[];
-  addCertificate: () => void;
-  updateCertificate: (
-    id: number | string,
-    field: keyof Certificate,
-    value: string,
-  ) => void;
-  removeCertificate: (id: string | number) => void;
-};
-
 type AdditionalInfoFormProps = {
   additionalInfo: string[];
   addAdditionalInfo: () => void;
@@ -121,10 +130,11 @@ type ExportButtonsProps = {
 type CVPreviewProps = {
   personal: PersonalInfo;
   profile?: string;
-  skill: string[];
+  competency: string[];
   experiences: Experience[];
   education: Education[];
   certificate: Certificate[];
+  skill: string[];
   reference: Reference[];
   additionalInfo: string[];
   className?: string;
@@ -135,12 +145,13 @@ type CVPreviewProps = {
 type ExportFunctionProps = {
   personal: PersonalInfo;
   profile: string;
-  skill: string[];
+  competency: string[];
   experiences: Experience[];
   education: Education[];
-  // certificate: Certificate[];
+  certificate: Certificate[];
+  skill: string[];
   reference: Reference[];
-  // additionalInfo: string[];
+  additionalInfo: string[];
   previewRef?: React.RefObject<HTMLDivElement | null>;
 };
 
@@ -152,11 +163,11 @@ type CVBuilderFormProps = {
   profile: any;
   setProfile: (value: string) => void;
 
-  ///////////----- Skills ------/////////////
-  skill: any[];
-  addSkill: () => void;
-  updateSkill: (idx: number, value: string) => void;
-  removeSkill: (idx: number) => void;
+  ///////////----- Competencies ------/////////////
+  competency: any[];
+  addCompetency: () => void;
+  updateCompetency: (idx: number, value: string) => void;
+  removeCompetency: (idx: number) => void;
 
   ///////////----- Experience ------/////////////
   experiences: any[];
@@ -198,6 +209,12 @@ type CVBuilderFormProps = {
   ) => void;
   removeCertificate: (id: string | number) => void;
 
+  ///////////----- Skills ------/////////////
+  skill: any[];
+  addSkill: () => void;
+  updateSkill: (idx: number, value: string) => void;
+  removeSkill: (idx: number) => void;
+
   ///////////----- Addtional Info ------/////////////
   additionalInfo: any[];
   addAdditionalInfo: () => void;
@@ -214,10 +231,11 @@ export type {
   //Form Props
   PersonalInfoFormProps,
   ProfileFormProps,
-  SkillsFormProps,
+  CompetenciesFormProps,
   ExperienceFormProps,
   EducationFormProps,
   CertificatesFormProps,
+  SkillsFormProps,
   ReferencesFormProps,
   AdditionalInfoFormProps,
 

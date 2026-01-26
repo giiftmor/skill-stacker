@@ -52,12 +52,12 @@ export async function initDb() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
-    // Create Skills table
+    // Create Competencies table
     await connection.query(`
-      CREATE TABLE IF NOT EXISTS skills (
+      CREATE TABLE IF NOT EXISTS competencies (
         id INT AUTO_INCREMENT PRIMARY KEY,
         cv_id INT NOT NULL,
-        skill VARCHAR(255) NOT NULL,
+        competency VARCHAR(255) NOT NULL,
         FOREIGN KEY (cv_id) REFERENCES cvs(id) ON DELETE CASCADE,
         INDEX idx_cv_id (cv_id)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
@@ -97,6 +97,17 @@ export async function initDb() {
         cv_id INT NOT NULL,
         name VARCHAR(255),
         date VARCHAR(255),
+        FOREIGN KEY (cv_id) REFERENCES cvs(id) ON DELETE CASCADE,
+        INDEX idx_cv_id (cv_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+
+    // Create Skills table
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS skills (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        cv_id INT NOT NULL,
+        skill VARCHAR(255) NOT NULL,
         FOREIGN KEY (cv_id) REFERENCES cvs(id) ON DELETE CASCADE,
         INDEX idx_cv_id (cv_id)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
@@ -148,7 +159,7 @@ export async function saveCV(data: {
     linkedin: string;
   };
   profile: string;
-  skills: string[];
+  competency: string[];
   experiences: Array<{
     company: string;
     role: string;
@@ -164,6 +175,7 @@ export async function saveCV(data: {
     name: string;
     date: string;
   }>;
+  skill: string[];
   reference: Array<{
     name: string;
     company: string;
@@ -195,15 +207,16 @@ export async function saveCV(data: {
 
     const cvId = (result as mysql.ResultSetHeader).insertId;
 
-    // Insert skills
-    if (data.skills.filter(Boolean).length > 0) {
-      const skillValues = data.skills
+    // Insert competencies
+    if (data.competency.filter(Boolean).length > 0) {
+      const competencyValues = data.competency
         .filter(Boolean)
-        .map((skill) => [cvId, skill]);
+        .map((competency) => [cvId, competency]);
 
-      await connection.query("INSERT INTO skills (cv_id, skill) VALUES ?", [
-        skillValues,
-      ]);
+      await connection.query(
+        "INSERT INTO competencies (cv_id, competency) VALUES ?",
+        [competencyValues],
+      );
     }
 
     // Insert experiences
@@ -263,6 +276,17 @@ export async function saveCV(data: {
       );
     }
 
+    // Insert skills
+    if (data.skill.filter(Boolean).length > 0) {
+      const skillValues = data.skill
+        .filter(Boolean)
+        .map((skill) => [cvId, skill]);
+
+      await connection.query("INSERT INTO skills (cv_id, skill) VALUES ?", [
+        skillValues,
+      ]);
+    }
+
     const validReference = data.reference.filter((e: any) => e.name || e.role);
     if (validReference.length > 0) {
       const refValues = validReference.map((ref: any) => [
@@ -311,7 +335,7 @@ export async function updateCV(cvId: number, data: any) {
     await connection.beginTransaction();
 
     // Update CV personal information
-    await connection.query(
+    const [updateResult] = await connection.query(
       `UPDATE cvs 
        SET full_name = ?, title = ?, phone = ?, email = ?, location = ?, 
        linkedin = ?, profile = ?, updated_at = CURRENT_TIMESTAMP
@@ -328,25 +352,38 @@ export async function updateCV(cvId: number, data: any) {
       ],
     );
 
+    // Validate update success
+    const updateResultSet = updateResult as mysql.ResultSetHeader;
+    if (updateResultSet.affectedRows === 0) {
+      throw new Error(`CV with ID ${cvId} not found`);
+    }
+
     // Delete existing related records
-    await connection.query("DELETE FROM skills WHERE cv_id = ?", [cvId]);
+    await connection.query("DELETE FROM competencies WHERE cv_id = ?", [cvId]);
     await connection.query("DELETE FROM experiences WHERE cv_id = ?", [cvId]);
     await connection.query("DELETE FROM education WHERE cv_id = ?", [cvId]);
+    await connection.query("DELETE FROM certificates WHERE cv_id = ?", [cvId]);
+    await connection.query("DELETE FROM skills WHERE cv_id = ?", [cvId]);
     await connection.query("DELETE FROM reference_list WHERE cv_id = ?", [
       cvId,
     ]);
+    await connection.query("DELETE FROM additional_info WHERE cv_id = ?", [
+      cvId,
+    ]);
 
-    // Re-insert new data
-    if (data.skills.filter(Boolean).length > 0) {
-      const skillValues = data.skills
+    // Re-insert competencies (independent section)
+    if (data.competency.filter(Boolean).length > 0) {
+      const competencyValues = data.competency
         .filter(Boolean)
-        .map((skill: string) => [cvId, skill]);
+        .map((competency: string) => [cvId, competency]);
 
-      await connection.query("INSERT INTO skills (cv_id, skill) VALUES ?", [
-        skillValues,
-      ]);
+      await connection.query(
+        "INSERT INTO competencies (cv_id, competency) VALUES ?",
+        [competencyValues],
+      );
     }
 
+    // Re-insert experiences (independent section)
     const validExperiences = data.experiences.filter(
       (e: any) => e.company || e.role,
     );
@@ -366,6 +403,7 @@ export async function updateCV(cvId: number, data: any) {
       );
     }
 
+    // Re-insert education (independent section)
     const validEducation = data.education.filter(
       (e: any) => e.institution || e.qualification,
     );
@@ -384,6 +422,7 @@ export async function updateCV(cvId: number, data: any) {
       );
     }
 
+    // Re-insert certificates (independent section)
     const validCertificate = data.certificate.filter(
       (e: any) => e.name || e.date,
     );
@@ -401,6 +440,18 @@ export async function updateCV(cvId: number, data: any) {
       );
     }
 
+    // Re-insert skills (independent section)
+    if (data.skill.filter(Boolean).length > 0) {
+      const skillValues = data.skill
+        .filter(Boolean)
+        .map((skill: string) => [cvId, skill]);
+
+      await connection.query("INSERT INTO skills (cv_id, skill) VALUES ?", [
+        skillValues,
+      ]);
+    }
+
+    // Re-insert references (independent section)
     const validReference = data.reference.filter((e: any) => e.name || e.role);
     if (validReference.length > 0) {
       const refValues = validReference.map((ref: any) => [
@@ -413,12 +464,13 @@ export async function updateCV(cvId: number, data: any) {
       ]);
 
       await connection.query(
-        `INSERT INTO reference_list (cv_id, name, company, role, email, phone )
+        `INSERT INTO reference_list (cv_id, name, company, role, email, phone)
          VALUES ?`,
         [refValues],
       );
     }
 
+    // Re-insert additional info (independent section)
     if (data.additionalInfo.filter(Boolean).length > 0) {
       const infoValues = data.additionalInfo
         .filter(Boolean)
@@ -455,8 +507,8 @@ export async function getCV(cvId: number) {
 
     const cv = cvArray[0];
 
-    const [skillRows] = await connection.query(
-      "SELECT skill FROM skills WHERE cv_id = ? ORDER BY id",
+    const [competencyRows] = await connection.query(
+      "SELECT competency FROM competencies WHERE cv_id = ? ORDER BY id",
       [cvId],
     );
 
@@ -471,6 +523,11 @@ export async function getCV(cvId: number) {
     );
     const [certificateRows] = await connection.query(
       "SELECT name, date FROM certificates WHERE cv_id = ? ORDER BY id",
+      [cvId],
+    );
+
+    const [skillRows] = await connection.query(
+      "SELECT skill FROM skills WHERE cv_id = ? ORDER BY id",
       [cvId],
     );
 
@@ -493,10 +550,13 @@ export async function getCV(cvId: number) {
         linkedin: cv.linkedin,
       },
       profile: cv.profile,
-      skills: (skillRows as mysql.RowDataPacket[]).map((s) => s.skill),
+      competency: (competencyRows as mysql.RowDataPacket[]).map(
+        (s) => s.competency,
+      ),
       experiences: experienceRows as mysql.RowDataPacket[],
       education: educationRows as mysql.RowDataPacket[],
       certificate: certificateRows as mysql.RowDataPacket[],
+      skill: (skillRows as mysql.RowDataPacket[]).map((s) => s.skill),
       reference: referenceRows as mysql.RowDataPacket[],
       additionalInfo: (additionalInfoRows as mysql.RowDataPacket[]).map(
         (info) => info.additionalInfo,

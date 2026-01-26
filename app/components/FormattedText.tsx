@@ -7,15 +7,15 @@ import {
 } from "../utils/textFormatter";
 
 interface FormattedTextProps {
-  text: string;
+  children: string;
   className?: string;
 }
 
 const FormattedText: React.FC<FormattedTextProps> = ({
-  text,
+  children,
   className = "",
 }) => {
-  const parsedItems = parseFormattedText(text);
+  const parsedItems = parseFormattedText(children);
   const groupedItems = groupFormattedText(parsedItems);
 
   return (
