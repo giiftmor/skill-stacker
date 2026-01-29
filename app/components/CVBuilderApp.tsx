@@ -6,7 +6,8 @@ import { exportToDocx, exportToPdf } from "./modules/exportModule";
 import { ArrowLeft } from "lucide-react";
 import NotificationModal from "./NotificationModal";
 import { useNotification } from "../hooks/useNotification";
-import CVPreviewWrapper from "./CVPreviewWrapper";
+import CVPreviewWrapper, { CVPreviewWrapperHandle } from "./CVPreviewWrapper";
+import Chat from "./Chat";
 
 export default function CVBuilderApp() {
   const [showCVList, setShowCVList] = useState(false);
@@ -57,6 +58,7 @@ export default function CVBuilderApp() {
   >("idle");
 
   const previewRef = useRef<HTMLDivElement>(null);
+  const printRef = useRef<CVPreviewWrapperHandle>(null);
 
   /***************************************************/
   /******************** Handlers *********************/
@@ -65,12 +67,12 @@ export default function CVBuilderApp() {
   const updatePersonal = (field: any, value: any) =>
     setPersonal((p) => ({ ...p, [field]: value }));
 
-  // Skills handlers
+  // Competencies handlers
   const addCompetency = () => setCompetencies((s) => [...s, ""]);
   const updateCompetency = (index: any, value: any) => {
-    const s = [...competency];
-    s[index] = value;
-    setCompetencies(s);
+    const comp = [...competency];
+    comp[index] = value;
+    setCompetencies(comp);
   };
   const removeCompetency = (i: number) =>
     setCompetencies((s) => s.filter((_, idx) => idx !== i));
@@ -365,6 +367,10 @@ export default function CVBuilderApp() {
     });
   };
 
+  const handlePrintToPdf = () => {
+    printRef.current?.print();
+  };
+
   return (
     <div className="min-h-screen bg-gray-400 p-6">
       {/* <button
@@ -402,6 +408,12 @@ export default function CVBuilderApp() {
             >
               {showCVList ? "✏️ Edit CV" : "📋 Manage CVs"}
             </button>
+            <button
+              onClick={handleNewCV}
+              className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium"
+            >
+              TEST AI CHAT
+            </button>
           </div>
         </div>
       </div>
@@ -430,10 +442,10 @@ export default function CVBuilderApp() {
               updatePersonal={updatePersonal}
               profile={profile}
               setProfile={setProfile}
-              skill={skill}
-              updateSkill={updateSkill}
-              addSkill={addSkill}
-              removeSkill={removeSkill}
+              competency={competency}
+              updateCompetency={updateCompetency}
+              addCompetency={addCompetency}
+              removeCompetency={removeCompetency}
               experiences={experiences}
               addExperience={addExperience}
               updateExperience={updateExperience}
@@ -446,9 +458,10 @@ export default function CVBuilderApp() {
               addCertificate={addCertificate}
               updateCertificate={updateCertificate}
               removeCertificate={removeCertificate}
-              updateCompetency={updateCompetency}
-              addCompetency={addCompetency}
-              removeCompetency={removeCompetency}
+              skill={skill}
+              updateSkill={updateSkill}
+              addSkill={addSkill}
+              removeSkill={removeSkill}
               reference={reference}
               updateReference={updateReference}
               addReference={addReference}
@@ -459,6 +472,7 @@ export default function CVBuilderApp() {
               removeAdditionalInfo={removeAdditionalInfo}
               exportToDocx={handleExportToDocx}
               exportToPdf={handleExportToPdf}
+              printToPdf={handlePrintToPdf}
               saveToDatabase={handleSaveToDatabase}
               saveStatus={saveStatus}
               currentCvId={currentCvId}
@@ -475,7 +489,10 @@ export default function CVBuilderApp() {
               reference={reference}
               additionalInfo={additionalInfo}
               previewRef={previewRef}
+              ref={printRef}
             />
+
+            <Chat />
           </div>
         )}
       </div>

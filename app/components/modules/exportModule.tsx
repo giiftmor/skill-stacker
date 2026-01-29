@@ -10,8 +10,10 @@ import {
   pdf,
   Font,
 } from "@react-pdf/renderer";
+import { A4_PAGE_STYLE } from "./ui/printStyles";
 
 import type { ExportFunctionProps } from "../../types/global";
+import { forwardRef, RefObject, useImperativeHandle, useRef } from "react";
 
 Font.register({
   family: "Roboto",
@@ -533,3 +535,9 @@ export const exportToDocx = async ({
 
 // Keep the advanced export as a fallback (not used by default)
 export const exportToPdfAdvanced = exportToPdf;
+function useReactToPrint(arg0: {
+  contentRef: RefObject<HTMLDivElement | null>;
+  documentTitle: string;
+}) {
+  throw new Error("Function not implemented.");
+}

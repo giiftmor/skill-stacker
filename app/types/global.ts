@@ -1,3 +1,5 @@
+import { CVPreviewWrapperHandle } from "../components/CVPreviewWrapper";
+
 // Personal Information Types
 type PersonalInfo = {
   fullName: string;
@@ -141,6 +143,12 @@ type CVPreviewProps = {
   previewRef?: React.Ref<HTMLDivElement>;
 };
 
+type CVPreviewWrapperProps = CVPreviewProps & {
+  className?: string;
+  showExportButton?: boolean;
+  onClick?: () => void;
+};
+
 // Export Function Props
 type ExportFunctionProps = {
   personal: PersonalInfo;
@@ -153,6 +161,7 @@ type ExportFunctionProps = {
   reference: Reference[];
   additionalInfo: string[];
   previewRef?: React.RefObject<HTMLDivElement | null>;
+  printRef?: React.RefObject<CVPreviewWrapperHandle | null>;
 };
 
 //Main CV Builder Form Props
@@ -224,7 +233,6 @@ type CVBuilderFormProps = {
   ///////////----- Education ------/////////////
   exportToDocx: () => void;
   exportToPdf: () => void;
-  className?: string;
 };
 
 export type {
@@ -242,6 +250,7 @@ export type {
   //Function/Component Props
   ExportButtonsProps,
   CVPreviewProps,
+  CVPreviewWrapperProps,
   CVBuilderFormProps,
   ExportFunctionProps,
 };

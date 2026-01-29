@@ -23,22 +23,15 @@
 
 body {
   background: var(--background);
-  color: var(--background);
+  color: var(--foreground);
   font-family: 'century-gothic', sans-serif;
-
 }
 
-/* h1 {
-  font-size: 3rem;
-  font-weight: 600;
-  color: #212529;
-  letter-spacing: 0.05em;
-} */
+/* ===================================
+   CV PREVIEW STYLES (MS Word to CSS)
+   =================================== */
 
-/* Personal Information / Header */
-/* I will be doing a MS Word Stylesto CSS Conversion explain */
-
-/* MS Word Style : TITLE */
+/* MS Word Style: TITLE */
 h1.user-name {
   font-size: 3.5rem;
   font-weight: 800;
@@ -46,7 +39,7 @@ h1.user-name {
   letter-spacing: 0.1em;
 }
 
-/* MS Word Style : SUBTLE REFERENCING */
+/* MS Word Style: SUBTLE REFERENCING */
 .professional-title {
   font-size: 1.25rem;
   font-weight: 400;
@@ -55,7 +48,7 @@ h1.user-name {
   letter-spacing: 0.1em;
 }
 
-/* MS Word Style : HEADING 1 */
+/* MS Word Style: HEADING 1 */
 h2.heading_1 {
   font-size: 1.5rem;
   font-weight: 200;
@@ -63,10 +56,9 @@ h2.heading_1 {
   border-bottom: 1px solid #ff7b00;
   margin-bottom: 0.75rem;
   text-transform: uppercase;
-
 }
 
-/* MS Word Style : NORMAL/PARAGRAPH */
+/* MS Word Style: NORMAL/PARAGRAPH */
 .normal-text {
   font-size: 14px;
   font-weight: 400;
@@ -74,10 +66,89 @@ h2.heading_1 {
   line-height: 1.5;
 }
 
-/* MS Word Style : NORMAL - INSTITUTION */
+/* MS Word Style: NORMAL - INSTITUTION */
 .institution-name {
   font-size: 1.125rem;
   font-weight: 900;
   color: #1a202c;
   text-transform: uppercase;
+}
+
+/* ===================================
+   PRINT STYLES
+   =================================== */
+
+@media print {
+
+  /* Hide non-print elements */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Force white background */
+  html,
+  body {
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Remove shadows and rounded corners */
+  * {
+    box-shadow: none !important;
+  }
+
+  .cv-preview-container {
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 15mm !important;
+    width: 210mm !important;
+  }
+
+
+
+  /* ✅ Allow long sections to split naturally across pages */
+  section {
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+
+  /* Keep headings near their content without being overly strict */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    break-after: avoid-page;
+    page-break-after: avoid;
+  }
+
+  /* Reasonable paragraph/list widows/orphans for professional look */
+  p,
+  li {
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* Keep a single list item together; fine to split between items */
+  li,
+  .mb-3 {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Paragraph blocks may break if needed */
+  .mb-4 {
+    page-break-inside: auto;
+    break-inside: auto;
+  }
+
+}
+
+/* A4 Page Sizing (for preview) */
+@page {
+  size: A4;
+  margin: 15mm;
 }

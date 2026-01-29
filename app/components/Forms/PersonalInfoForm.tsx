@@ -15,7 +15,7 @@ const PersonalInfoForm = ({
         Full name
       </label>
       <input
-        className="w-full border border-gray-300 rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        className="w-full border  border-gray-300 rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         value={personal.fullName}
         onChange={(e) => updatePersonal("fullName", e.target.value)}
       />

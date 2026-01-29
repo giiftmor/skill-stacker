@@ -14,7 +14,7 @@ interface CVSummary {
 
 interface CVListManagerProps {
   onLoadCV: (id: number) => void;
-  currentCvId: number | null;
+  currentCvId: string | number | null;
 }
 
 export default function CVListManager({
@@ -26,7 +26,7 @@ export default function CVListManager({
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "date">("date");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(
-    null
+    null,
   );
 
   // Fetch all CVs
@@ -79,7 +79,7 @@ export default function CVListManager({
       (cv) =>
         cv.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         cv.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        cv.title.toLowerCase().includes(searchTerm.toLowerCase())
+        cv.title.toLowerCase().includes(searchTerm.toLowerCase()),
     )
     .sort((a, b) => {
       if (sortBy === "name") {

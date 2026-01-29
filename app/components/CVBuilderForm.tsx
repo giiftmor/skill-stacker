@@ -1,32 +1,35 @@
 // app/components/CVBuilderForm.tsx - With Smooth Accordion Animations
 
 import React, { useState } from "react";
-import PersonalInfoForm from "./Forms/PersonalInfoForm";
-import ProfileForm from "./Forms/ProfileForm";
-import SkillsForm from "./Forms/SkillsForm";
-import ExperienceForm from "./Forms/ExperienceForm";
-import EducationForm from "./Forms/EducationForm";
-import ReferencesForm from "./Forms/ReferencesForm";
-import ExportButtons from "./ExportButtons";
+import PersonalInfoForm from "./forms/PersonalInfoForm";
+import ProfileForm from "./forms/ProfileForm";
+import SkillsForm from "./forms/SkillsForm";
+import ExperienceForm from "./forms/ExperienceForm";
+import EducationForm from "./forms/EducationForm";
+import ReferencesForm from "./forms/ReferencesForm";
+import ExportButtons from "./forms/ExportButtons";
 import { ChevronDown } from "lucide-react";
 
 import type { CVBuilderFormProps } from "../types/global";
-import CertificatesForm from "./Forms/CertificatesForm";
-import AdditionalInfoForm from "./Forms/AdditionalInfoForm";
+import CertificatesForm from "./forms/CertificatesForm";
+import AdditionalInfoForm from "./forms/AdditionalInfoForm";
+import CompetenciesForm from "./forms/CompetenciesForm";
 
 interface ExtendedCVBuilderFormProps extends CVBuilderFormProps {
   saveToDatabase: () => void;
   saveStatus: "idle" | "saving" | "success" | "error";
   currentCvId: string | number | null;
+  printToPdf?: () => void;
 }
 
 type AccordionSection =
   | "personal"
   | "profile"
-  | "skills"
+  | "competencies"
   | "experience"
   | "education"
   | "certificates"
+  | "skills"
   | "references"
   | "additionalInfo"
   | null;
@@ -36,10 +39,10 @@ const CVBuilderForm: React.FC<ExtendedCVBuilderFormProps> = ({
   updatePersonal,
   profile,
   setProfile,
-  skill,
-  updateSkill,
-  addSkill,
-  removeSkill,
+  competency,
+  updateCompetency,
+  addCompetency,
+  removeCompetency,
   experiences,
   addExperience,
   updateExperience,
@@ -52,6 +55,10 @@ const CVBuilderForm: React.FC<ExtendedCVBuilderFormProps> = ({
   addCertificate,
   updateCertificate,
   removeCertificate,
+  skill,
+  updateSkill,
+  addSkill,
+  removeSkill,
   reference,
   updateReference,
   addReference,
@@ -65,6 +72,7 @@ const CVBuilderForm: React.FC<ExtendedCVBuilderFormProps> = ({
   saveToDatabase,
   saveStatus,
   currentCvId,
+  printToPdf,
 }) => {
   const [openAccordion, setOpenAccordion] =
     useState<AccordionSection>("personal");
@@ -118,7 +126,7 @@ const CVBuilderForm: React.FC<ExtendedCVBuilderFormProps> = ({
   };
 
   return (
-    <div className="lg:col-span-1 bg-white p-6 rounded-lg shadow">
+    <div className="lg:col-span-1 max-h-fit overflow-y-auto  bg-white p-6 rounded-lg shadow text-black">
       <h2 className="text-xl font-semibold mb-4">Spectres | Skill Stack</h2>
 
       {/* Current CV ID Indicator */}
@@ -140,12 +148,12 @@ const CVBuilderForm: React.FC<ExtendedCVBuilderFormProps> = ({
           <ProfileForm profile={profile} setProfile={setProfile} />
         </AccordionItem>
 
-        <AccordionItem id="skills" title="Technical Skills">
-          <SkillsForm
-            skill={skill}
-            updateSkill={updateSkill}
-            addSkill={addSkill}
-            removeSkill={removeSkill}
+        <AccordionItem id="competencies" title="Core Competencies">
+          <CompetenciesForm
+            competency={competency}
+            updateCompetency={updateCompetency}
+            addCompetency={addCompetency}
+            removeCompetency={removeCompetency}
           />
         </AccordionItem>
 
@@ -173,6 +181,14 @@ const CVBuilderForm: React.FC<ExtendedCVBuilderFormProps> = ({
             addCertificate={addCertificate}
             updateCertificate={updateCertificate}
             removeCertificate={removeCertificate}
+          />
+        </AccordionItem>
+        <AccordionItem id="skills" title="Technical Competencies">
+          <SkillsForm
+            skill={skill}
+            updateSkill={updateSkill}
+            addSkill={addSkill}
+            removeSkill={removeSkill}
           />
         </AccordionItem>
 
@@ -213,7 +229,11 @@ const CVBuilderForm: React.FC<ExtendedCVBuilderFormProps> = ({
           </button>
         </div>
 
-        <ExportButtons exportToDocx={exportToDocx} exportToPdf={exportToPdf} />
+        <ExportButtons
+          exportToDocx={exportToDocx}
+          exportToPdf={exportToPdf}
+          printToPdf={printToPdf}
+        />
       </div>
     </div>
   );
