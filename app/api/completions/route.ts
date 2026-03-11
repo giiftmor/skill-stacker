@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 export async function POST(req: NextRequest) {
   const body = await req.json();
 
-  const upstream = await fetch(`${baseSchema.baseUrl}/chat/completions`, {
+  const upstream = await fetch(`${baseSchema.baseUrl}/completions`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${baseSchema.apiKey}`,
@@ -14,8 +14,9 @@ export async function POST(req: NextRequest) {
       Accept: "text/event-stream",
     },
     body: JSON.stringify({
-      model: body.model ?? "gpt-3.5-turbo",
-      messages: body.messages ?? [],
+      model: body.model ?? "gpt-3.5-turbo-instruct",
+      prompt: body.prompt,
+      max_tokens: body.max_tokens ?? 256,
       temperature: body.temperature ?? 0.7,
       stream: body.stream ?? true,
     }),

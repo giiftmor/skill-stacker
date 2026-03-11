@@ -108,6 +108,20 @@ const CVPreview = forwardRef<HTMLDivElement, CVPreviewProps>(
           </section>
         )}
 
+        {/* Core Competencies */}
+        {competency.filter(Boolean).length > 0 && (
+          <section className="mb-6 cv-section">
+            <h2 className="heading_1">Core Competencies</h2>
+            <ul className="list-disc pl-5 space-y-1 text-gray-700">
+              {competency.filter(Boolean).map((comp, idx) => (
+                <li className="normal-text" key={`comp-${idx}`}>
+                  {comp}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
         {/* Career History */}
         {experiences.some((exp) => exp.company || exp.role) && (
           <section className="mb-6 cv-section">
@@ -133,20 +147,6 @@ const CVPreview = forwardRef<HTMLDivElement, CVPreviewProps>(
                 )}
               </div>
             ))}
-          </section>
-        )}
-
-        {/* Core Competencies */}
-        {competency.filter(Boolean).length > 0 && (
-          <section className="mb-6 cv-section">
-            <h2 className="heading_1">Core Competencies</h2>
-            <ul className="list-disc pl-5 space-y-1 text-gray-700">
-              {competency.filter(Boolean).map((comp, idx) => (
-                <li className="normal-text" key={`comp-${idx}`}>
-                  {comp}
-                </li>
-              ))}
-            </ul>
           </section>
         )}
 

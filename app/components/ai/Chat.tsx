@@ -1,7 +1,7 @@
 // code/components/Chat.tsx
 "use client";
 import React, { useState } from "react";
-import FormattedText from "./FormattedText";
+import FormattedText from "./../FormattedText";
 
 export default function Chat() {
   const [input, setInput] = useState("");

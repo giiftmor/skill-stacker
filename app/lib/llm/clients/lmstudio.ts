@@ -1,11 +1,11 @@
 // code/lib/llm/clients/lmstudio.ts
 // Uses OpenAI SDK pointed at LM Studio's OpenAI-compatible server
 import OpenAI from "openai";
-import { ENV } from "@/env";
+import { ENV } from "@/app/lib/env";
 
 const client = new OpenAI({
-  apiKey: ENV.LMSTUDIO_API_KEY || "lm-studio",
-  baseURL: ENV.LMSTUDIO_BASE_URL,
+  apiKey: ENV.LLM_API_KEY || "lm",
+  baseURL: ENV.LLM_BASE_URL,
 });
 
 export async function streamLMStudioChat(
@@ -13,7 +13,7 @@ export async function streamLMStudioChat(
   prompt: string,
 ): Promise<ReadableStream<Uint8Array>> {
   const res = await client.chat.completions.create({
-    model: ENV.LMSTUDIO_MODEL,
+    model: ENV.LLM_MODEL,
     stream: true,
     messages: [
       ...(system ? [{ role: "system", content: system } as const] : []),
