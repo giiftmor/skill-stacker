@@ -1,19 +1,19 @@
 "use client";
-import { saveAs } from "file-saver";
-import { Document as DocxDocument, Packer, Paragraph, TextRun } from "docx";
 import {
   Document,
+  Font,
   Page,
+  pdf,
+  StyleSheet,
   Text,
   View,
-  StyleSheet,
-  pdf,
-  Font,
 } from "@react-pdf/renderer";
-import { A4_PAGE_STYLE } from "./ui/printStyles";
+import { Document as DocxDocument, Packer, Paragraph, TextRun } from "docx";
+import { saveAs } from "file-saver";
+import { forwardRef, type RefObject, useImperativeHandle, useRef } from "react";
 
 import type { ExportFunctionProps } from "../../types/global";
-import { forwardRef, RefObject, useImperativeHandle, useRef } from "react";
+import { A4_PAGE_STYLE } from "../ui/printStyles";
 
 Font.register({
   family: "Roboto",
@@ -119,15 +119,10 @@ const styles = StyleSheet.create({
     color: "#444",
   },
   gridContainer: {
-    display: "grid",
-    gridTemplateColumns: "repeat(1, minmax(250px, 1fr))",
+    display: "flex" as const,
+    flexDirection: "row",
+    flexWrap: "wrap" as const,
     gap: 6,
-    "@sm": {
-      gridTemplateColumns: "repeat(2, minmax(250px, 1fr))",
-    },
-    "@md": {
-      gridTemplateColumns: "repeat(3, minmax(250px, 1fr))",
-    },
   },
 });
 
@@ -401,7 +396,7 @@ export const exportToDocx = async ({
                   }),
                   ...experiences
                     .filter((exp) => exp.company || exp.role)
-                    .map((exp) => [
+                    .flatMap((exp) => [
                       new Paragraph({
                         children: [
                           new TextRun({
@@ -432,8 +427,7 @@ export const exportToDocx = async ({
                           ]
                         : []),
                       new Paragraph({ children: [new TextRun(" ")] }),
-                    ])
-                    .flat(),
+                    ]),
                 ]
               : []),
 
@@ -451,7 +445,7 @@ export const exportToDocx = async ({
                   }),
                   ...education
                     .filter((ed) => ed.institution || ed.qualification)
-                    .map((ed) => [
+                    .flatMap((ed) => [
                       new Paragraph({
                         children: [
                           new TextRun({
@@ -473,8 +467,7 @@ export const exportToDocx = async ({
                         ],
                       }),
                       new Paragraph({ children: [new TextRun(" ")] }),
-                    ])
-                    .flat(),
+                    ]),
                 ]
               : []),
 
@@ -499,19 +492,26 @@ export const exportToDocx = async ({
               : []),
 
             // References Section
-            ...(reference.filter(Boolean).length > 0
+            ...(reference.filter((r) => r && r.name).length > 0
               ? [
                   new Paragraph({
                     children: [
                       new TextRun({ text: "References", bold: true, size: 28 }),
                     ],
                   }),
-                  ...reference.filter(Boolean).map(
-                    (ref) =>
-                      new Paragraph({
-                        children: [new TextRun({ text: ref, size: 22 })],
-                      }),
-                  ),
+                  ...reference
+                    .filter((r) => r && r.name)
+                    .map(
+                      (ref) =>
+                        new Paragraph({
+                          children: [
+                            new TextRun({
+                              text: `${ref.name}${ref.role ? ` - ${ref.role}` : ""}${ref.company ? ` at ${ref.company}` : ""}`,
+                              size: 22,
+                            }),
+                          ],
+                        }),
+                    ),
                 ]
               : []),
           ],

@@ -1,13 +1,16 @@
 // app/components/CVBuilderApp.tsx - Final Version with CV Manager
-import React, { useState, useRef } from "react";
+
+import { ArrowLeft } from "lucide-react";
+import React, { useRef, useState } from "react";
+import { useNotification } from "../hooks/useNotification";
+import Chat from "./ai/Chat";
 import CVBuilderForm from "./CVBuilderForm";
 import CVListManager from "./CVListManager";
+import CVPreviewWrapper, {
+  type CVPreviewWrapperHandle,
+} from "./CVPreviewWrapper";
 import { exportToDocx, exportToPdf } from "./modules/exportModule";
-import { ArrowLeft } from "lucide-react";
 import NotificationModal from "./NotificationModal";
-import { useNotification } from "../hooks/useNotification";
-import CVPreviewWrapper, { CVPreviewWrapperHandle } from "./CVPreviewWrapper";
-import Chat from "./ai/Chat";
 import Page from "./page";
 
 export default function CVBuilderApp() {
@@ -421,12 +424,14 @@ export default function CVBuilderApp() {
             >
               {showCVList ? "✏️ Edit CV" : "📋 Manage CVs"}
             </button>
+            {/* AI Chat feature muted - to be re-enabled later
             <button
               onClick={() => handleFunctionSwitch("ai")}
               className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium"
             >
               TEST AI CHAT
             </button>
+            */}
           </div>
         </div>
       </div>
