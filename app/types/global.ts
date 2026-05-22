@@ -1,4 +1,5 @@
 import { CVPreviewWrapperHandle } from "../components/CVPreviewWrapper";
+import type { ReactNode } from "react";
 
 // Personal Information Types
 type PersonalInfo = {
@@ -141,6 +142,10 @@ type CVPreviewProps = {
   additionalInfo: string[];
   className?: string;
   previewRef?: React.Ref<HTMLDivElement>;
+  templateId?: string;
+  themeId?: string;
+  fontPairId?: string;
+  photoUrl?: string;
 };
 
 type CVPreviewWrapperProps = CVPreviewProps & {
@@ -235,6 +240,47 @@ type CVBuilderFormProps = {
   exportToPdf: () => void;
 };
 
+// Template Types
+interface TemplatePreviewProps {
+  personal: PersonalInfo;
+  profile?: string;
+  competency: string[];
+  experiences: Experience[];
+  education: Education[];
+  certificate: Certificate[];
+  skill: string[];
+  reference: Reference[];
+  additionalInfo: string[];
+  colors: {
+    primary: string;
+    secondary: string;
+    accent: string;
+    text: string;
+    background: string;
+  };
+  fontPair: {
+    heading: string;
+    body: string;
+  };
+  photoUrl?: string;
+}
+
+interface TemplateSection {
+  key: string;
+  content: ReactNode;
+  estimatedHeight: number;
+  canBreak: boolean;
+  isOverflow?: boolean;
+  clipFrom?: number;
+}
+
+interface TemplateSectionsResult {
+  sidebar?: TemplateSection[];
+  main: TemplateSection[];
+}
+
+type TemplateComponent = (props: TemplatePreviewProps) => TemplateSectionsResult;
+
 export type {
   //Form Props
   PersonalInfoFormProps,
@@ -253,4 +299,10 @@ export type {
   CVPreviewWrapperProps,
   CVBuilderFormProps,
   ExportFunctionProps,
+
+  // Template types
+  TemplatePreviewProps,
+  TemplateSection,
+  TemplateSectionsResult,
+  TemplateComponent,
 };
