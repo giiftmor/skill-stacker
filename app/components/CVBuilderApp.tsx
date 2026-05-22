@@ -1,4 +1,7 @@
 // app/components/CVBuilderApp.tsx
+// @deprecated - Replaced by per-template components (app/components/templates/)
+// and page-based routing (app/cvs/new/, app/cvs/[id]/edit/, app/cvs/[id]/preview/).
+// Kept for reference only. Will be removed after migration is stable.
 import React, { useState, useRef } from "react";
 import CVBuilderForm from "./CVBuilderForm";
 import CVListManager from "./CVListManager";
