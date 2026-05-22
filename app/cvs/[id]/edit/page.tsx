@@ -8,6 +8,7 @@ import CVBuilderForm from "../../../components/CVBuilderForm";
 import CVPreviewWrapper from "../../../components/CVPreviewWrapper";
 import { useAutoSave } from "../../../hooks/useAutoSave";
 import { TemplateId, TemplateSettings } from "../../../lib/templates/templateDefinitions";
+import { exportCV } from "../../../lib/export/exportDispatcher";
 
 export default function EditCVPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -113,6 +114,24 @@ export default function EditCVPage({ params }: { params: Promise<{ id: string }>
   const updateCompetency = (index: number, value: string) => { const c = [...competency]; c[index] = value; setCompetencies(c); };
   const removeCompetency = (i: number) => setCompetencies((c) => c.filter((_, idx) => idx !== i));
 
+  const handleExportToPdf = () => {
+    exportCV("pdf", {
+      data: { personal, profile, competency, experiences, education, certificate, skill, reference, additionalInfo },
+      templateId: (templateSettings?.template || "classic") as TemplateId,
+      themeId: templateSettings?.theme,
+      fontPairId: templateSettings?.fontPair,
+    });
+  };
+
+  const handleExportToDocx = () => {
+    exportCV("docx", {
+      data: { personal, profile, competency, experiences, education, certificate, skill, reference, additionalInfo },
+      templateId: (templateSettings?.template || "classic") as TemplateId,
+      themeId: templateSettings?.theme,
+      fontPairId: templateSettings?.fontPair,
+    });
+  };
+
   if (loading) {
     return <div className="min-h-screen bg-gray-100 flex items-center justify-center">Loading...</div>;
   }
@@ -174,9 +193,9 @@ export default function EditCVPage({ params }: { params: Promise<{ id: string }>
               addAdditionalInfo={addAdditionalInfo}
               updateAdditionalInfo={updateAdditionalInfo}
               removeAdditionalInfo={removeAdditionalInfo}
-              exportToDocx={() => {}}
-              exportToPdf={() => {}}
-              printToPdf={() => {}}
+              exportToDocx={handleExportToDocx}
+              exportToPdf={handleExportToPdf}
+              printToPdf={handleExportToPdf}
               saveToDatabase={() => {}}
               saveStatus="idle"
               currentCvId={cvId}
