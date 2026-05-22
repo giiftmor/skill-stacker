@@ -139,11 +139,11 @@ export default function EditCVPage({ params }: { params: Promise<{ id: string }>
   };
 
   if (loading) {
-    return <div className="min-h-screen bg-gray-100 flex items-center justify-center">Loading...</div>;
+    return <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center animate-pulse-subtle text-[#8a8a8a]">Loading...</div>;
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-[#0d0d0d]">
       <Header
         title="Edit CV"
         saveStatus={status}
@@ -151,7 +151,7 @@ export default function EditCVPage({ params }: { params: Promise<{ id: string }>
         actions={
           <button
             onClick={() => router.push(`/cvs/${cvId}/preview`)}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="px-4 py-2 bg-[#d4a853] text-[#0d0d0d] hover:bg-[#b8923e] rounded font-semibold"
           >
             Preview
           </button>

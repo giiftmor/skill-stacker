@@ -49,11 +49,11 @@ export default function NewCVPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-[#0d0d0d]">
       <Header title="Create New CV" />
       <main className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-6">Choose Your Template</h2>
+        <div className="max-w-5xl mx-auto bg-[#1a1a1a] rounded-xl border border-[#333] p-8">
+          <h2 className="font-[family-name:var(--font-heading)] text-xl text-[#e8e6e3] mb-6">Choose Your Template</h2>
 
           <TemplateSelector
             selectedTemplate={selectedTemplate}
@@ -67,7 +67,7 @@ export default function NewCVPage() {
           <div className="mt-8 flex justify-end">
             <button type="button"
               onClick={handleCreate}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              className="px-8 py-3 bg-[#d4a853] text-[#0d0d0d] hover:bg-[#b8923e] font-semibold rounded-lg transition-colors"
             >
               Continue to Editor →
             </button>

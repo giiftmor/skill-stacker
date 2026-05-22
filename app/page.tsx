@@ -1,53 +1,73 @@
 // app/page.tsx - Landing page / redirect to CVs
 "use client";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { FileText, Sparkles, Palette, Cloud, History } from "lucide-react";
 import Link from "next/link";
 
 export default function Home() {
-  const router = useRouter();
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-8 text-center">
-        <div className="mb-6">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Skill Stacker</h1>
-          <p className="text-lg text-gray-600">Professional CV Builder</p>
+    <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center p-4">
+      <div className="max-w-2xl w-full">
+        <div className="mb-8 animate-fade-in-up">
+          <h1 className="font-[family-name:var(--font-heading)] text-4xl md:text-5xl lg:text-6xl font-bold text-[#e8e6e3] leading-tight mb-4">
+            Skill Stacker
+          </h1>
+          <p className="text-[#8a8a8a] text-lg md:text-xl">
+            Professional CV Builder
+          </p>
         </div>
-        
-        <div className="space-y-4 mb-8">
-          <p className="text-gray-600">
-            Create beautiful, professional CVs with our easy-to-use builder. 
-            Choose from 7 professional templates, customize colors and fonts, 
+
+        <div className="mb-10 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
+          <p className="text-[#8a8a8a] text-base leading-relaxed mb-6">
+            Create beautiful, professional CVs with our easy-to-use builder.
+            Choose from 7 professional templates, customize colors and fonts,
             and export to PDF or Word.
           </p>
-          
-          <div className="flex flex-wrap justify-center gap-3 text-sm">
-            <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full">7 Templates</span>
-            <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full">PDF Export</span>
-            <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full">Word Export</span>
-            <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full">Auto-Save</span>
-            <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full">Version History</span>
+
+          <div className="flex flex-wrap gap-2 text-sm">
+            <span className="px-3 py-1 bg-[#d4a85315] text-[#d4a853] rounded-full">7 Templates</span>
+            <span className="px-3 py-1 bg-[#d4a85315] text-[#d4a853] rounded-full">PDF Export</span>
+            <span className="px-3 py-1 bg-[#d4a85315] text-[#d4a853] rounded-full">Word Export</span>
+            <span className="px-3 py-1 bg-[#d4a85315] text-[#d4a853] rounded-full">Auto-Save</span>
+            <span className="px-3 py-1 bg-[#d4a85315] text-[#d4a853] rounded-full">Version History</span>
           </div>
         </div>
-        
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+
+        <div className="flex flex-col sm:flex-row gap-4 mb-10 animate-fade-in-up" style={{ animationDelay: "200ms" }}>
           <Link
             href="/cvs/new"
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-lg"
+            className="bg-[#d4a853] text-[#0d0d0d] hover:bg-[#b8923e] font-semibold px-8 py-3 rounded-lg transition-all duration-200 text-center"
           >
+            <FileText className="inline w-5 h-5 mr-2 -mt-0.5" />
             Create New CV
           </Link>
           <Link
             href="/cvs"
-            className="px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+            className="border border-[#333] text-[#e8e6e3] hover:border-[#d4a853] px-8 py-3 rounded-lg transition-all duration-200 text-center"
           >
             View My CVs
           </Link>
         </div>
-        
-        <div className="mt-8 pt-6 border-t text-sm text-gray-500">
-          <p>Your CVs are automatically saved as you work.</p>
+
+        <div className="pt-6 border-t border-[#333] animate-fade-in-up" style={{ animationDelay: "300ms" }}>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="flex items-center gap-3 text-[#8a8a8a] text-sm">
+              <Sparkles className="w-4 h-4 text-[#d4a853]" />
+              <span>7 Templates</span>
+            </div>
+            <div className="flex items-center gap-3 text-[#8a8a8a] text-sm">
+              <Palette className="w-4 h-4 text-[#d4a853]" />
+              <span>Custom Themes</span>
+            </div>
+            <div className="flex items-center gap-3 text-[#8a8a8a] text-sm">
+              <Cloud className="w-4 h-4 text-[#d4a853]" />
+              <span>Auto-Save</span>
+            </div>
+            <div className="flex items-center gap-3 text-[#8a8a8a] text-sm">
+              <History className="w-4 h-4 text-[#d4a853]" />
+              <span>Version History</span>
+            </div>
+          </div>
+          <p className="mt-6 text-[#666] text-xs">Your CVs are automatically saved as you work.</p>
         </div>
       </div>
     </div>
