@@ -1,5 +1,5 @@
 // app/components/CVPreview.tsx - Section Overflow Pagination with Navigation
-import React, { forwardRef, useMemo, useState, useCallback, useEffect, useRef } from "react";
+import { forwardRef, useMemo, useState, useCallback, useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import type { CVPreviewProps } from "../types/global";
 import { getTemplateSections, type TemplatePreviewProps } from "./templates";
@@ -40,18 +40,6 @@ interface Section {
   isOverflow?: boolean;
   clipFrom?: number;
 }
-
-const ESTIMATED_HEIGHTS = {
-  header: 80,
-  profile: 100,
-  competencyList: 100,
-  experienceEntry: 180,
-  educationEntry: 80,
-  certificateEntry: 50,
-  skillList: 100,
-  referenceEntry: 80,
-  additionalInfo: 60,
-} as const;
 
 const DEBUG_MODE = false;
 
@@ -110,7 +98,6 @@ const CVPreview = forwardRef<HTMLDivElement, CVPreviewComponentProps>(
       reference,
       additionalInfo,
       currentPage = 0,
-      onPageChange,
       onTotalPagesChange,
       showAllPages = false,
       templateId = "classic",
@@ -123,9 +110,7 @@ const CVPreview = forwardRef<HTMLDivElement, CVPreviewComponentProps>(
     const [debugEnabled, setDebugEnabled] = useState(false);
     const [showBreakLines, setShowBreakLines] = useState(false);
     const sectionRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-    const [measuredHeights, setMeasuredHeights] = useState<Map<string, number>>(new Map());
-    const observerRef = useRef<ResizeObserver | null>(null);
-    const debounceRef = useRef<NodeJS.Timeout | null>(null);
+    const measuredHeights = useMemo(() => new Map<string, number>(), []);
 
     const colors = useMemo(() => resolveColors(templateId, themeId), [templateId, themeId]);
     const fontPair = useMemo(() => resolveFontPair(fontPairId), [fontPairId]);
@@ -202,13 +187,13 @@ const CVPreview = forwardRef<HTMLDivElement, CVPreviewComponentProps>(
         {templateStyle && <style>{templateStyle}</style>}
         {DEBUG_MODE && (
           <div className="fixed top-4 right-4 z-50 flex gap-2">
-            <button
+            <button type="button"
               onClick={toggleDebug}
               className="px-3 py-1 bg-gray-800 text-white text-xs rounded opacity-50 hover:opacity-100"
             >
               {debugEnabled ? "Hide Heights" : "Show Heights"}
             </button>
-            <button
+            <button type="button"
               onClick={toggleBreakLines}
               className={`px-3 py-1 text-xs rounded opacity-50 hover:opacity-100 ${
                 showBreakLines ? "bg-red-600 text-white" : "bg-gray-800 text-white"

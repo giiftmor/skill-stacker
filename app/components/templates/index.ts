@@ -29,7 +29,6 @@ export function getTemplateSections(
       return getTwoColumnSections(props);
     case "academic":
       return getAcademicSections(props);
-    case "classic":
     default:
       return getClassicSections(props);
   }

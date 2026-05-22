@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Header from "../../components/ui/Header";
 import TemplateSelector from "../../components/ui/TemplateSelector";
-import { TemplateId, TemplateSettings } from "../../lib/templates/templateDefinitions";
+import type { TemplateId, TemplateSettings } from "../../lib/templates/templateDefinitions";
 
 export default function NewCVPage() {
   const router = useRouter();
@@ -65,7 +65,7 @@ export default function NewCVPage() {
           />
 
           <div className="mt-8 flex justify-end">
-            <button
+            <button type="button"
               onClick={handleCreate}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
             >
