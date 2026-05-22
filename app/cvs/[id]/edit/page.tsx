@@ -9,6 +9,7 @@ import CVPreviewWrapper from "../../../components/CVPreviewWrapper";
 import { useAutoSave } from "../../../hooks/useAutoSave";
 import { TemplateId, TemplateSettings } from "../../../lib/templates/templateDefinitions";
 import { exportCV } from "../../../lib/export/exportDispatcher";
+import UploadPhoto from "../../../components/ui/UploadPhoto";
 
 export default function EditCVPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -35,6 +36,7 @@ export default function EditCVPage({ params }: { params: Promise<{ id: string }>
   const [additionalInfo, setAdditionalInfo] = useState([""]);
   const [loading, setLoading] = useState(true);
   const [templateSettings, setTemplateSettings] = useState<TemplateSettings | null>(null);
+  const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
   const previewRef = useRef<HTMLDivElement>(null);
   const printRef = useRef<any>(null);
 
@@ -68,6 +70,7 @@ export default function EditCVPage({ params }: { params: Promise<{ id: string }>
         if (cv.template_settings) {
           setTemplateSettings(cv.template_settings);
         }
+        setPhotoUrl(`/api/photo/${cvId}`);
       }
     } catch (err) {
       console.error("Failed to load CV:", err);
@@ -114,21 +117,24 @@ export default function EditCVPage({ params }: { params: Promise<{ id: string }>
   const updateCompetency = (index: number, value: string) => { const c = [...competency]; c[index] = value; setCompetencies(c); };
   const removeCompetency = (i: number) => setCompetencies((c) => c.filter((_, idx) => idx !== i));
 
+  const exportOptions = {
+    templateId: (templateSettings?.template || "classic") as TemplateId,
+    themeId: templateSettings?.theme,
+    fontPairId: templateSettings?.fontPair,
+    photoUrl,
+  };
+
   const handleExportToPdf = () => {
     exportCV("pdf", {
       data: { personal, profile, competency, experiences, education, certificate, skill, reference, additionalInfo },
-      templateId: (templateSettings?.template || "classic") as TemplateId,
-      themeId: templateSettings?.theme,
-      fontPairId: templateSettings?.fontPair,
+      ...exportOptions,
     });
   };
 
   const handleExportToDocx = () => {
     exportCV("docx", {
       data: { personal, profile, competency, experiences, education, certificate, skill, reference, additionalInfo },
-      templateId: (templateSettings?.template || "classic") as TemplateId,
-      themeId: templateSettings?.theme,
-      fontPairId: templateSettings?.fontPair,
+      ...exportOptions,
     });
   };
 
@@ -160,6 +166,9 @@ export default function EditCVPage({ params }: { params: Promise<{ id: string }>
       <main className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-2">
+            <div className="mb-4">
+              <UploadPhoto cvId={cvId} onUploadComplete={setPhotoUrl} />
+            </div>
             <CVBuilderForm
               personal={personal}
               updatePersonal={updatePersonal}
@@ -215,6 +224,7 @@ export default function EditCVPage({ params }: { params: Promise<{ id: string }>
               templateId={templateSettings?.template}
               themeId={templateSettings?.theme}
               fontPairId={templateSettings?.fontPair}
+              photoUrl={photoUrl}
               previewRef={previewRef}
               ref={printRef}
             />

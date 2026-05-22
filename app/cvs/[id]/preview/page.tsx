@@ -27,6 +27,7 @@ export default function PreviewCVPage({ params }: { params: Promise<{ id: string
   const [reference, setReference] = useState<any[]>([]);
   const [additionalInfo, setAdditionalInfo] = useState<string[]>([]);
   const [templateSettings, setTemplateSettings] = useState<TemplateSettings | null>(null);
+  const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -62,6 +63,7 @@ export default function PreviewCVPage({ params }: { params: Promise<{ id: string
         if (cv.template_settings) {
           setTemplateSettings(cv.template_settings);
         }
+        setPhotoUrl(`/api/photo/${cvId}`);
       }
     } catch (err) {
       console.error("Failed to load CV:", err);
@@ -150,6 +152,7 @@ export default function PreviewCVPage({ params }: { params: Promise<{ id: string
               templateId={templateSettings?.template}
               themeId={templateSettings?.theme}
               fontPairId={templateSettings?.fontPair}
+              photoUrl={photoUrl}
               currentPage={currentPage}
               onPageChange={setCurrentPage}
               onTotalPagesChange={setTotalPages}
@@ -208,6 +211,7 @@ export default function PreviewCVPage({ params }: { params: Promise<{ id: string
           templateId={templateSettings?.template}
           themeId={templateSettings?.theme}
           fontPairId={templateSettings?.fontPair}
+          photoUrl={photoUrl}
           showAllPages={true}
         />
       </div>
