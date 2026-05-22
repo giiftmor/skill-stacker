@@ -2,13 +2,15 @@ import type { TemplatePreviewProps, TemplateSectionsResult, TemplateSection } fr
 
 export type { TemplatePreviewProps, TemplateSectionsResult, TemplateSection };
 
-export { getClassicSections } from "./ClassicPreview";
-export { getExecutiveSections } from "./ExecutivePreview";
-export { getModernSections } from "./ModernPreview";
-export { getMinimalSections } from "./MinimalPreview";
-export { getCreativeSections } from "./CreativePreview";
-export { getTwoColumnSections } from "./TwoColumnPreview";
-export { getAcademicSections } from "./AcademicPreview";
+import { getClassicSections } from "./ClassicPreview";
+import { getExecutiveSections } from "./ExecutivePreview";
+import { getModernSections } from "./ModernPreview";
+import { getMinimalSections } from "./MinimalPreview";
+import { getCreativeSections } from "./CreativePreview";
+import { getTwoColumnSections } from "./TwoColumnPreview";
+import { getAcademicSections } from "./AcademicPreview";
+
+export { getClassicSections, getExecutiveSections, getModernSections, getMinimalSections, getCreativeSections, getTwoColumnSections, getAcademicSections };
 
 export function getTemplateSections(
   templateId: string,
