@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { CheckCircle, XCircle, AlertTriangle, Loader2, Info } from "lucide-react";
 
 export type NotificationType =
   | "success"
@@ -43,49 +44,44 @@ export default function NotificationModal({
 
   const typeStyles = {
     success: {
-      bg: "bg-green-50/50",
-      border: "border-green-500",
-      icon: "✅",
-      iconBg: "bg-green-100",
-      iconColor: "text-green-600",
-      titleColor: "text-green-900",
-      messageColor: "text-green-700",
+      bg: "bg-[#1a1a1a]",
+      border: "border-[#4caf50]",
+      icon: CheckCircle,
+      iconColor: "text-[#4caf50]",
+      titleColor: "text-[#e8e6e3]",
+      messageColor: "text-[#8a8a8a]",
     },
     error: {
-      bg: "bg-red-50/50",
-      border: "border-red-500",
-      icon: "❌",
-      iconBg: "bg-red-100",
-      iconColor: "text-red-600",
-      titleColor: "text-red-900",
-      messageColor: "text-red-700",
+      bg: "bg-[#1a1a1a]",
+      border: "border-[#dc4444]",
+      icon: XCircle,
+      iconColor: "text-[#dc4444]",
+      titleColor: "text-[#e8e6e3]",
+      messageColor: "text-[#8a8a8a]",
     },
     warning: {
-      bg: "bg-yellow-50/50",
-      border: "border-yellow-500",
-      icon: "⚠️",
-      iconBg: "bg-yellow-100",
-      iconColor: "text-yellow-600",
-      titleColor: "text-yellow-900",
-      messageColor: "text-yellow-700",
+      bg: "bg-[#1a1a1a]",
+      border: "border-[#f59e0b]",
+      icon: AlertTriangle,
+      iconColor: "text-[#f59e0b]",
+      titleColor: "text-[#e8e6e3]",
+      messageColor: "text-[#8a8a8a]",
     },
     saving: {
-      bg: "bg-purple-50/50",
-      border: "border-purple-500",
-      icon: "💾",
-      iconBg: "bg-purple-100",
-      iconColor: "text-purple-600",
-      titleColor: "text-purple-900",
-      messageColor: "text-purple-700",
+      bg: "bg-[#1a1a1a]",
+      border: "border-[#d4a853]",
+      icon: Loader2,
+      iconColor: "text-[#d4a853]",
+      titleColor: "text-[#e8e6e3]",
+      messageColor: "text-[#8a8a8a]",
     },
     info: {
-      bg: "bg-blue-50/50",
-      border: "border-blue-500",
-      icon: "ℹ️",
-      iconBg: "bg-blue-100",
-      iconColor: "text-blue-600",
-      titleColor: "text-blue-900",
-      messageColor: "text-blue-700",
+      bg: "bg-[#1a1a1a]",
+      border: "border-[#d4a853]",
+      icon: Info,
+      iconColor: "text-[#d4a853]",
+      titleColor: "text-[#e8e6e3]",
+      messageColor: "text-[#8a8a8a]",
     },
   };
 
@@ -101,18 +97,16 @@ export default function NotificationModal({
 
       {/* Modal */}
       <div className="fixed top-4 left-[40%] insert-x-0 z-50 flex items-center justify-center p-0">
-        <div
-          className={`${styles.bg} ${styles.border} rounded-lg shadow-xl max-w-md w-full transform transition-all animate-bounce-in overflow-hidden`}
-        >
-          <div className="pt-6 px-6">
-            {/* Header */}
-            <div className="flex items-start gap-4 ">
-              {/* Icon */}
-              <div
-                className={`${styles.iconBg} rounded-full size-8 inserts-center flex items-center justify-center flex-shrink-0`}
-              >
-                <span className="text-sm ">{styles.icon}</span>
-              </div>
+          <div
+            className={`${styles.bg} ${styles.border} border rounded-lg shadow-xl max-w-md w-full transform transition-all animate-bounce-in overflow-hidden`}
+          >
+            <div className="pt-6 px-6">
+              {/* Header */}
+              <div className="flex items-start gap-4 ">
+                {/* Icon */}
+                <div className={`${styles.iconColor} flex-shrink-0`}>
+                  <styles.icon className="w-6 h-6" />
+                </div>
 
               {/* Content */}
               <div className="flex-1">
@@ -148,18 +142,18 @@ export default function NotificationModal({
 
           {/* Progress Bar (if autoClose) */}
           {autoClose && (
-            <div className="mt-4 h-1 bg-gray-200 w-full rounded-full overflow-hidden">
+            <div className="mt-4 h-1 bg-[#333] w-full rounded-full overflow-hidden">
               <div
                 className={`h-full ${
                   type === "success"
-                    ? "bg-green-500"
+                    ? "bg-[#4caf50]"
                     : type === "error"
-                    ? "bg-red-500"
+                    ? "bg-[#dc4444]"
                     : type === "warning"
-                    ? "bg-yellow-500"
+                    ? "bg-[#f59e0b]"
                     : type === "saving"
-                    ? "bg-purple-500"
-                    : "bg-blue-500"
+                    ? "bg-[#d4a853]"
+                    : "bg-[#d4a853]"
                 } animate-progress`}
                 style={{
                   animation: `progress ${autoCloseDelay}ms linear`,

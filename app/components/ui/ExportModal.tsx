@@ -41,61 +41,61 @@ export default function ExportModal({ data, templateId, themeId, fontPairId, pho
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+      <div className="bg-[#1a1a1a] rounded-lg shadow-xl w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Export CV</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-xl">✕</button>
+          <h2 className="text-lg font-semibold text-[#e8e6e3]">Export CV</h2>
+          <button onClick={onClose} className="text-[#8a8a8a] hover:text-[#e8e6e3] text-xl">&#x2715;</button>
         </div>
 
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Export Format</label>
+          <label className="block text-sm font-medium text-[#8a8a8a] mb-2">Export Format</label>
           <div className="flex gap-3">
             <button
               onClick={() => setFormat("pdf")}
               className={`flex-1 p-4 rounded-lg border-2 transition-all ${
                 format === "pdf"
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-gray-200 hover:border-gray-300"
+                  ? "border-[#d4a853] bg-[#d4a85315]"
+                  : "border-[#333] hover:border-[#444]"
               }`}
             >
               <div className="text-2xl mb-1">📄</div>
-              <div className="font-medium">PDF</div>
-              <div className="text-xs text-gray-500">Best for printing</div>
+              <div className="font-medium text-[#e8e6e3]">PDF</div>
+              <div className="text-xs text-[#8a8a8a]">Best for printing</div>
             </button>
             <button
               onClick={() => setFormat("docx")}
               className={`flex-1 p-4 rounded-lg border-2 transition-all ${
                 format === "docx"
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-gray-200 hover:border-gray-300"
+                  ? "border-[#d4a853] bg-[#d4a85315]"
+                  : "border-[#333] hover:border-[#444]"
               }`}
             >
               <div className="text-2xl mb-1">📝</div>
-              <div className="font-medium">Word</div>
-              <div className="text-xs text-gray-500">Editable document</div>
+              <div className="font-medium text-[#e8e6e3]">Word</div>
+              <div className="text-xs text-[#8a8a8a]">Editable document</div>
             </button>
           </div>
         </div>
 
         {templateId && (
-          <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-            <div className="text-sm text-gray-600">Template: {TEMPLATES[templateId]?.name || templateId}</div>
-            {themeId && <div className="text-sm text-gray-600">Theme: {themeId}</div>}
+          <div className="mb-4 p-3 bg-[#242424] rounded-lg">
+            <div className="text-sm text-[#8a8a8a]">Template: {TEMPLATES[templateId]?.name || templateId}</div>
+            {themeId && <div className="text-sm text-[#8a8a8a]">Theme: {themeId}</div>}
           </div>
         )}
 
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+            className="flex-1 px-4 py-2 bg-[#333] text-[#e8e6e3] rounded-lg hover:bg-[#444] transition-all duration-200"
           >
             Cancel
           </button>
           <button
             onClick={handleExport}
             disabled={exporting}
-            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            className="flex-1 px-4 py-2 bg-[#d4a853] text-[#0d0d0d] rounded-lg hover:bg-[#b8923e] disabled:opacity-50 transition-all duration-200 font-medium"
           >
             {exporting ? "Exporting..." : `Export as ${format.toUpperCase()}`}
           </button>
