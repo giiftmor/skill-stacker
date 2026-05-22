@@ -32,18 +32,18 @@ const PersonalInfoForm = ({ personal, updatePersonal }: PersonalInfoFormProps) =
   };
 
   const getInputClass = (field: string) => {
-    const baseClass = "w-full border rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:border-transparent";
+    const baseClass = "w-full bg-[#242424] border rounded-lg px-3 py-2.5 text-[#e8e6e3] placeholder:text-[#666] text-sm focus:outline-none focus:ring-2 transition-all duration-200";
     if (touched[field] && errors[field]) {
-      return `${baseClass} border-red-500 focus:ring-red-500`;
+      return `${baseClass} border-[#dc4444] focus:border-[#dc4444] focus:ring-[#dc444422]`;
     }
-    return `${baseClass} border-gray-300 focus:ring-blue-500`;
+    return `${baseClass} border-[#333] focus:border-[#d4a853] focus:ring-[#d4a85315]`;
   };
 
   return (
     <div className="space-y-3">
       <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Full name <span className="text-red-500">*</span>
+        <label className="block text-sm font-medium text-[#e8e6e3]">
+          Full name <span className="text-[#dc4444]">*</span>
         </label>
         <input
           className={getInputClass("fullName")}
@@ -53,12 +53,12 @@ const PersonalInfoForm = ({ personal, updatePersonal }: PersonalInfoFormProps) =
           placeholder="Enter your full name"
         />
         {touched.fullName && errors.fullName && (
-          <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>
+          <p className="text-[#dc4444] text-sm mt-1">{errors.fullName}</p>
         )}
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-[#e8e6e3]">
           Title (e.g., Retail Assistant)
         </label>
         <input
@@ -69,13 +69,13 @@ const PersonalInfoForm = ({ personal, updatePersonal }: PersonalInfoFormProps) =
           placeholder="e.g., Senior Software Engineer"
         />
         {touched.title && errors.title && (
-          <p className="text-red-500 text-sm mt-1">{errors.title}</p>
+          <p className="text-[#dc4444] text-sm mt-1">{errors.title}</p>
         )}
       </div>
 
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className="block text-sm font-medium text-gray-700">Phone</label>
+          <label className="block text-sm font-medium text-[#e8e6e3]">Phone</label>
           <input
             className={getInputClass("phone")}
             value={personal.phone}
@@ -84,12 +84,12 @@ const PersonalInfoForm = ({ personal, updatePersonal }: PersonalInfoFormProps) =
             placeholder="(555) 123-4567"
           />
           {touched.phone && errors.phone && (
-            <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
+            <p className="text-[#dc4444] text-sm mt-1">{errors.phone}</p>
           )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Email</label>
+          <label className="block text-sm font-medium text-[#e8e6e3]">Email</label>
           <input
             type="email"
             className={getInputClass("email")}
@@ -99,13 +99,13 @@ const PersonalInfoForm = ({ personal, updatePersonal }: PersonalInfoFormProps) =
             placeholder="you@example.com"
           />
           {touched.email && errors.email && (
-            <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+            <p className="text-[#dc4444] text-sm mt-1">{errors.email}</p>
           )}
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-[#e8e6e3]">
           Location
         </label>
         <input
@@ -116,12 +116,12 @@ const PersonalInfoForm = ({ personal, updatePersonal }: PersonalInfoFormProps) =
           placeholder="City, State"
         />
         {touched.location && errors.location && (
-          <p className="text-red-500 text-sm mt-1">{errors.location}</p>
+          <p className="text-[#dc4444] text-sm mt-1">{errors.location}</p>
         )}
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-[#e8e6e3]">
           LinkedIn Profile (Optional)
         </label>
         <input
@@ -132,7 +132,7 @@ const PersonalInfoForm = ({ personal, updatePersonal }: PersonalInfoFormProps) =
           placeholder="linkedin.com/in/yourprofile"
         />
         {touched.linkedin && errors.linkedin && (
-          <p className="text-red-500 text-sm mt-1">{errors.linkedin}</p>
+          <p className="text-[#dc4444] text-sm mt-1">{errors.linkedin}</p>
         )}
       </div>
     </div>
