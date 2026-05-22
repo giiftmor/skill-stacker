@@ -19,10 +19,10 @@ export default function Sidebar({ cvId }: SidebarProps) {
   ];
 
   return (
-    <aside className="w-64 bg-white border-r h-screen sticky top-0 overflow-y-auto">
-      <div className="p-4 border-b">
-        <h1 className="text-xl font-bold text-gray-900">Skill Stacker</h1>
-        <p className="text-sm text-gray-500">CV Builder</p>
+    <aside className="w-64 bg-[#1a1a1a] border-r border-[#333] h-screen sticky top-0 overflow-y-auto">
+      <div className="p-4 border-b border-[#333]">
+        <h1 className="text-xl font-bold text-[#e8e6e3]">Skill Stacker</h1>
+        <p className="text-sm text-[#666]">CV Builder</p>
       </div>
       <nav className="p-4">
         <ul className="space-y-2">
@@ -32,8 +32,8 @@ export default function Sidebar({ cvId }: SidebarProps) {
                 href={link.href}
                 className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
                   pathname === link.href
-                    ? "bg-blue-100 text-blue-700"
-                    : "text-gray-700 hover:bg-gray-100"
+                    ? "bg-[#d4a85315] text-[#d4a853]"
+                    : "text-[#8a8a8a] hover:bg-[#242424] hover:text-[#e8e6e3]"
                 }`}
               >
                 <span>{link.icon}</span>
