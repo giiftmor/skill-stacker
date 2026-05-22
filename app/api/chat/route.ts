@@ -1,32 +1,6 @@
-import { NextRequest } from "next/server";
-import baseSchema from "@/app/lib/env";
+import { NextRequest, NextResponse } from "next/server";
 
-export const runtime = "nodejs";
-
+// AI endpoints disabled
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-
-  const upstream = await fetch(`${baseSchema.baseUrl}/chat/completions`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${baseSchema.apiKey}`,
-      "Content-Type": "application/json",
-      Accept: "text/event-stream",
-    },
-    body: JSON.stringify({
-      model: body.model ?? "gpt-3.5-turbo",
-      messages: body.messages ?? [],
-      temperature: body.temperature ?? 0.7,
-      stream: body.stream ?? true,
-    }),
-  });
-
-  return new Response(upstream.body, {
-    status: upstream.status,
-    headers: {
-      "Content-Type":
-        upstream.headers.get("Content-Type") ?? "text/event-stream",
-      "Cache-Control": "no-store",
-    },
-  });
+  return NextResponse.json({ error: "AI endpoints disabled" }, { status: 501 });
 }

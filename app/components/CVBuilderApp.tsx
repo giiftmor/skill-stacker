@@ -1,31 +1,14 @@
-// app/components/CVBuilderApp.tsx - Final Version with CV Manager
+// app/components/CVBuilderApp.tsx
 import React, { useState, useRef } from "react";
 import CVBuilderForm from "./CVBuilderForm";
 import CVListManager from "./CVListManager";
 import { exportToDocx, exportToPdf } from "./modules/exportModule";
-import { ArrowLeft } from "lucide-react";
 import NotificationModal from "./NotificationModal";
 import { useNotification } from "../hooks/useNotification";
 import CVPreviewWrapper, { CVPreviewWrapperHandle } from "./CVPreviewWrapper";
-import Chat from "./ai/Chat";
-import Page from "./page";
 
 export default function CVBuilderApp() {
   const [showCVList, setShowCVList] = useState(false);
-  const [testAi, setTestAi] = useState(false);
-
-  const handleFunctionSwitch = (component: any) => {
-    if (component === "ai") {
-      setTestAi(!testAi);
-    } else {
-      setShowCVList(!showCVList);
-      setTestAi(false);
-    }
-  };
-
-  console.log("🟡 CVBuilderApp rendered, showCVList:", showCVList);
-
-  console.log("🟡 CVBuilderApp rendered, testAI:", testAi);
 
   const [personal, setPersonal] = useState({
     fullName: "",
@@ -281,7 +264,15 @@ export default function CVBuilderApp() {
 
       if (result.success && result.cv) {
         const cv = result.cv;
-        setPersonal(cv.personal);
+        // Map snake_case from DB to camelCase for the form
+        setPersonal({
+          fullName: cv.full_name || "",
+          title: cv.title || "",
+          phone: cv.phone || "",
+          email: cv.email || "",
+          location: cv.location || "",
+          linkedin: cv.linkedin || "",
+        });
         setProfile(cv.profile);
         setCompetencies(cv.competency.length > 0 ? cv.competency : [""]);
         setExperiences(
@@ -401,7 +392,7 @@ export default function CVBuilderApp() {
               Spectres | Skill Stack
             </h1>
             <p className="text-sm text-gray-600 mt-1">
-              Thembi's AI-Powered CV Builder
+              Thembi's CV Builder
             </p>
           </div>
           <div className="flex gap-3">
@@ -412,20 +403,14 @@ export default function CVBuilderApp() {
               New CV
             </button>
             <button
-              onClick={() => handleFunctionSwitch("cvList")}
+              onClick={() => setShowCVList(!showCVList)}
               className={`px-4 py-2 rounded-md font-medium transition-colors ${
                 showCVList
                   ? "bg-gray-600 text-white hover:bg-gray-700"
                   : "bg-blue-600 text-white hover:bg-blue-700"
               }`}
             >
-              {showCVList ? "✏️ Edit CV" : "📋 Manage CVs"}
-            </button>
-            <button
-              onClick={() => handleFunctionSwitch("ai")}
-              className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium"
-            >
-              TEST AI CHAT
+              {showCVList ? "Edit CV" : "Manage CVs"}
             </button>
           </div>
         </div>
@@ -441,76 +426,68 @@ export default function CVBuilderApp() {
       </div>
 
       <div className="max-w-8xl mx-auto">
-        {testAi ? (
-          // AI Chat View
-          <Page />
+        {showCVList ? (
+          <CVListManager
+            onLoadCV={handleLoadFromDatabase}
+            currentCvId={currentCvId}
+          />
         ) : (
-          <>
-            {showCVList === true && (
-              <CVListManager
-                onLoadCV={handleLoadFromDatabase}
-                currentCvId={currentCvId}
-              />
-            )}{" "}
-            {showCVList === false && (
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                <CVBuilderForm
-                  personal={personal}
-                  updatePersonal={updatePersonal}
-                  profile={profile}
-                  setProfile={setProfile}
-                  competency={competency}
-                  updateCompetency={updateCompetency}
-                  addCompetency={addCompetency}
-                  removeCompetency={removeCompetency}
-                  experiences={experiences}
-                  addExperience={addExperience}
-                  updateExperience={updateExperience}
-                  removeExperience={removeExperience}
-                  education={education}
-                  addEducation={addEducation}
-                  updateEducation={updateEducation}
-                  removeEducation={removeEducation}
-                  certificate={certificate}
-                  addCertificate={addCertificate}
-                  updateCertificate={updateCertificate}
-                  removeCertificate={removeCertificate}
-                  skill={skill}
-                  updateSkill={updateSkill}
-                  addSkill={addSkill}
-                  removeSkill={removeSkill}
-                  reference={reference}
-                  updateReference={updateReference}
-                  addReference={addReference}
-                  removeReference={removeReference}
-                  additionalInfo={additionalInfo}
-                  addAdditionalInfo={addAdditionalInfo}
-                  updateAdditionalInfo={updateAdditionalInfo}
-                  removeAdditionalInfo={removeAdditionalInfo}
-                  exportToDocx={handleExportToDocx}
-                  exportToPdf={handleExportToPdf}
-                  printToPdf={handlePrintToPdf}
-                  saveToDatabase={handleSaveToDatabase}
-                  saveStatus={saveStatus}
-                  currentCvId={currentCvId}
-                />
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <CVBuilderForm
+              personal={personal}
+              updatePersonal={updatePersonal}
+              profile={profile}
+              setProfile={setProfile}
+              competency={competency}
+              updateCompetency={updateCompetency}
+              addCompetency={addCompetency}
+              removeCompetency={removeCompetency}
+              experiences={experiences}
+              addExperience={addExperience}
+              updateExperience={updateExperience}
+              removeExperience={removeExperience}
+              education={education}
+              addEducation={addEducation}
+              updateEducation={updateEducation}
+              removeEducation={removeEducation}
+              certificate={certificate}
+              addCertificate={addCertificate}
+              updateCertificate={updateCertificate}
+              removeCertificate={removeCertificate}
+              skill={skill}
+              updateSkill={updateSkill}
+              addSkill={addSkill}
+              removeSkill={removeSkill}
+              reference={reference}
+              updateReference={updateReference}
+              addReference={addReference}
+              removeReference={removeReference}
+              additionalInfo={additionalInfo}
+              addAdditionalInfo={addAdditionalInfo}
+              updateAdditionalInfo={updateAdditionalInfo}
+              removeAdditionalInfo={removeAdditionalInfo}
+              exportToDocx={handleExportToDocx}
+              exportToPdf={handleExportToPdf}
+              printToPdf={handlePrintToPdf}
+              saveToDatabase={handleSaveToDatabase}
+              saveStatus={saveStatus}
+              currentCvId={currentCvId}
+            />
 
-                <CVPreviewWrapper
-                  personal={personal}
-                  profile={profile}
-                  competency={competency}
-                  experiences={experiences}
-                  education={education}
-                  certificate={certificate}
-                  skill={skill}
-                  reference={reference}
-                  additionalInfo={additionalInfo}
-                  previewRef={previewRef}
-                  ref={printRef}
-                />
-              </div>
-            )}
-          </>
+            <CVPreviewWrapper
+              personal={personal}
+              profile={profile}
+              competency={competency}
+              experiences={experiences}
+              education={education}
+              certificate={certificate}
+              skill={skill}
+              reference={reference}
+              additionalInfo={additionalInfo}
+              previewRef={previewRef}
+              ref={printRef}
+            />
+          </div>
         )}
       </div>
     </div>

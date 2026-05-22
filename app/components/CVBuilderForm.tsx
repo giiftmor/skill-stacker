@@ -1,19 +1,19 @@
 // app/components/CVBuilderForm.tsx - With Smooth Accordion Animations
 
 import React, { useState } from "react";
-import PersonalInfoForm from "./forms/PersonalInfoForm";
-import ProfileForm from "./forms/ProfileForm";
-import SkillsForm from "./forms/SkillsForm";
-import ExperienceForm from "./forms/ExperienceForm";
-import EducationForm from "./forms/EducationForm";
-import ReferencesForm from "./forms/ReferencesForm";
-import ExportButtons from "./forms/ExportButtons";
+import PersonalInfoForm from "./Forms/PersonalInfoForm";
+import ProfileForm from "./Forms/ProfileForm";
+import SkillsForm from "./Forms/SkillsForm";
+import ExperienceForm from "./Forms/ExperienceForm";
+import EducationForm from "./Forms/EducationForm";
+import ReferencesForm from "./Forms/ReferencesForm";
+import ExportButtons from "./Forms/ExportButtons";
 import { ChevronDown } from "lucide-react";
 
 import type { CVBuilderFormProps } from "../types/global";
-import CertificatesForm from "./forms/CertificatesForm";
-import AdditionalInfoForm from "./forms/AdditionalInfoForm";
-import CompetenciesForm from "./forms/CompetenciesForm";
+import CertificatesForm from "./Forms/CertificatesForm";
+import AdditionalInfoForm from "./Forms/AdditionalInfoForm";
+import CompetenciesForm from "./Forms/CompetenciesForm";
 
 interface ExtendedCVBuilderFormProps extends CVBuilderFormProps {
   saveToDatabase: () => void;

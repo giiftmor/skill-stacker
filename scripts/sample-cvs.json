@@ -1,0 +1,479 @@
+[
+  {
+    "personal": {
+      "fullName": "Sarah Chen",
+      "title": "Senior Software Engineer",
+      "phone": "(555) 123-4567",
+      "email": "sarah.chen@email.com",
+      "location": "San Francisco, CA",
+      "linkedin": "linkedin.com/in/sarahchen"
+    },
+    "profile": "Experienced software engineer with 8+ years in full-stack development. Passionate about building scalable applications and mentoring junior developers. Specialized in cloud-native architectures and microservices design patterns. Proven track record of leading cross-functional teams to deliver complex projects on time and within budget. Strong advocate for clean code principles and automated testing.",
+    "competency": [
+      "Full-Stack Development",
+      "System Architecture",
+      "Team Leadership",
+      "Agile Methodology",
+      "Cloud Infrastructure",
+      "CI/CD Pipeline Design",
+      "Microservices Architecture",
+      "Database Optimization",
+      "Performance Tuning",
+      "Code Review Best Practices",
+      "Technical Documentation",
+      "Stakeholder Management"
+    ],
+    "experiences": [
+      {
+        "id": "exp-1-1",
+        "company": "TechCorp Inc.",
+        "role": "Senior Software Engineer",
+        "period": "2021 - Present",
+        "details": "Led development of microservices architecture serving 1M+ users. Mentored team of 5 junior developers. Implemented CI/CD pipelines reducing deployment time by 60%. Designed and implemented real-time notification system handling 50K requests per second. Optimized database queries reducing average response time from 800ms to 150ms. Led migration from monolith to microservices saving $200K annually in infrastructure costs."
+      },
+      {
+        "id": "exp-1-2",
+        "company": "StartupXYZ",
+        "role": "Software Engineer",
+        "period": "2018 - 2021",
+        "details": "Built and maintained React frontend serving 500K monthly active users. Developed RESTful APIs using Node.js and Express. Implemented authentication and authorization system using JWT. Collaborated with UX team to improve user experience and conversion rates. Mentored 3 intern developers throughout their tenure."
+      },
+      {
+        "id": "exp-1-3",
+        "company": "WebDev Agency",
+        "role": "Junior Software Engineer",
+        "period": "2016 - 2018",
+        "details": "Developed responsive web applications for various clients. Worked on e-commerce platforms using PHP and MySQL. Participated in agile sprints and contributed to code reviews. Created automated testing suites achieving 85% code coverage."
+      }
+    ],
+    "education": [
+      {
+        "id": "edu-1-1",
+        "institution": "Stanford University",
+        "qualification": "M.S. Computer Science",
+        "period": "2014 - 2016"
+      },
+      {
+        "id": "edu-1-2",
+        "institution": "UC Berkeley",
+        "qualification": "B.S. Computer Science",
+        "period": "2010 - 2014"
+      }
+    ],
+    "certificate": [
+      { "id": "cert-1-1", "name": "AWS Solutions Architect Professional", "date": "2023" },
+      { "id": "cert-1-2", "name": "AWS Solutions Architect Associate", "date": "2021" },
+      { "id": "cert-1-3", "name": "Kubernetes Administrator (CKA)", "date": "2022" }
+    ],
+    "skill": [
+      "JavaScript/TypeScript",
+      "React",
+      "Node.js",
+      "Python",
+      "PostgreSQL",
+      "MongoDB",
+      "AWS",
+      "GCP",
+      "Docker",
+      "Kubernetes",
+      "Redis",
+      "GraphQL",
+      "REST APIs",
+      "CI/CD",
+      "Agile/Scrum",
+      "System Design",
+      "Performance Optimization"
+    ],
+    "reference": [
+      {
+        "id": "ref-1-1",
+        "name": "Michael Roberts",
+        "role": "VP Engineering",
+        "company": "TechCorp Inc.",
+        "email": "mroberts@techcorp.com",
+        "phone": "(555) 111-2222"
+      },
+      {
+        "id": "ref-1-2",
+        "name": "Jennifer Lee",
+        "role": "CTO",
+        "company": "StartupXYZ",
+        "email": "jlee@startupxyz.com",
+        "phone": "(555) 333-4444"
+      }
+    ],
+    "additionalInfo": [
+      "Open source contributor to several React libraries",
+      "Speaker at local tech meetups",
+      "Fluent in Mandarin Chinese",
+      "Hobbies: Rock climbing, Photography"
+    ]
+  },
+  {
+    "personal": {
+      "fullName": "Marcus Johnson",
+      "title": "Product Designer",
+      "phone": "(555) 234-5678",
+      "email": "marcus.j@email.com",
+      "location": "New York, NY",
+      "linkedin": "linkedin.com/in/marcusjohnson"
+    },
+    "profile": "Creative product designer with strong UX background. Focused on creating intuitive and beautiful user interfaces. 7+ years of experience in designing digital products for startups and enterprise companies. Passionate about accessibility and inclusive design practices. Strong understanding of design systems and component libraries.",
+    "competency": [
+      "UI/UX Design",
+      "User Research",
+      "Prototyping",
+      "Design Systems",
+      "Figma",
+      "Interaction Design",
+      "Visual Design",
+      "Information Architecture",
+      "Usability Testing",
+      "Accessibility Standards",
+      "Design Thinking",
+      "Wireframing"
+    ],
+    "experiences": [
+      {
+        "id": "exp-2-1",
+        "company": "DesignStudio",
+        "role": "Senior Product Designer",
+        "period": "2020 - Present",
+        "details": "Lead designer for flagship product. Established design system used across 5 products. Increased user satisfaction scores by 25%. Managed design team of 3 designers. Created component library with 100+ reusable components. Conducted user research reducing user drop-off by 15%."
+      },
+      {
+        "id": "exp-2-2",
+        "company": "Digital Agency NYC",
+        "role": "Product Designer",
+        "period": "2017 - 2020",
+        "details": "Designed web and mobile applications for Fortune 500 clients. Collaborated with development teams to ensure design implementation. Created interactive prototypes for client presentations. Led design workshops for junior designers."
+      }
+    ],
+    "education": [
+      {
+        "id": "edu-2-1",
+        "institution": "Rhode Island School of Design",
+        "qualification": "BFA Graphic Design",
+        "period": "2013 - 2017"
+      },
+      {
+        "id": "edu-2-2",
+        "institution": "Interaction Design Foundation",
+        "qualification": "UX Design Certification",
+        "period": "2018"
+      }
+    ],
+    "certificate": [
+      { "id": "cert-2-1", "name": "Google UX Design Certificate", "date": "2021" },
+      { "id": "cert-2-2", "name": "Figma Advanced Certification", "date": "2022" }
+    ],
+    "skill": [
+      "Figma",
+      "Sketch",
+      "Adobe XD",
+      "Adobe Photoshop",
+      "Adobe Illustrator",
+      "InVision",
+      "Prototyping",
+      "User Research",
+      "HTML/CSS",
+      "Design Systems",
+      "Accessibility",
+      "Animation"
+    ],
+    "reference": [
+      {
+        "id": "ref-2-1",
+        "name": "Amanda White",
+        "role": "Design Director",
+        "company": "DesignStudio",
+        "email": "awhite@designstudio.com",
+        "phone": "(555) 555-6666"
+      }
+    ],
+    "additionalInfo": [
+      "Open to remote work",
+      "Portfolio: marcusjohnson.design",
+      "Volunteer mentor for design bootcamp students"
+    ]
+  },
+  {
+    "personal": {
+      "fullName": "Priya Patel",
+      "title": "Data Scientist",
+      "phone": "(555) 345-6789",
+      "email": "priya.patel@email.com",
+      "location": "Boston, MA",
+      "linkedin": "linkedin.com/in/priyapatel"
+    },
+    "profile": "Data scientist with expertise in machine learning and predictive analytics. Strong academic background in statistics. 6+ years of experience developing ML models for healthcare and finance industries. Published researcher with focus on interpretable AI and ethical machine learning. Experienced in scaling ML solutions from prototype to production.",
+    "competency": [
+      "Machine Learning",
+      "Statistical Analysis",
+      "Data Visualization",
+      "Python/R Programming",
+      "Deep Learning",
+      "Natural Language Processing",
+      "Computer Vision",
+      "Time Series Analysis",
+      "Feature Engineering",
+      "Model Deployment",
+      "A/B Testing",
+      "Data Pipeline Design"
+    ],
+    "experiences": [
+      {
+        "id": "exp-3-1",
+        "company": "DataTech Solutions",
+        "role": "Senior Data Scientist",
+        "period": "2022 - Present",
+        "details": "Developed ML models for predictive maintenance. Reduced equipment downtime by 15%. Led team of 3 data scientists. Built real-time anomaly detection system processing 1M events/hour. Implemented MLOps practices reducing model deployment time from weeks to days. Collaborated with product team to define success metrics for ML projects."
+      },
+      {
+        "id": "exp-3-2",
+        "company": "HealthAI Corp",
+        "role": "Data Scientist",
+        "period": "2019 - 2022",
+        "details": "Developed patient readmission prediction model achieving 89% accuracy. Created NLP pipeline for clinical notes analysis. Designed dashboards for executive decision-making using Tableau. Mentored junior data scientists on best practices."
+      }
+    ],
+    "education": [
+      {
+        "id": "edu-3-1",
+        "institution": "MIT",
+        "qualification": "M.S. Data Science",
+        "period": "2017 - 2019"
+      },
+      {
+        "id": "edu-3-2",
+        "institution": "IIT Bombay",
+        "qualification": "B.Tech Computer Science",
+        "period": "2013 - 2017"
+      }
+    ],
+    "certificate": [
+      { "id": "cert-3-1", "name": "TensorFlow Developer Certificate", "date": "2023" },
+      { "id": "cert-3-2", "name": "AWS Machine Learning Specialty", "date": "2022" },
+      { "id": "cert-3-3", "name": "Google Professional Data Engineer", "date": "2021" }
+    ],
+    "skill": [
+      "Python",
+      "TensorFlow",
+      "PyTorch",
+      "Scikit-learn",
+      "SQL",
+      "Tableau",
+      "R",
+      "Spark",
+      "Airflow",
+      "AWS SageMaker",
+      "Docker",
+      "Git",
+      "Statistics",
+      "Linear Algebra",
+      "Calculus"
+    ],
+    "reference": [
+      {
+        "id": "ref-3-1",
+        "name": "Dr. James Wilson",
+        "role": "Research Director",
+        "company": "MIT",
+        "email": "jwilson@mit.edu",
+        "phone": "(555) 777-8888"
+      }
+    ],
+    "additionalInfo": [
+      "Published 3 papers in peer-reviewed journals",
+      "Reviewer for ML conferences (NeurIPS, ICML)",
+      "Kaggle Competition Master (Rank top 5%)"
+    ]
+  },
+  {
+    "personal": {
+      "fullName": "David Kim",
+      "title": "DevOps Engineer",
+      "phone": "(555) 456-7890",
+      "email": "david.kim@email.com",
+      "location": "Seattle, WA",
+      "linkedin": "linkedin.com/in/davidkim"
+    },
+    "profile": "DevOps professional with expertise in CI/CD, cloud infrastructure, and automation. Focused on improving development workflows and reducing operational overhead. 8+ years of experience in infrastructure engineering. Strong background in security and compliance. Passionate about building reliable and scalable systems.",
+    "competency": [
+      "CI/CD Pipeline Design",
+      "Cloud Architecture",
+      "Infrastructure as Code",
+      "Container Orchestration",
+      "Monitoring & Logging",
+      "System Administration",
+      "Security Best Practices",
+      "Network Configuration",
+      "Database Administration",
+      "Performance Optimization",
+      "Incident Response",
+      "Documentation"
+    ],
+    "experiences": [
+      {
+        "id": "exp-4-1",
+        "company": "CloudFirst Inc.",
+        "role": "DevOps Lead",
+        "period": "2021 - Present",
+        "details": "Architected multi-cloud infrastructure on AWS and GCP. Implemented Kubernetes clusters reducing deployment failures by 80%. Led SRE team of 4 engineers. Established on-call rotation and incident response procedures. Implemented observability stack reducing mean time to detection by 60%. Managed infrastructure budget of $2M annually."
+      },
+      {
+        "id": "exp-4-2",
+        "company": "FinTech Startup",
+        "role": "Senior DevOps Engineer",
+        "period": "2018 - 2021",
+        "details": "Built CI/CD pipelines for microservices architecture. Implemented IaC using Terraform reducing provisioning time by 70%. Set up monitoring and alerting using Prometheus and Grafana. Managed production environment serving 100K daily active users. Implemented security scanning in CI/CD pipeline."
+      },
+      {
+        "id": "exp-4-3",
+        "company": "Tech Corp",
+        "role": "Systems Administrator",
+        "period": "2015 - 2018",
+        "details": "Maintained Linux servers for production environment. Managed database backups and disaster recovery. Provided 24/7 on-call support for critical systems. Automated routine tasks using shell scripts."
+      }
+    ],
+    "education": [
+      {
+        "id": "edu-4-1",
+        "institution": "University of Washington",
+        "qualification": "B.S. Computer Engineering",
+        "period": "2011 - 2015"
+      }
+    ],
+    "certificate": [
+      { "id": "cert-4-1", "name": "CKA - Kubernetes Administrator", "date": "2023" },
+      { "id": "cert-4-2", "name": "AWS Solutions Architect Professional", "date": "2022" },
+      { "id": "cert-4-3", "name": "HashiCorp Terraform Associate", "date": "2021" }
+    ],
+    "skill": [
+      "Kubernetes",
+      "Docker",
+      "Jenkins",
+      "GitLab CI",
+      "Terraform",
+      "Ansible",
+      "Puppet",
+      "AWS",
+      "GCP",
+      "Azure",
+      "Linux",
+      "Python",
+      "Go",
+      "Prometheus",
+      "Grafana",
+      "ELK Stack",
+      "Networking",
+      "Security"
+    ],
+    "reference": [
+      {
+        "id": "ref-4-1",
+        "name": "Alex Thompson",
+        "role": "VP Engineering",
+        "company": "CloudFirst Inc.",
+        "email": "athompson@cloudfirst.com",
+        "phone": "(555) 999-0000"
+      }
+    ],
+    "additionalInfo": [
+      "Active Secret clearance",
+      "Speaker at AWS re:Invent 2022",
+      "Open source contributor to Kubernetes ecosystem"
+    ]
+  },
+  {
+    "personal": {
+      "fullName": "Emma Rodriguez",
+      "title": "Marketing Manager",
+      "phone": "(555) 567-8901",
+      "email": "emma.r@email.com",
+      "location": "Austin, TX",
+      "linkedin": "linkedin.com/in/emmarodriguez"
+    },
+    "profile": "Results-driven marketing professional with experience in digital marketing, brand management, and demand generation. 6+ years of experience in B2B SaaS marketing. Proven track record of increasing pipeline and revenue through multi-channel campaigns. Data-driven approach with focus on ROI and measurable results.",
+    "competency": [
+      "Digital Marketing",
+      "Brand Management",
+      "Content Strategy",
+      "SEO/SEM",
+      "Analytics",
+      "Email Marketing",
+      "Social Media Marketing",
+      "Marketing Automation",
+      "Lead Generation",
+      "Campaign Management",
+      "Market Research",
+      "Budget Management"
+    ],
+    "experiences": [
+      {
+        "id": "exp-5-1",
+        "company": "GrowthMarketing Co.",
+        "role": "Marketing Manager",
+        "period": "2020 - Present",
+        "details": "Led digital marketing campaigns increasing MQLs by 45%. Managed $500K annual marketing budget. Grew social media following by 200%. Implemented marketing automation improving conversion rates by 30%. Developed content strategy increasing organic traffic by 80%. Led team of 4 marketing specialists."
+      },
+      {
+        "id": "exp-5-2",
+        "company": "SaaS Company",
+        "role": "Digital Marketing Specialist",
+        "period": "2017 - 2020",
+        "details": "Managed PPC campaigns across Google and LinkedIn. Created landing pages improving conversion rates by 25%. Analyzed marketing metrics and reported to leadership. Assisted with brand messaging and positioning."
+      }
+    ],
+    "education": [
+      {
+        "id": "edu-5-1",
+        "institution": "University of Texas",
+        "qualification": "B.B.A. Marketing",
+        "period": "2013 - 2017"
+      },
+      {
+        "id": "edu-5-2",
+        "institution": "HubSpot Academy",
+        "qualification": "Inbound Marketing Certification",
+        "period": "2018"
+      }
+    ],
+    "certificate": [
+      { "id": "cert-5-1", "name": "Google Analytics Certified", "date": "2023" },
+      { "id": "cert-5-2", "name": "HubSpot Inbound Marketing", "date": "2022" },
+      { "id": "cert-5-3", "name": "Facebook Blueprint Certification", "date": "2021" }
+    ],
+    "skill": [
+      "Google Analytics",
+      "HubSpot",
+      "Marketo",
+      "SEMrush",
+      "Mailchimp",
+      "Hootsuite",
+      "WordPress",
+      "Salesforce",
+      " Tableau",
+      "Google Ads",
+      "LinkedIn Ads",
+      "Content Writing",
+      "SEO",
+      "A/B Testing"
+    ],
+    "reference": [
+      {
+        "id": "ref-5-1",
+        "name": "Jennifer Smith",
+        "role": "CMO",
+        "company": "GrowthMarketing Co.",
+        "email": "jsmith@growthmarketing.com",
+        "phone": "(555) 222-3333"
+      }
+    ],
+    "additionalInfo": [
+      "Willing to travel up to 25%",
+      "Speaker at MarketingProfs conference",
+      "Board member of local marketing association"
+    ]
+  }
+]

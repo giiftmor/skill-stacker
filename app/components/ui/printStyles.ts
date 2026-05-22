@@ -12,46 +12,45 @@ export const A4_PAGE_STYLE = `
   
   @media print {
     html, body {
-      -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
       background: white !important;
     }
-    
 
-    /* Remove shadows/rounded corners in print only */
+    /* Allow content to flow naturally */
+    .cv-section-wrapper {
+      page-break-inside: auto;
+      break-inside: auto;
+    }
+
+    /* Prevent orphan lines */
+    p, li, div {
+      orphans: 2;
+      widows: 2;
+    }
+
+    /* Hide dev indicators in print */
+    .break-line-indicator::after,
+    .overflow-indicator::before {
+      display: none !important;
+    }
+
+    /* Remove shadows/bounded corners in print */
     * {
       box-shadow: none !important;
       border-radius: 0 !important;
     }
 
-    /* ✅ Allow long sections to split naturally across pages */
-    section {
-      page-break-inside: auto !important;
-      break-inside: auto !important;
-    }
-
-    /* Keep headings near their content without being overly strict */
+    /* Professional heading behavior */
     h1, h2, h3, h4, h5, h6 {
-      break-after: avoid-page;
       page-break-after: avoid;
+      break-after: avoid;
     }
 
-    /* Reasonable paragraph/list widows/orphans for professional look */
-    p, li {
-      orphans: 3;
-      widows: 3;
-    }
-
-    /* Keep a single list item together; fine to split between items */
-    li, .mb-3 {
+    /* Allow list items to break if needed */
+    li {
       page-break-inside: avoid;
       break-inside: avoid;
-    }
-
-    /* Paragraph blocks may break if needed */
-    .mb-4 {
-      page-break-inside: auto;
-      break-inside: auto;
     }
   }
 `;
@@ -60,8 +59,8 @@ export const A4_PAGE_STYLE = `
  * A4 dimensions and styling classes
  */
 export const A4_DIMENSIONS = {
-  width: "210mm", // A4 width
-  height: "297mm", // A4 height
-  padding: "15mm", // Standard margin
-  maxWidth: "180mm", // Width minus margins (210mm - 2*15mm)
+  width: "210mm",
+  height: "297mm",
+  padding: "15mm",
+  maxWidth: "180mm",
 } as const;

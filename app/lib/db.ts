@@ -1,43 +1,63 @@
-// app/lib/db.ts - MySQL Version
-import { info } from "console";
-import mysql from "mysql2/promise";
+// app/lib/db.ts - PostgreSQL Version
+import { Pool, QueryResult } from "pg";
 
-let pool: mysql.Pool | null = null;
+let pool: Pool | null = null;
+
+interface CVPhoto {
+  id: number;
+  cv_id: number;
+  filename: string;
+  original_name: string;
+  mime_type: string;
+  size: number;
+  url: string;
+  created_at: Date;
+}
+
+interface CVVersion {
+  id: number;
+  cv_id: number;
+  data: string;
+  created_at: Date;
+}
+
+interface TemplateSettings {
+  template: string;
+  theme: string;
+  fontPair: string;
+  colorScheme: string;
+}
 
 // Database configuration
 const dbConfig = {
   host: process.env.DB_HOST || "localhost",
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PASSWORD || "",
+  port: parseInt(process.env.DB_PORT || "5432"),
+  user: process.env.DB_USER || "postgres",
+  password: process.env.DB_PASSWORD || "postgres",
   database: process.env.DB_NAME || "cvbuilder",
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
 };
 
 // Initialize database connection pool
 export function getPool() {
   if (!pool) {
-    pool = mysql.createPool(dbConfig);
+    pool = new Pool(dbConfig);
+    console.log("PostgreSQL pool created");
   }
   return pool;
 }
 
 // Initialize database tables
 export async function initDb() {
-  const connection = await getPool().getConnection();
+  const client = await getPool().connect();
 
   try {
-    // Create database if it doesn't exist
-    await connection.query(
-      `CREATE DATABASE IF NOT EXISTS ${dbConfig.database}`,
-    );
-    await connection.query(`USE ${dbConfig.database}`);
-
-    // Create CVs table
-    await connection.query(`
+    // Create CVs table with template_settings
+    await client.query(`
       CREATE TABLE IF NOT EXISTS cvs (
-        id INT AUTO_INCREMENT PRIMARY KEY,
+        id SERIAL PRIMARY KEY,
         full_name VARCHAR(255) NOT NULL,
         title VARCHAR(255),
         phone VARCHAR(50),
@@ -45,106 +65,143 @@ export async function initDb() {
         location VARCHAR(255),
         linkedin VARCHAR(255),
         profile TEXT,
+        template_settings JSONB DEFAULT '{}',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        INDEX idx_full_name (full_name),
-        INDEX idx_email (email)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Add template_settings column if it doesn't exist
+    await client.query(`
+      ALTER TABLE cvs ADD COLUMN IF NOT EXISTS template_settings JSONB DEFAULT '{}'
+    `);
+
+    // Create index if not exists
+    await client.query(`
+      DO $$ 
+      BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_cvs_full_name') THEN
+          CREATE INDEX idx_cvs_full_name ON cvs(full_name);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_cvs_email') THEN
+          CREATE INDEX idx_cvs_email ON cvs(email);
+        END IF;
+      END $$
+    `);
+
+    // Create CV Photos table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS cv_photos (
+        id SERIAL PRIMARY KEY,
+        cv_id INTEGER NOT NULL REFERENCES cvs(id) ON DELETE CASCADE,
+        filename VARCHAR(255) NOT NULL,
+        original_name VARCHAR(255),
+        mime_type VARCHAR(100),
+        size INTEGER,
+        url TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create CV Versions table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS cv_versions (
+        id SERIAL PRIMARY KEY,
+        cv_id INTEGER NOT NULL REFERENCES cvs(id) ON DELETE CASCADE,
+        data JSONB NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create CV versions index
+    await client.query(`
+      DO $$
+      BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_cv_versions_cv_id') THEN
+          CREATE INDEX idx_cv_versions_cv_id ON cv_versions(cv_id);
+        END IF;
+      END $$
     `);
 
     // Create Competencies table
-    await connection.query(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS competencies (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        cv_id INT NOT NULL,
-        competency VARCHAR(255) NOT NULL,
-        FOREIGN KEY (cv_id) REFERENCES cvs(id) ON DELETE CASCADE,
-        INDEX idx_cv_id (cv_id)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        id SERIAL PRIMARY KEY,
+        cv_id INTEGER NOT NULL REFERENCES cvs(id) ON DELETE CASCADE,
+        competency VARCHAR(255) NOT NULL
+      )
     `);
 
     // Create Experiences table
-    await connection.query(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS experiences (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        cv_id INT NOT NULL,
+        id SERIAL PRIMARY KEY,
+        cv_id INTEGER NOT NULL REFERENCES cvs(id) ON DELETE CASCADE,
         company VARCHAR(255),
         role VARCHAR(255),
         period VARCHAR(255),
-        details TEXT,
-        FOREIGN KEY (cv_id) REFERENCES cvs(id) ON DELETE CASCADE,
-        INDEX idx_cv_id (cv_id)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        details TEXT
+      )
     `);
 
     // Create Education table
-    await connection.query(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS education (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        cv_id INT NOT NULL,
+        id SERIAL PRIMARY KEY,
+        cv_id INTEGER NOT NULL REFERENCES cvs(id) ON DELETE CASCADE,
         institution VARCHAR(255),
         qualification VARCHAR(255),
-        period VARCHAR(255),
-        FOREIGN KEY (cv_id) REFERENCES cvs(id) ON DELETE CASCADE,
-        INDEX idx_cv_id (cv_id)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        period VARCHAR(255)
+      )
     `);
 
     // Create Certificates table
-    await connection.query(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS certificates (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        cv_id INT NOT NULL,
+        id SERIAL PRIMARY KEY,
+        cv_id INTEGER NOT NULL REFERENCES cvs(id) ON DELETE CASCADE,
         name VARCHAR(255),
-        date VARCHAR(255),
-        FOREIGN KEY (cv_id) REFERENCES cvs(id) ON DELETE CASCADE,
-        INDEX idx_cv_id (cv_id)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        date VARCHAR(255)
+      )
     `);
 
     // Create Skills table
-    await connection.query(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS skills (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        cv_id INT NOT NULL,
-        skill VARCHAR(255) NOT NULL,
-        FOREIGN KEY (cv_id) REFERENCES cvs(id) ON DELETE CASCADE,
-        INDEX idx_cv_id (cv_id)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        id SERIAL PRIMARY KEY,
+        cv_id INTEGER NOT NULL REFERENCES cvs(id) ON DELETE CASCADE,
+        skill VARCHAR(255) NOT NULL
+      )
     `);
 
     // Create References table
-    await connection.query(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS reference_list (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        cv_id INT NOT NULL,
+        id SERIAL PRIMARY KEY,
+        cv_id INTEGER NOT NULL REFERENCES cvs(id) ON DELETE CASCADE,
         name VARCHAR(255),
         company VARCHAR(255),
         role VARCHAR(255),
         email VARCHAR(255),
-        phone VARCHAR(50),
-        FOREIGN KEY (cv_id) REFERENCES cvs(id) ON DELETE CASCADE,
-        INDEX idx_cv_id (cv_id)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        phone VARCHAR(255)
+      )
     `);
 
-    // Create References table
-    await connection.query(`
+    // Create Additional Info table
+    await client.query(`
       CREATE TABLE IF NOT EXISTS additional_info (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        cv_id INT NOT NULL,
-        info TEXT NOT NULL,
-        FOREIGN KEY (cv_id) REFERENCES cvs(id) ON DELETE CASCADE,
-        INDEX idx_cv_id (cv_id)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        id SERIAL PRIMARY KEY,
+        cv_id INTEGER NOT NULL REFERENCES cvs(id) ON DELETE CASCADE,
+        info TEXT NOT NULL
+      )
     `);
 
-    console.log("Database tables initialized successfully");
+    console.log("PostgreSQL tables initialized successfully");
   } catch (error) {
     console.error("Error initializing database:", error);
     throw error;
   } finally {
-    connection.release();
+    client.release();
   }
 }
 
@@ -184,16 +241,18 @@ export async function saveCV(data: {
     phone: string;
   }>;
   additionalInfo: string[];
+  templateSettings?: TemplateSettings;
 }) {
-  const connection = await getPool().getConnection();
+  const client = await getPool().connect();
 
   try {
-    await connection.beginTransaction();
+    await client.query("BEGIN");
 
     // Insert CV personal information
-    const [result] = await connection.query(
-      `INSERT INTO cvs (full_name, title, phone, email, location, linkedin, profile)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    const cvResult = await client.query(
+      `INSERT INTO cvs (full_name, title, phone, email, location, linkedin, profile, template_settings)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING id`,
       [
         data.personal.fullName,
         data.personal.title,
@@ -202,420 +261,411 @@ export async function saveCV(data: {
         data.personal.location,
         data.personal.linkedin,
         data.profile,
+        data.templateSettings ? JSON.stringify(data.templateSettings) : '{}',
       ],
     );
-
-    const cvId = (result as mysql.ResultSetHeader).insertId;
+    const cvId = cvResult.rows[0].id;
 
     // Insert competencies
-    if (data.competency.filter(Boolean).length > 0) {
-      const competencyValues = data.competency
-        .filter(Boolean)
-        .map((competency) => [cvId, competency]);
-
-      await connection.query(
-        "INSERT INTO competencies (cv_id, competency) VALUES ?",
-        [competencyValues],
+    for (const comp of data.competency.filter(Boolean)) {
+      await client.query(
+        "INSERT INTO competencies (cv_id, competency) VALUES ($1, $2)",
+        [cvId, comp],
       );
     }
 
     // Insert experiences
-    const validExperiences = data.experiences.filter(
-      (e) => e.company || e.role,
-    );
-    if (validExperiences.length > 0) {
-      const expValues = validExperiences.map((exp) => [
-        cvId,
-        exp.company,
-        exp.role,
-        exp.period,
-        exp.details,
-      ]);
-
-      await connection.query(
-        `INSERT INTO experiences (cv_id, company, role, period, details)
-         VALUES ?`,
-        [expValues],
+    for (const exp of data.experiences.filter((e) => e.company || e.role)) {
+      await client.query(
+        "INSERT INTO experiences (cv_id, company, role, period, details) VALUES ($1, $2, $3, $4, $5)",
+        [cvId, exp.company, exp.role, exp.period, exp.details],
       );
     }
 
     // Insert education
-    const validEducation = data.education.filter(
-      (e) => e.institution || e.qualification,
-    );
-    if (validEducation.length > 0) {
-      const eduValues = validEducation.map((edu) => [
-        cvId,
-        edu.institution,
-        edu.qualification,
-        edu.period,
-      ]);
-
-      await connection.query(
-        `INSERT INTO education (cv_id, institution, qualification, period)
-         VALUES ?`,
-        [eduValues],
+    for (const edu of data.education.filter((e) => e.institution || e.qualification)) {
+      await client.query(
+        "INSERT INTO education (cv_id, institution, qualification, period) VALUES ($1, $2, $3, $4)",
+        [cvId, edu.institution, edu.qualification, edu.period],
       );
     }
 
     // Insert certificates
-    const validCertificate = data.certificate.filter(
-      (e: any) => e.name || e.date,
-    );
-    if (validCertificate.length > 0) {
-      const certValues = validCertificate.map((cert: any) => [
-        cvId,
-        cert.name,
-        cert.date,
-      ]);
-
-      await connection.query(
-        `INSERT INTO certificates (cv_id, name, date)
-         VALUES ?`,
-        [certValues],
+    for (const cert of data.certificate.filter((c) => c.name || c.date)) {
+      await client.query(
+        "INSERT INTO certificates (cv_id, name, date) VALUES ($1, $2, $3)",
+        [cvId, cert.name, cert.date],
       );
     }
 
     // Insert skills
-    if (data.skill.filter(Boolean).length > 0) {
-      const skillValues = data.skill
-        .filter(Boolean)
-        .map((skill) => [cvId, skill]);
-
-      await connection.query("INSERT INTO skills (cv_id, skill) VALUES ?", [
-        skillValues,
-      ]);
-    }
-
-    const validReference = data.reference.filter((e: any) => e.name || e.role);
-    if (validReference.length > 0) {
-      const refValues = validReference.map((ref: any) => [
+    for (const skill of data.skill.filter(Boolean)) {
+      await client.query("INSERT INTO skills (cv_id, skill) VALUES ($1, $2)", [
         cvId,
-        ref.name,
-        ref.company,
-        ref.role,
-        ref.email,
-        ref.phone,
+        skill,
       ]);
+    }
 
-      await connection.query(
-        `INSERT INTO reference_list (cv_id, name, company, role, email, phone )
-         VALUES ?`,
-        [refValues],
+    // Insert references
+    for (const ref of data.reference.filter((r) => r.name || r.company)) {
+      await client.query(
+        "INSERT INTO reference_list (cv_id, name, company, role, email, phone) VALUES ($1, $2, $3, $4, $5, $6)",
+        [cvId, ref.name, ref.company, ref.role, ref.email, ref.phone],
       );
     }
 
-    if (data.additionalInfo.filter(Boolean).length > 0) {
-      const infoValues = data.additionalInfo
-        .filter(Boolean)
-        .map((info: string) => [cvId, info]);
-
-      await connection.query(
-        "INSERT INTO additional_info (cv_id, info) VALUES ?",
-        [infoValues],
-      );
+    // Insert additional info
+    for (const info of data.additionalInfo.filter(Boolean)) {
+      await client.query("INSERT INTO additional_info (cv_id, info) VALUES ($1, $2)", [
+        cvId,
+        info,
+      ]);
     }
 
-    await connection.commit();
+    await client.query("COMMIT");
     return { success: true, cvId };
   } catch (error) {
-    await connection.rollback();
+    await client.query("ROLLBACK");
     console.error("Error saving CV:", error);
     throw error;
   } finally {
-    connection.release();
+    client.release();
   }
 }
 
-// Update existing CV
-export async function updateCV(cvId: number, data: any) {
-  const connection = await getPool().getConnection();
-
-  try {
-    await connection.beginTransaction();
-
-    // Update CV personal information
-    const [updateResult] = await connection.query(
-      `UPDATE cvs 
-       SET full_name = ?, title = ?, phone = ?, email = ?, location = ?, 
-       linkedin = ?, profile = ?, updated_at = CURRENT_TIMESTAMP
-       WHERE id = ?`,
-      [
-        data.personal.fullName,
-        data.personal.title,
-        data.personal.phone,
-        data.personal.email,
-        data.personal.location,
-        data.personal.linkedin,
-        data.profile,
-        cvId,
-      ],
-    );
-
-    // Validate update success
-    const updateResultSet = updateResult as mysql.ResultSetHeader;
-    if (updateResultSet.affectedRows === 0) {
-      throw new Error(`CV with ID ${cvId} not found`);
-    }
-
-    // Delete existing related records
-    await connection.query("DELETE FROM competencies WHERE cv_id = ?", [cvId]);
-    await connection.query("DELETE FROM experiences WHERE cv_id = ?", [cvId]);
-    await connection.query("DELETE FROM education WHERE cv_id = ?", [cvId]);
-    await connection.query("DELETE FROM certificates WHERE cv_id = ?", [cvId]);
-    await connection.query("DELETE FROM skills WHERE cv_id = ?", [cvId]);
-    await connection.query("DELETE FROM reference_list WHERE cv_id = ?", [
-      cvId,
-    ]);
-    await connection.query("DELETE FROM additional_info WHERE cv_id = ?", [
-      cvId,
-    ]);
-
-    // Re-insert competencies (independent section)
-    if (data.competency.filter(Boolean).length > 0) {
-      const competencyValues = data.competency
-        .filter(Boolean)
-        .map((competency: string) => [cvId, competency]);
-
-      await connection.query(
-        "INSERT INTO competencies (cv_id, competency) VALUES ?",
-        [competencyValues],
-      );
-    }
-
-    // Re-insert experiences (independent section)
-    const validExperiences = data.experiences.filter(
-      (e: any) => e.company || e.role,
-    );
-    if (validExperiences.length > 0) {
-      const expValues = validExperiences.map((exp: any) => [
-        cvId,
-        exp.company,
-        exp.role,
-        exp.period,
-        exp.details,
-      ]);
-
-      await connection.query(
-        `INSERT INTO experiences (cv_id, company, role, period, details)
-         VALUES ?`,
-        [expValues],
-      );
-    }
-
-    // Re-insert education (independent section)
-    const validEducation = data.education.filter(
-      (e: any) => e.institution || e.qualification,
-    );
-    if (validEducation.length > 0) {
-      const eduValues = validEducation.map((edu: any) => [
-        cvId,
-        edu.institution,
-        edu.qualification,
-        edu.period,
-      ]);
-
-      await connection.query(
-        `INSERT INTO education (cv_id, institution, qualification, period)
-         VALUES ?`,
-        [eduValues],
-      );
-    }
-
-    // Re-insert certificates (independent section)
-    const validCertificate = data.certificate.filter(
-      (e: any) => e.name || e.date,
-    );
-    if (validCertificate.length > 0) {
-      const certValues = validCertificate.map((cert: any) => [
-        cvId,
-        cert.name,
-        cert.date,
-      ]);
-
-      await connection.query(
-        `INSERT INTO certificates (cv_id, name, date)
-         VALUES ?`,
-        [certValues],
-      );
-    }
-
-    // Re-insert skills (independent section)
-    if (data.skill.filter(Boolean).length > 0) {
-      const skillValues = data.skill
-        .filter(Boolean)
-        .map((skill: string) => [cvId, skill]);
-
-      await connection.query("INSERT INTO skills (cv_id, skill) VALUES ?", [
-        skillValues,
-      ]);
-    }
-
-    // Re-insert references (independent section)
-    const validReference = data.reference.filter((e: any) => e.name || e.role);
-    if (validReference.length > 0) {
-      const refValues = validReference.map((ref: any) => [
-        cvId,
-        ref.name,
-        ref.company,
-        ref.role,
-        ref.email,
-        ref.phone,
-      ]);
-
-      await connection.query(
-        `INSERT INTO reference_list (cv_id, name, company, role, email, phone)
-         VALUES ?`,
-        [refValues],
-      );
-    }
-
-    // Re-insert additional info (independent section)
-    if (data.additionalInfo.filter(Boolean).length > 0) {
-      const infoValues = data.additionalInfo
-        .filter(Boolean)
-        .map((info: string) => [cvId, info]);
-
-      await connection.query(
-        "INSERT INTO additional_info (cv_id, info) VALUES ?",
-        [infoValues],
-      );
-    }
-
-    await connection.commit();
-    return { success: true, cvId };
-  } catch (error) {
-    await connection.rollback();
-    console.error("Error updating CV:", error);
-    throw error;
-  } finally {
-    connection.release();
-  }
-}
-
-// Get CV by ID
-export async function getCV(cvId: number) {
-  const connection = await getPool().getConnection();
-
-  try {
-    const [cvRows] = await connection.query("SELECT * FROM cvs WHERE id = ?", [
-      cvId,
-    ]);
-
-    const cvArray = cvRows as mysql.RowDataPacket[];
-    if (cvArray.length === 0) return null;
-
-    const cv = cvArray[0];
-
-    const [competencyRows] = await connection.query(
-      "SELECT competency FROM competencies WHERE cv_id = ? ORDER BY id",
-      [cvId],
-    );
-
-    const [experienceRows] = await connection.query(
-      "SELECT company, role, period, details FROM experiences WHERE cv_id = ? ORDER BY id",
-      [cvId],
-    );
-
-    const [educationRows] = await connection.query(
-      "SELECT institution, qualification, period FROM education WHERE cv_id = ? ORDER BY id",
-      [cvId],
-    );
-    const [certificateRows] = await connection.query(
-      "SELECT name, date FROM certificates WHERE cv_id = ? ORDER BY id",
-      [cvId],
-    );
-
-    const [skillRows] = await connection.query(
-      "SELECT skill FROM skills WHERE cv_id = ? ORDER BY id",
-      [cvId],
-    );
-
-    const [referenceRows] = await connection.query(
-      "SELECT name, company, role, email, phone FROM reference_list WHERE cv_id = ? ORDER BY id",
-      [cvId],
-    );
-    const [additionalInfoRows] = await connection.query(
-      "SELECT info FROM additional_info WHERE cv_id = ? ORDER BY id",
-      [cvId],
-    );
-
-    return {
-      personal: {
-        fullName: cv.full_name,
-        title: cv.title,
-        phone: cv.phone,
-        email: cv.email,
-        location: cv.location,
-        linkedin: cv.linkedin,
-      },
-      profile: cv.profile,
-      competency: (competencyRows as mysql.RowDataPacket[]).map(
-        (s) => s.competency,
-      ),
-      experiences: experienceRows as mysql.RowDataPacket[],
-      education: educationRows as mysql.RowDataPacket[],
-      certificate: certificateRows as mysql.RowDataPacket[],
-      skill: (skillRows as mysql.RowDataPacket[]).map((s) => s.skill),
-      reference: referenceRows as mysql.RowDataPacket[],
-      additionalInfo: (additionalInfoRows as mysql.RowDataPacket[]).map(
-        (info) => info.additionalInfo,
-      ),
-      createdAt: cv.created_at,
-      updatedAt: cv.updated_at,
-    };
-  } finally {
-    connection.release();
-  }
-}
-
-// Get all CVs (summary list)
+// Get all CVs
 export async function getAllCVs() {
-  const connection = await getPool().getConnection();
+  const result = await getPool().query(
+    `SELECT id, full_name as "fullName", title, phone, email, location, linkedin, profile,
+            created_at as "createdAt", updated_at as "updatedAt"
+     FROM cvs ORDER BY updated_at DESC`,
+  );
+  return result.rows;
+}
+
+// Get single CV
+export async function getCV(id: number) {
+  const client = await getPool().connect();
 
   try {
-    const [rows] = await connection.query(
-      "SELECT id, full_name, title, email, created_at, updated_at FROM cvs ORDER BY updated_at DESC",
+    // Get CV basic info
+    const cvResult = await client.query(
+      "SELECT * FROM cvs WHERE id = $1",
+      [id],
     );
+    if (cvResult.rows.length === 0) {
+      throw new Error("CV not found");
+    }
+    const cv = cvResult.rows[0];
 
-    return (rows as mysql.RowDataPacket[]).map((cv) => ({
-      id: cv.id,
-      fullName: cv.full_name,
-      title: cv.title,
-      email: cv.email,
-      createdAt: cv.created_at,
-      updatedAt: cv.updated_at,
-    }));
+    // Get experiences
+    const expResult = await client.query(
+      "SELECT * FROM experiences WHERE cv_id = $1 ORDER BY id",
+      [id],
+    );
+    cv.experiences = expResult.rows;
+
+    // Get education
+    const eduResult = await client.query(
+      "SELECT * FROM education WHERE cv_id = $1 ORDER BY id",
+      [id],
+    );
+    cv.education = eduResult.rows;
+
+    // Get competencies
+    const compResult = await client.query(
+      "SELECT competency FROM competencies WHERE cv_id = $1",
+      [id],
+    );
+    cv.competency = compResult.rows.map((r) => r.competency);
+
+    // Get certificates
+    const certResult = await client.query(
+      "SELECT name, date FROM certificates WHERE cv_id = $1",
+      [id],
+    );
+    cv.certificate = certResult.rows;
+
+    // Get skills
+    const skillResult = await client.query(
+      "SELECT skill FROM skills WHERE cv_id = $1",
+      [id],
+    );
+    cv.skill = skillResult.rows.map((r) => r.skill);
+
+    // Get references
+    const refResult = await client.query(
+      "SELECT * FROM reference_list WHERE cv_id = $1",
+      [id],
+    );
+    cv.reference = refResult.rows;
+
+    // Get additional info
+    const infoResult = await client.query(
+      "SELECT info FROM additional_info WHERE cv_id = $1",
+      [id],
+    );
+    cv.additionalInfo = infoResult.rows.map((r) => r.info);
+
+    return cv;
   } finally {
-    connection.release();
+    client.release();
   }
 }
 
 // Delete CV
-export async function deleteCV(cvId: number) {
-  const connection = await getPool().getConnection();
-
-  try {
-    await connection.query("DELETE FROM cvs WHERE id = ?", [cvId]);
-    return { success: true };
-  } catch (error) {
-    console.error("Error deleting CV:", error);
-    throw error;
-  } finally {
-    connection.release();
-  }
+export async function deleteCV(id: number) {
+  await getPool().query("DELETE FROM cvs WHERE id = $1", [id]);
+  return { success: true };
 }
 
 // Test database connection
 export async function testConnection() {
   try {
-    const connection = await getPool().getConnection();
-    await connection.ping();
-    connection.release();
-    console.log("Database connection successful");
+    const result = await getPool().query("SELECT 1");
+    console.log("PostgreSQL connection successful");
     return true;
   } catch (error) {
-    console.error("Database connection failed:", error);
+    console.error("PostgreSQL connection failed:", error);
     return false;
   }
+}
+
+// Update existing CV
+export async function updateCV(
+  cvId: number,
+  data: {
+    personal: {
+      fullName: string;
+      title: string;
+      phone: string;
+      email: string;
+      location: string;
+      linkedin: string;
+    };
+    profile: string;
+    competency: string[];
+    experiences: Array<{
+      company: string;
+      role: string;
+      period: string;
+      details: string;
+    }>;
+    education: Array<{
+      institution: string;
+      qualification: string;
+      period: string;
+    }>;
+    certificate: Array<{
+      name: string;
+      date: string;
+    }>;
+    skill: string[];
+    reference: Array<{
+      name: string;
+      company: string;
+      role: string;
+      email: string;
+      phone: string;
+    }>;
+    additionalInfo: string[];
+  },
+) {
+  const client = await getPool().connect();
+
+  try {
+    await client.query("BEGIN");
+
+    // Update CV personal information
+    await client.query(
+      `UPDATE cvs 
+       SET full_name = $1, title = $2, phone = $3, email = $4, 
+           location = $5, linkedin = $6, profile = $7, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $8`,
+      [
+        data.personal.fullName,
+        data.personal.title,
+        data.personal.phone,
+        data.personal.email,
+        data.personal.location,
+        data.personal.linkedin,
+        data.profile,
+        cvId,
+      ],
+    );
+
+    // Delete and re-insert related records
+    await client.query("DELETE FROM competencies WHERE cv_id = $1", [cvId]);
+    await client.query("DELETE FROM experiences WHERE cv_id = $1", [cvId]);
+    await client.query("DELETE FROM education WHERE cv_id = $1", [cvId]);
+    await client.query("DELETE FROM certificates WHERE cv_id = $1", [cvId]);
+    await client.query("DELETE FROM skills WHERE cv_id = $1", [cvId]);
+    await client.query("DELETE FROM reference_list WHERE cv_id = $1", [cvId]);
+    await client.query("DELETE FROM additional_info WHERE cv_id = $1", [cvId]);
+
+    // Insert competencies
+    for (const comp of data.competency.filter(Boolean)) {
+      await client.query(
+        "INSERT INTO competencies (cv_id, competency) VALUES ($1, $2)",
+        [cvId, comp],
+      );
+    }
+
+    // Insert experiences
+    for (const exp of data.experiences.filter((e) => e.company || e.role)) {
+      await client.query(
+        "INSERT INTO experiences (cv_id, company, role, period, details) VALUES ($1, $2, $3, $4, $5)",
+        [cvId, exp.company, exp.role, exp.period, exp.details],
+      );
+    }
+
+    // Insert education
+    for (const edu of data.education.filter((e) => e.institution || e.qualification)) {
+      await client.query(
+        "INSERT INTO education (cv_id, institution, qualification, period) VALUES ($1, $2, $3, $4)",
+        [cvId, edu.institution, edu.qualification, edu.period],
+      );
+    }
+
+    // Insert certificates
+    for (const cert of data.certificate.filter((c) => c.name || c.date)) {
+      await client.query("INSERT INTO certificates (cv_id, name, date) VALUES ($1, $2, $3)", [
+        cvId,
+        cert.name,
+        cert.date,
+      ]);
+    }
+
+    // Insert skills
+    for (const skill of data.skill.filter(Boolean)) {
+      await client.query("INSERT INTO skills (cv_id, skill) VALUES ($1, $2)", [cvId, skill]);
+    }
+
+    // Insert references
+    for (const ref of data.reference.filter((r) => r.name || r.company)) {
+      await client.query(
+        "INSERT INTO reference_list (cv_id, name, company, role, email, phone) VALUES ($1, $2, $3, $4, $5, $6)",
+        [cvId, ref.name, ref.company, ref.role, ref.email, ref.phone],
+      );
+    }
+
+    // Insert additional info
+    for (const info of data.additionalInfo.filter(Boolean)) {
+      await client.query("INSERT INTO additional_info (cv_id, info) VALUES ($1, $2)", [cvId, info]);
+    }
+
+    await client.query("COMMIT");
+    return { success: true, cvId };
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("Error updating CV:", error);
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+// Photo management functions
+export async function saveCVPhoto(cvId: number, photoData: {
+  filename: string;
+  original_name: string;
+  mime_type: string;
+  size: number;
+  url: string;
+}) {
+  const client = await getPool().connect();
+
+  try {
+    // Delete existing photo for this CV
+    await client.query("DELETE FROM cv_photos WHERE cv_id = $1", [cvId]);
+
+    // Insert new photo
+    const result = await client.query(
+      `INSERT INTO cv_photos (cv_id, filename, original_name, mime_type, size, url)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [cvId, photoData.filename, photoData.original_name, photoData.mime_type, photoData.size, photoData.url],
+    );
+
+    return { success: true, photo: result.rows[0] };
+  } finally {
+    client.release();
+  }
+}
+
+export async function getCVPhoto(cvId: number): Promise<CVPhoto | null> {
+  const result = await getPool().query(
+    "SELECT * FROM cv_photos WHERE cv_id = $1 LIMIT 1",
+    [cvId],
+  );
+  return result.rows[0] || null;
+}
+
+export async function deleteCVPhoto(cvId: number) {
+  await getPool().query("DELETE FROM cv_photos WHERE cv_id = $1", [cvId]);
+  return { success: true };
+}
+
+// Version management functions
+export async function saveCVVersion(cvId: number, data: Record<string, unknown>) {
+  const client = await getPool().connect();
+
+  try {
+    // Auto-prune: keep only 20 most recent versions
+    await client.query(`
+      DELETE FROM cv_versions
+      WHERE cv_id = $1 AND id NOT IN (
+        SELECT id FROM cv_versions
+        WHERE cv_id = $1
+        ORDER BY created_at DESC
+        LIMIT 19
+      )
+    `, [cvId]);
+
+    // Insert new version
+    const result = await client.query(
+      `INSERT INTO cv_versions (cv_id, data)
+       VALUES ($1, $2)
+       RETURNING *`,
+      [cvId, JSON.stringify(data)],
+    );
+
+    return { success: true, version: result.rows[0] };
+  } finally {
+    client.release();
+  }
+}
+
+export async function getCVVersions(cvId: number): Promise<CVVersion[]> {
+  const result = await getPool().query(
+    "SELECT * FROM cv_versions WHERE cv_id = $1 ORDER BY created_at DESC",
+    [cvId],
+  );
+  return result.rows;
+}
+
+export async function getCVVersion(versionId: number): Promise<CVVersion | null> {
+  const result = await getPool().query(
+    "SELECT * FROM cv_versions WHERE id = $1",
+    [versionId],
+  );
+  return result.rows[0] || null;
+}
+
+// Get CV with template settings
+export async function getCVWithSettings(id: number) {
+  const result = await getPool().query(
+    "SELECT *, template_settings FROM cvs WHERE id = $1",
+    [id],
+  );
+  return result.rows[0] || null;
+}
+
+// Update CV template settings
+export async function updateCVTemplateSettings(cvId: number, settings: TemplateSettings) {
+  await getPool().query(
+    "UPDATE cvs SET template_settings = $1 WHERE id = $2",
+    [JSON.stringify(settings), cvId],
+  );
+  return { success: true };
 }

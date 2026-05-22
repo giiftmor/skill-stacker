@@ -1,15 +1,6 @@
 import { NextResponse } from "next/server";
-import baseSchema from "@/app/lib/env";
 
+// AI endpoints disabled
 export async function GET() {
-  const upstream = await fetch(`${baseSchema.baseUrl}/models`, {
-    headers: { Authorization: `Bearer ${baseSchema.apiKey}` },
-    cache: "no-store",
-  });
-  if (!upstream.ok) {
-    const text = await upstream.text();
-    return NextResponse.json({ error: text }, { status: upstream.status });
-  }
-  const data = await upstream.json();
-  return NextResponse.json(data);
+  return NextResponse.json({ error: "AI endpoints disabled" }, { status: 501 });
 }

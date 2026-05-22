@@ -10,7 +10,7 @@ import {
   pdf,
   Font,
 } from "@react-pdf/renderer";
-import { A4_PAGE_STYLE } from "./ui/printStyles";
+import { A4_PAGE_STYLE } from "../ui/printStyles";
 
 import type { ExportFunctionProps } from "../../types/global";
 import { forwardRef, RefObject, useImperativeHandle, useRef } from "react";
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     color: "#666",
     marginBottom: 3,
   },
-  period: {
+period: {
     fontSize: 10,
     color: "#666",
   },
@@ -117,17 +117,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     lineHeight: 1.4,
     color: "#444",
-  },
-  gridContainer: {
-    display: "grid",
-    gridTemplateColumns: "repeat(1, minmax(250px, 1fr))",
-    gap: 6,
-    "@sm": {
-      gridTemplateColumns: "repeat(2, minmax(250px, 1fr))",
-    },
-    "@md": {
-      gridTemplateColumns: "repeat(3, minmax(250px, 1fr))",
-    },
   },
 });
 
@@ -163,33 +152,26 @@ const CVDocument = ({
         </View>
       )}
 
-      {/* Skills Section */}
+      {/* Skills Section - 2 Column Layout */}
       {skill.filter(Boolean).length > 0 && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Key Skills</Text>
-          {(() => {
-            const validSkills = skill.filter(Boolean);
-            const numColumns = Math.min(Math.ceil(validSkills.length / 5), 3);
-
-            return (
-              <View style={styles.gridContainer}>
-                {Array.from({ length: numColumns }).map((_, colIdx) => (
-                  <View key={colIdx} style={{ marginBottom: 5 }}>
-                    {validSkills
-                      .slice(colIdx * 5, colIdx * 5 + 5)
-                      .map((skill, idx) => (
-                        <Text
-                          key={`${skill}-${idx}`}
-                          style={styles.bulletPoint}
-                        >
-                          • {skill}
-                        </Text>
-                      ))}
-                  </View>
-                ))}
-              </View>
-            );
-          })()}
+          <View style={{ flexDirection: "row", gap: 20 }}>
+            <View style={{ flex: 1 }}>
+              {skill.filter(Boolean).slice(0, Math.ceil(skill.filter(Boolean).length / 2)).map((s, idx) => (
+                <Text key={`skill-l-${idx}`} style={styles.bulletPoint}>
+                  • {s}
+                </Text>
+              ))}
+            </View>
+            <View style={{ flex: 1 }}>
+              {skill.filter(Boolean).slice(Math.ceil(skill.filter(Boolean).length / 2)).map((s, idx) => (
+                <Text key={`skill-r-${idx}`} style={styles.bulletPoint}>
+                  • {s}
+                </Text>
+              ))}
+            </View>
+          </View>
         </View>
       )}
 
@@ -499,22 +481,29 @@ export const exportToDocx = async ({
               : []),
 
             // References Section
-            ...(reference.filter(Boolean).length > 0
+            ...(reference.filter((r) => r.name || r.company).length > 0
               ? [
                   new Paragraph({
                     children: [
                       new TextRun({ text: "References", bold: true, size: 28 }),
                     ],
                   }),
-                  ...reference.filter(Boolean).map(
-                    (ref) =>
-                      new Paragraph({
-                        children: [new TextRun({ text: ref, size: 22 })],
-                      }),
-                  ),
+                  ...reference
+                    .filter((r) => r.name || r.company)
+                    .map(
+                      (ref) =>
+                        new Paragraph({
+                          children: [
+                            new TextRun({
+                              text: `${ref.name}${ref.company ? ` - ${ref.company}` : ""}`,
+                              size: 22,
+                            }),
+                          ],
+                        }),
+                    ),
                 ]
               : []),
-          ],
+],
         },
       ],
     });
