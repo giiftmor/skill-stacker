@@ -241,7 +241,7 @@ type CVBuilderFormProps = {
 };
 
 // Template Types
-interface TemplatePreviewProps {
+type TemplatePreviewProps = {
   personal: PersonalInfo;
   profile?: string;
   competency: string[];
@@ -265,7 +265,7 @@ interface TemplatePreviewProps {
   photoUrl?: string;
 }
 
-interface TemplateSection {
+type TemplateSection = {
   key: string;
   content: ReactNode;
   estimatedHeight: number;
@@ -274,7 +274,7 @@ interface TemplateSection {
   clipFrom?: number;
 }
 
-interface TemplateSectionsResult {
+type TemplateSectionsResult = {
   sidebar?: TemplateSection[];
   main: TemplateSection[];
 }
