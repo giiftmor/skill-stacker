@@ -10,6 +10,8 @@ import { useAutoSave } from "../../../hooks/useAutoSave";
 import { TemplateId, TemplateSettings } from "../../../lib/templates/templateDefinitions";
 import { exportCV } from "../../../lib/export/exportDispatcher";
 import UploadPhoto from "../../../components/ui/UploadPhoto";
+import { TailorPanel } from "../../../components/tailor/TailorPanel";
+import type { TailorApplyUpdate } from "../../../lib/tailor/types";
 
 export default function EditCVPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -39,6 +41,7 @@ export default function EditCVPage({ params }: { params: Promise<{ id: string }>
   const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
   const previewRef = useRef<HTMLDivElement>(null);
   const printRef = useRef<any>(null);
+  const snapshotDoneRef = useRef(false);
 
   useEffect(() => {
     loadCV();
@@ -93,6 +96,25 @@ export default function EditCVPage({ params }: { params: Promise<{ id: string }>
     onSave: handleSave,
     enabled: !loading,
   });
+
+  const handleTailorApply = (update: TailorApplyUpdate) => {
+    if (!snapshotDoneRef.current) {
+      fetch(`/api/cv/${cvId}/snapshot`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(cvData),
+      });
+      snapshotDoneRef.current = true;
+    }
+    if (update.profile !== undefined) setProfile(update.profile);
+    if (update.skill !== undefined) setSkills(update.skill);
+    if (update.competency !== undefined) setCompetencies(update.competency);
+    if (update.experiences && update.experiences.length > 0) {
+      setExperiences((prev) =>
+        prev.map((exp, i) => (update.experiences![i] ? { ...exp, details: update.experiences![i].details } : exp))
+      );
+    }
+  };
 
   const updatePersonal = (field: string, value: string) => setPersonal((p) => ({ ...p, [field]: value }));
   const addExperience = () => setExperiences((e) => [...e, { id: generateId(), company: "", role: "", period: "", details: "" }]);
@@ -164,6 +186,9 @@ export default function EditCVPage({ params }: { params: Promise<{ id: string }>
         ]}
       />
       <main className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <TailorPanel cv={cvData} onApply={handleTailorApply} />
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-2">
             <div className="mb-4">
