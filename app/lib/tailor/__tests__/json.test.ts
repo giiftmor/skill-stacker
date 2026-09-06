@@ -7,16 +7,18 @@ describe("parseJsonObject", () => {
   });
 
   it("strips markdown code fences", () => {
-    const raw = "```json\n{\"a\": 1}\n```";
+    const raw = '```json\n{"a": 1}\n```';
     expect(parseJsonObject(raw)).toEqual({ a: 1 });
   });
 
   it("extracts the first object from prose", () => {
-    const raw = "Here you go:\n{\"must_have\": [\"x\"]}\nThanks!";
+    const raw = 'Here you go:\n{"must_have": ["x"]}\nThanks!';
     expect(parseJsonObject(raw)).toEqual({ must_have: ["x"] });
   });
 
   it("throws on unparseable input", () => {
-    expect(() => parseJsonObject("no json here")).toThrow("Could not parse JSON from model output");
+    expect(() => parseJsonObject("no json here")).toThrow(
+      "Could not parse JSON from model output",
+    );
   });
 });

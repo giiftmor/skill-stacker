@@ -114,7 +114,8 @@ export function TailorPanel({
           />
           <button
             onClick={analyze}
-            type="button" className="px-4 py-2 rounded bg-[#d4a853] text-[#0d0d0d] font-medium self-start"
+            type="button"
+            className="px-4 py-2 rounded bg-[#d4a853] text-[#0d0d0d] font-medium self-start"
           >
             Analyze
           </button>

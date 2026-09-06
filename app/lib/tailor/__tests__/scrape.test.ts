@@ -3,7 +3,8 @@ import { extractMainText } from "../scrape";
 
 describe("extractMainText", () => {
   it("drops short and boilerplate lines", () => {
-    const text = "Home\nSearch\n\nSenior React Engineer needed to build dashboards.\nWe are hiring.\n";
+    const text =
+      "Home\nSearch\n\nSenior React Engineer needed to build dashboards.\nWe are hiring.\n";
     const out = extractMainText(text);
     expect(out).not.toContain("Home");
     expect(out).not.toContain("Search");

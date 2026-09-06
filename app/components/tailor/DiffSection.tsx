@@ -30,14 +30,16 @@ export function DiffSection({
           <div className="flex gap-2">
             <button
               onClick={onReject}
-              type="button" className="px-3 py-1 text-xs rounded border border-[#555] text-[#cfcfcf]"
+              type="button"
+              className="px-3 py-1 text-xs rounded border border-[#555] text-[#cfcfcf]"
               disabled={applied}
             >
               Reject
             </button>
             <button
               onClick={onApply}
-              type="button" className="px-3 py-1 text-xs rounded bg-[#d4a853] text-[#0d0d0d]"
+              type="button"
+              className="px-3 py-1 text-xs rounded bg-[#d4a853] text-[#0d0d0d]"
               disabled={applied}
             >
               Apply

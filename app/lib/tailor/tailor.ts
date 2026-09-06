@@ -2,11 +2,21 @@ import { chat, llmConfig } from "../llm";
 import type { JobRequirements, TailorDiff } from "./types";
 
 const STOPWORDS = new Set(
-  "the,to,of,and,or,for,with,from,that,this,my,years,experience,work,worked,working,built,building,team,teams,projects,project,product,products,web,application,applications,application,".split(","),
+  "the,to,of,and,or,for,with,from,that,this,my,years,experience,work,worked,working,built,building,team,teams,projects,project,product,products,web,application,applications,application,".split(
+    ",",
+  ),
 );
 
-export function guardNoFabrication(original: string, proposed: string): { ok: boolean; reason?: string } {
-  const srcTokens = new Set(original.toLowerCase().split(/\s+/).map((t) => t.replace(/[^a-z0-9]/gi, "")));
+export function guardNoFabrication(
+  original: string,
+  proposed: string,
+): { ok: boolean; reason?: string } {
+  const srcTokens = new Set(
+    original
+      .toLowerCase()
+      .split(/\s+/)
+      .map((t) => t.replace(/[^a-z0-9]/gi, "")),
+  );
   const invented: string[] = [];
   for (const word of proposed.split(/\s+/)) {
     const w = word.replace(/[^a-z0-9]/gi, "").toLowerCase();
@@ -14,7 +24,10 @@ export function guardNoFabrication(original: string, proposed: string): { ok: bo
     if (!srcTokens.has(w) && !invented.includes(w)) invented.push(w);
   }
   return invented.length
-    ? { ok: false, reason: `May introduce facts not in your CV: ${invented.slice(0, 5).join(", ")}` }
+    ? {
+        ok: false,
+        reason: `May introduce facts not in your CV: ${invented.slice(0, 5).join(", ")}`,
+      }
     : { ok: true };
 }
 
@@ -69,12 +82,16 @@ export async function buildTailorDiffs(args: {
     });
   }
 
-  const experiences = (args.cv.experiences as Array<Record<string, unknown>> | undefined) ?? [];
+  const experiences =
+    (args.cv.experiences as Array<Record<string, unknown>> | undefined) ?? [];
   for (const exp of experiences) {
     const details = (exp.details as string | undefined) ?? "";
     if (!details.trim()) continue;
-    const id = (exp.id as string | number | undefined) ?? `${Math.random().toString(36).slice(2)}`;
-    const label = `${(exp.company as string) || ""} — ${(exp.role as string) || "Experience"}`.trim();
+    const id =
+      (exp.id as string | number | undefined) ??
+      `${Math.random().toString(36).slice(2)}`;
+    const label =
+      `${(exp.company as string) || ""} — ${(exp.role as string) || "Experience"}`.trim();
     const { original, proposed } = await tailorSection({
       section: `experience ${label}`,
       original: details,
@@ -111,7 +128,10 @@ export async function buildTailorDiffs(args: {
       label: "Skills",
       original,
       proposed: deduped.join("\n"),
-      status: JSON.stringify(deduped) === JSON.stringify(skill) ? "original" : "changed",
+      status:
+        JSON.stringify(deduped) === JSON.stringify(skill)
+          ? "original"
+          : "changed",
     });
   }
 
@@ -135,7 +155,10 @@ export async function buildTailorDiffs(args: {
       label: "Competencies",
       original,
       proposed: deduped.join("\n"),
-      status: JSON.stringify(deduped) === JSON.stringify(competency) ? "original" : "changed",
+      status:
+        JSON.stringify(deduped) === JSON.stringify(competency)
+          ? "original"
+          : "changed",
     });
   }
 

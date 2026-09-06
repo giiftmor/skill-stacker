@@ -8,7 +8,9 @@ const SYSTEM =
   '{"must_have": string[], "nice_to_have": string[], "responsibilities": string[]}. ' +
   "Do not add keys, do not explain, do not wrap in markdown.";
 
-export async function extractRequirements(jobText: string): Promise<JobRequirements> {
+export async function extractRequirements(
+  jobText: string,
+): Promise<JobRequirements> {
   const { extractModel } = llmConfig();
   const prompt = `Job advert text:\n\n${jobText}`;
   const raw = await chat({ model: extractModel, system: SYSTEM, prompt });
@@ -23,6 +25,8 @@ export async function extractRequirements(jobText: string): Promise<JobRequireme
   return {
     must_have: Array.isArray(parsed.must_have) ? parsed.must_have : [],
     nice_to_have: Array.isArray(parsed.nice_to_have) ? parsed.nice_to_have : [],
-    responsibilities: Array.isArray(parsed.responsibilities) ? parsed.responsibilities : [],
+    responsibilities: Array.isArray(parsed.responsibilities)
+      ? parsed.responsibilities
+      : [],
   };
 }
