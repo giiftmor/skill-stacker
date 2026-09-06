@@ -129,8 +129,8 @@ export const mmToPt = (mm: number) => (mm * 72) / 25.4;
 - `app/lib/export/exportDispatcher.ts` (drop pdf; keep docx)
 - `app/lib/export/docxExport.ts` (explicit A4 + 15mm margins)
 - `app/globals.css` (consolidate print rules; `@page margin:0` in print)
-- Dead/legacy removal candidates (verify unreferenced): `app/components/ui/ExportModal.tsx`, `app/components/modules/exportModule.tsx` (react-pdf copy), `app/lib/templates/pdfStyles.ts`, and the `CVBuilderForm`/`ExportButtons` pdf wiring.
-- `package.json` (remove `@react-pdf/renderer`)
+- Dead/legacy removal (confirmed unreferenced): `app/lib/export/pdfExport.tsx`, `app/components/ui/ExportModal.tsx`, the react-pdf copy inside `app/components/modules/exportModule.tsx`, `app/lib/templates/pdfStyles.ts`; drop `@react-pdf/renderer` from deps. Keep `CVBuilderForm` as the form UI — only rewire its `ExportButtons` PDF action.
+- `package.json` (remove `@react-pdf/renderer`; consider removing `react-to-print` if still unreferenced after cleanup)
 - Tests: `app/*/__tests__/*`, `e2e/preview-page.spec.ts`
 
 ## Out of scope (future phases)
