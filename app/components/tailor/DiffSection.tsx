@@ -1,5 +1,5 @@
-import type { TailorDiff } from "../../lib/tailor/types";
 import { guardNoFabrication } from "../../lib/tailor/tailor";
+import type { TailorDiff } from "../../lib/tailor/types";
 
 export function DiffSection({ diff, applied, onApply, onReject }: {
   diff: TailorDiff;

@@ -1,7 +1,7 @@
-import { describe, expect, it, vi, afterEach } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { TailorPanel } from "../TailorPanel";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { TailorDiff } from "../../../lib/tailor/types";
+import { TailorPanel } from "../TailorPanel";
 
 function sseStream(messages: unknown[]): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder();

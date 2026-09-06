@@ -1,15 +1,19 @@
-import { NextResponse } from "next/server";
 import { saveCVVersion } from "@/app/lib/db";
+import { NextResponse } from "next/server";
+
+interface SnapshotRequest {
+  json: () => Promise<Record<string, unknown>>;
+}
 
 export async function POST(
-  request: { json: () => any },
+  request: SnapshotRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
-    const cvId = parseInt(id);
+    const cvId = parseInt(id, 10);
 
-    if (isNaN(cvId)) {
+    if (Number.isNaN(cvId)) {
       return NextResponse.json(
         {
           success: false,

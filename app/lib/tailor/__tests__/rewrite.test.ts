@@ -42,8 +42,9 @@ describe("buildTailorDiffs", () => {
     const diffs = await buildTailorDiffs({ cv, requirements, chatFn });
     const profileDiff = diffs.find((d) => d.section === "profile");
     expect(profileDiff).toBeDefined();
-    expect(profileDiff!.status).toBe("changed");
-    expect(profileDiff!.original).toBe("I worked on React.");
+    if (!profileDiff) return;
+    expect(profileDiff.status).toBe("changed");
+    expect(profileDiff.original).toBe("I worked on React.");
     expect(chatFn).toHaveBeenCalledWith(expect.objectContaining({ prompt: expect.stringContaining("I worked on React.") }));
   });
 

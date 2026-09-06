@@ -27,7 +27,7 @@ describe("runTailorPipeline", () => {
     const diffs = await runTailorPipeline({
       request: { jobUrl: "https://example.com/job" },
       cv: { profile: "x" },
-      onEvent: (e) => events.push(e.type + ":" + (e.type === "status" ? e.step : "")),
+      onEvent: (e) => events.push(`${e.type}:${e.type === "status" ? e.step : ""}`),
     });
 
     expect(mocks.scrapeJobAd).toHaveBeenCalledWith("https://example.com/job");
@@ -74,7 +74,7 @@ describe("runTailorPipeline", () => {
     await runTailorPipeline({
       request: { jobText: "paste me" },
       cv: {},
-      onEvent: (e) => events.push(e.type + ":" + (e.type === "status" ? e.step : "")),
+      onEvent: (e) => events.push(`${e.type}:${e.type === "status" ? e.step : ""}`),
     });
 
     expect(mocks.extractRequirements).toHaveBeenCalledWith("paste me");

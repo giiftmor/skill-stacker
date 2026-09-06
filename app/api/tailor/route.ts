@@ -1,5 +1,4 @@
-import { runTailorPipeline } from "../../lib/tailor/pipeline";
-import type { TailorRequest } from "../../lib/tailor/pipeline";
+import { runTailorPipeline, type TailorRequest } from "../../lib/tailor/pipeline";
 
 export const runtime = "nodejs";
 

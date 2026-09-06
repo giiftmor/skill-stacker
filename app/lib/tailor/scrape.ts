@@ -12,7 +12,7 @@ export function extractMainText(fullText: string): string {
 }
 
 export async function scrapeJobAd(url: string): Promise<string> {
-  let browser;
+  let browser: import("playwright").Browser | undefined;
   try {
     const { chromium } = await import("playwright");
     browser = await chromium.launch({

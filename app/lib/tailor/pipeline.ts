@@ -1,5 +1,5 @@
-import { scrapeJobAd } from "./scrape";
 import { extractRequirements } from "./extract";
+import { scrapeJobAd } from "./scrape";
 import { buildTailorDiffs } from "./tailor";
 import type { JobRequirements, TailorDiff } from "./types";
 

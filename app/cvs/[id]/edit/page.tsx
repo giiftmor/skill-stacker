@@ -1,24 +1,29 @@
 // app/cvs/[id]/edit/page.tsx - Edit CV
 "use client";
-import { useState, useEffect, useRef, use } from "react";
 import { useRouter } from "next/navigation";
-import Header from "../../../components/ui/Header";
-import Breadcrumb from "../../../components/ui/Breadcrumb";
+import { use, useCallback, useEffect, useRef, useState } from "react";
 import CVBuilderForm from "../../../components/CVBuilderForm";
-import CVPreviewWrapper from "../../../components/CVPreviewWrapper";
-import { useAutoSave } from "../../../hooks/useAutoSave";
-import { TemplateId, TemplateSettings } from "../../../lib/templates/templateDefinitions";
-import { exportCV } from "../../../lib/export/exportDispatcher";
-import UploadPhoto from "../../../components/ui/UploadPhoto";
+import CVPreviewWrapper, {
+  type CVPreviewWrapperHandle,
+} from "../../../components/CVPreviewWrapper";
 import { TailorPanel } from "../../../components/tailor/TailorPanel";
+import Breadcrumb from "../../../components/ui/Breadcrumb";
+import Header from "../../../components/ui/Header";
+import UploadPhoto from "../../../components/ui/UploadPhoto";
+import { useAutoSave } from "../../../hooks/useAutoSave";
+import { exportCV } from "../../../lib/export/exportDispatcher";
 import type { TailorApplyUpdate } from "../../../lib/tailor/types";
+import type {
+  TemplateId,
+  TemplateSettings,
+} from "../../../lib/templates/templateDefinitions";
 
 export default function EditCVPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const router = useRouter();
   const cvId = parseInt(resolvedParams.id, 10);
 
-  const generateId = () => Math.random().toString(36).substr(2, 9);
+  const generateId = useCallback(() => Math.random().toString(36).substr(2, 9), []);
 
   const [personal, setPersonal] = useState({
     fullName: "",
@@ -40,14 +45,10 @@ export default function EditCVPage({ params }: { params: Promise<{ id: string }>
   const [templateSettings, setTemplateSettings] = useState<TemplateSettings | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
   const previewRef = useRef<HTMLDivElement>(null);
-  const printRef = useRef<any>(null);
+  const printRef = useRef<CVPreviewWrapperHandle>(null);
   const snapshotDoneRef = useRef(false);
 
-  useEffect(() => {
-    loadCV();
-  }, [cvId]);
-
-  const loadCV = async () => {
+  const loadCV = useCallback(async () => {
     try {
       const response = await fetch(`/api/cv/${cvId}`);
       const data = await response.json();
@@ -63,11 +64,27 @@ export default function EditCVPage({ params }: { params: Promise<{ id: string }>
         });
         setProfile(cv.profile || "");
         setCompetencies(cv.competency?.length > 0 ? cv.competency : [""]);
-        setExperiences(cv.experiences?.length > 0 ? cv.experiences.map((e: any) => ({ ...e, id: generateId() })) : [{ id: generateId(), company: "", role: "", period: "", details: "" }]);
-        setEducation(cv.education?.length > 0 ? cv.education.map((e: any) => ({ ...e, id: generateId() })) : [{ id: generateId(), institution: "", qualification: "", period: "" }]);
-        setCertificate(cv.certificate?.length > 0 ? cv.certificate.map((c: any) => ({ ...c, id: generateId() })) : [{ id: generateId(), name: "", date: "" }]);
+        setExperiences(
+          cv.experiences?.length > 0
+            ? cv.experiences.map((e: { company: string; role: string; period: string; details: string }) => ({ ...e, id: generateId() }))
+            : [{ id: generateId(), company: "", role: "", period: "", details: "" }],
+        );
+        setEducation(
+          cv.education?.length > 0
+            ? cv.education.map((e: { institution: string; qualification: string; period: string }) => ({ ...e, id: generateId() }))
+            : [{ id: generateId(), institution: "", qualification: "", period: "" }],
+        );
+        setCertificate(
+          cv.certificate?.length > 0
+            ? cv.certificate.map((c: { name: string; date: string }) => ({ ...c, id: generateId() }))
+            : [{ id: generateId(), name: "", date: "" }],
+        );
         setSkills(cv.skill?.length > 0 ? cv.skill : [""]);
-        setReference(cv.reference?.length > 0 ? cv.reference.map((r: any) => ({ ...r, id: generateId() })) : [{ id: generateId(), name: "", company: "", role: "", email: "", phone: "" }]);
+        setReference(
+          cv.reference?.length > 0
+            ? cv.reference.map((r: { name: string; company: string; role: string; email: string; phone: string }) => ({ ...r, id: generateId() }))
+            : [{ id: generateId(), name: "", company: "", role: "", email: "", phone: "" }],
+        );
         setAdditionalInfo(cv.additionalInfo?.length > 0 ? cv.additionalInfo : [""]);
 
         if (cv.template_settings) {
@@ -80,7 +97,11 @@ export default function EditCVPage({ params }: { params: Promise<{ id: string }>
     } finally {
       setLoading(false);
     }
-  };
+  }, [cvId, generateId]);
+
+  useEffect(() => {
+    loadCV();
+  }, [loadCV]);
 
   const handleSave = async (data: Record<string, unknown>) => {
     await fetch(`/api/cv/${cvId}`, {
@@ -109,9 +130,13 @@ export default function EditCVPage({ params }: { params: Promise<{ id: string }>
     if (update.profile !== undefined) setProfile(update.profile);
     if (update.skill !== undefined) setSkills(update.skill);
     if (update.competency !== undefined) setCompetencies(update.competency);
-    if (update.experiences && update.experiences.length > 0) {
+    const experiences = update.experiences;
+    if (experiences && experiences.length > 0) {
       setExperiences((prev) =>
-        prev.map((exp, i) => (update.experiences![i] ? { ...exp, details: update.experiences![i].details } : exp))
+        prev.map((exp, i) => {
+          const detail = experiences[i];
+          return detail ? { ...exp, details: detail.details } : exp;
+        }),
       );
     }
   };
