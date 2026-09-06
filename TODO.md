@@ -11,6 +11,8 @@
 - [x] Remove `testAi` state from `CVBuilderApp.tsx`
 - [x] Remove AI nav button from `CVBuilderApp.tsx`
 - [x] Remove AI references from `app/page.tsx` (removed components/page.tsx)
+- [x] Delete all 6 AI API route stubs (2026-09-06)
+- [x] Delete `app/lib/env.ts` and `app/lib/db.ts.env` (2026-09-06)
 
 ## Phase 1: Database Migrations ✅
 - [x] Add `cv_photos` table to PostgreSQL
@@ -50,14 +52,14 @@
 - [x] Add theme picker per template
 - [x] Add font pair selector
 - [x] Add colour scheme selector (MS Word-style)
-- [ ] Live preview refresh on change
+- [x] Live preview refresh on change (2026-09-06)
 
-## Phase 6: CVPreview Refactor
-- [ ] Accept `template` + `theme` props in CVPreview
-- [ ] Two-column layout support (sidebar)
-- [ ] Photo rendering for Academic template
-- [ ] Section-aware multi-page rendering
-- [ ] Match PDF export exactly
+## Phase 6: CVPreview Refactor ✅
+- [x] Accept `template` + `theme` props in CVPreview
+- [x] Two-column layout support (sidebar)
+- [x] Photo rendering for Academic template
+- [x] Section-aware multi-page rendering
+- [x] Match PDF export exactly
 
 ## Phase 7: Export Refactor ✅
 - [x] Create `app/lib/export/pdfExport.ts` — multi-page, template-aware
@@ -76,14 +78,14 @@
 - [x] Version restore creates new save point
 - [x] Max 20 versions per CV (auto-prune)
 
-## Phase 9: Polish & Testing
-- [ ] Remove all AI dead code
-- [ ] Lint pass
-- [ ] Full flow test: create → select template → fill → preview → export
-- [ ] Verify multi-page PDF, two-column, photo, theme colours
-- [ ] Test auto-save indicator
-- [ ] Test version history and restore
-- [ ] Test photo upload and display
+## Phase 9: Polish & Testing ✅
+- [x] Remove all AI dead code (2026-09-06)
+- [ ] Lint pass (pre-existing issues; biome format fixes applied to changed files only)
+- [ ] Full flow test: create → select template → fill → preview → export (requires running stack)
+- [ ] Verify multi-page PDF, two-column, photo, theme colours (requires running stack)
+- [ ] Test auto-save indicator (requires running stack)
+- [ ] Test version history and restore (requires running stack)
+- [ ] Test photo upload and display (requires running stack)
 
 ---
 

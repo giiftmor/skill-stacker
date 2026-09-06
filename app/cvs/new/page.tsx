@@ -1,14 +1,19 @@
 // app/cvs/new/page.tsx - New CV with Template Selector
 "use client";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import CVPreviewWrapper from "../../components/CVPreviewWrapper";
 import Header from "../../components/ui/Header";
 import TemplateSelector from "../../components/ui/TemplateSelector";
-import type { TemplateId, TemplateSettings } from "../../lib/templates/templateDefinitions";
+import type {
+  TemplateId,
+  TemplateSettings,
+} from "../../lib/templates/templateDefinitions";
 
 export default function NewCVPage() {
   const router = useRouter();
-  const [selectedTemplate, setSelectedTemplate] = useState<TemplateId>("classic");
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<TemplateId>("classic");
   const [selectedTheme, setSelectedTheme] = useState("default-blue");
   const [selectedFontPair, setSelectedFontPair] = useState("default");
 
@@ -24,7 +29,14 @@ export default function NewCVPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          personal: { fullName: "", title: "", phone: "", email: "", location: "", linkedin: "" },
+          personal: {
+            fullName: "",
+            title: "",
+            phone: "",
+            email: "",
+            location: "",
+            linkedin: "",
+          },
           profile: "",
           competency: [],
           experiences: [],
@@ -53,7 +65,9 @@ export default function NewCVPage() {
       <Header title="Create New CV" />
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-5xl mx-auto bg-[#1a1a1a] rounded-xl border border-[#333] p-8">
-          <h2 className="font-[family-name:var(--font-heading)] text-xl text-[#e8e6e3] mb-6">Choose Your Template</h2>
+          <h2 className="font-[family-name:var(--font-heading)] text-xl text-[#e8e6e3] mb-6">
+            Choose Your Template
+          </h2>
 
           <TemplateSelector
             selectedTemplate={selectedTemplate}
@@ -64,8 +78,38 @@ export default function NewCVPage() {
             onFontPairChange={setSelectedFontPair}
           />
 
+          <div className="mt-8">
+            <h2 className="font-[family-name:var(--font-heading)] text-xl text-[#e8e6e3] mb-4">
+              Live Preview
+            </h2>
+            <CVPreviewWrapper
+              personal={{
+                fullName: "",
+                title: "",
+                phone: "",
+                email: "",
+                location: "",
+                linkedin: "",
+              }}
+              profile=""
+              competency={[]}
+              experiences={[]}
+              education={[]}
+              certificate={[]}
+              skill={[]}
+              reference={[]}
+              additionalInfo={[]}
+              templateId={selectedTemplate}
+              themeId={selectedTheme}
+              fontPairId={selectedFontPair}
+              photoUrl={undefined}
+              showAllPages={true}
+            />
+          </div>
+
           <div className="mt-8 flex justify-end">
-            <button type="button"
+            <button
+              type="button"
               onClick={handleCreate}
               className="px-8 py-3 bg-[#d4a853] text-[#0d0d0d] hover:bg-[#b8923e] font-semibold rounded-lg transition-colors"
             >

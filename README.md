@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Skill-Stacker
+
+A professional CV builder — create, preview, and export resumes in 7 templates.
+
+## Tech Stack
+
+- **Next.js 16** (App Router, Turbopack) + React 19 + TypeScript 5.9
+- **PostgreSQL 16** (dockerized) via the `pg` driver
+- **Tailwind CSS v4**
+- **Vitest** (unit) + **Playwright** (e2e)
+- **Biome** (lint/format)
+- **zod** (validation)
+
+## Features
+
+- 7 CV templates: Classic, Executive, Modern, Minimal, Creative, Two-Column, Academic
+- Per-template colour themes and font pairs (MS Word-style)
+- Live template preview on the "New CV" page
+- Photo upload (two-column + academic templates)
+- Multi-page PDF and Word (DOCX) export
+- Auto-save (30s debounce) with save indicator
+- Version history — up to 20 saved versions per CV, with restore
 
 ## Getting Started
 
-First, run the development server:
+The project runs fully in Docker.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Start the stack (Postgres + app)
+docker compose up -d --build app
+
+# App is available at
+open http://localhost:5252
+
+# Health check
+curl http://localhost:5252/api/health
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Docker Commands
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Action | Command |
+|--------|---------|
+| Start services | `docker compose up -d` |
+| View logs | `docker compose logs -f app` |
+| Restart app | `docker compose restart app` |
+| Rebuild app | `docker compose up -d --build app` |
+| Run linter | `docker compose exec app npm run lint` |
+| Run unit tests | `docker compose exec app npm run test` |
+| Run e2e tests | `docker compose exec app npm run test:e2e` |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+> **Note:** Do not run `npm` commands directly on the host — use the Docker commands above.
 
-## Learn More
+## Database
 
-To learn more about Next.js, take a look at the following resources:
+- PostgreSQL 16 (`postgres:16-alpine`), database `cvbuilder`
+- Schema lives in `app/lib/db.ts` (tables: `cvs`, `cv_photos`, `cv_versions`, and CV content tables)
+- Data persists in the `postgres_data` named volume
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Environment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Configuration lives in `.env` (see `docker-compose.yml` for defaults):
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```env
+DB_HOST=db
+DB_PORT=5432
+DB_NAME=cvbuilder
+DB_USER=postgres
+DB_PASSWORD=postgres
+HOST_PORT=5252
+```

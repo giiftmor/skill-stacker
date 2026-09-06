@@ -22,12 +22,15 @@ This project uses Docker containers for ALL services. Managed via `docker-compos
 
 | Service | Image | Container Port | Host Port | Notes |
 |---------|-------|----------------|-----------|-------|
+| **db** | `postgres:16-alpine` | 5432 | — (internal only) | PostgreSQL 16, database `cvbuilder` |
 | **app** | built from `Dockerfile` | 5252 | 5252 | Next.js app (production) |
 
 ### Networks & Volumes
 - Network: `skill-stacker-network` (bridge driver)
-- Volume: `data` — app data persistence
-- Bind mount: `./cvbuilder.db` — SQLite database file
+- Volume: `postgres_data` — PostgreSQL data persistence
+- Bind mounts: `./scripts` (ro), `./uploads` (file uploads)
+
+> **Database is PostgreSQL 16**, accessed directly via the `pg` driver (`app/lib/db.ts`). There is no Prisma and no SQLite.
 
 ---
 
@@ -114,21 +117,15 @@ docker ps
 ## Project-Specific Notes
 
 - **Node.js version**: >=20.x (Next.js 16, React 19)
-- **Database**: SQLite (local file: `./cvbuilder.db`)
-- **No Prisma**: Direct SQLite via `sqlite3` / `better-sqlite3`
-- **LLM Support**: Ollama or LMStudio (optional)
+- **Database**: PostgreSQL 16 (dockerized) — database `cvbuilder`
+- **No ORM**: Direct SQL via the `pg` driver (`app/lib/db.ts`)
+- **LLM Support**: disabled (AI routes removed)
 - **Build system**: Next.js 16 with Turbopack
-- **Entry point**: Port 3000 (no nginx reverse proxy)
+- **Entry point**: Port 5252 (no nginx reverse proxy)
 
-### LLM Configuration (Optional)
+### LLM Configuration (Removed)
 
-In `.env`:
-```env
-LLM_PROVIDER=local           # or "openai"
-LLM_BASE_URL=http://localhost:1234  # Ollama: 11434, LMStudio: 1234
-LLM_MODEL=                   # e.g., llama3, mistral, etc.
-LLM_API_KEY=                # for OpenAI only
-```
+AI endpoints were removed in Sep 2026. `.env` may still reference `LLM_*` variables, but they are inert.
 
 ---
 
@@ -138,7 +135,7 @@ At the start of EVERY session, verify:
 - [ ] Read `docker-compose.yml` to understand current environment
 - [ ] Read `.env` to check service configurations
 - [ ] Run `docker ps` to see running containers
-- [ ] Check if port 3000 is in use, use different port if needed
+- [ ] Check if port 5252 is in use, use different port if needed
 - [ ] Run `docker compose logs -f` to check for errors
 - [ ] ONLY THEN proceed with development tasks
 
