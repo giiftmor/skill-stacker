@@ -66,13 +66,17 @@ describe("chat", () => {
 
     await chat({ model: "m1", prompt: "hi" });
     const [, init] = fetchMock.mock.calls[0];
-    expect(JSON.parse(init.body).messages).toEqual([{ role: "user", content: "hi" }]);
+    expect(JSON.parse(init.body).messages).toEqual([
+      { role: "user", content: "hi" },
+    ]);
   });
 
   it("throws on non-ok response", async () => {
     vi.stubEnv("LLM_BASE_URL", "http://llm:11434");
     const { chat } = await import("../ollama");
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false }));
-    await expect(chat({ model: "m1", prompt: "hi" })).rejects.toThrow("Ollama request failed");
+    await expect(chat({ model: "m1", prompt: "hi" })).rejects.toThrow(
+      "Ollama request failed",
+    );
   });
 });

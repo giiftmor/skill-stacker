@@ -3,9 +3,18 @@ import { useState } from "react";
 import type { TailorApplyUpdate, TailorDiff } from "../../lib/tailor/types";
 import { DiffSection } from "./DiffSection";
 
-type ProgressStep = "idle" | "scraping" | "extracting" | "tailoring" | "done" | "error";
+type ProgressStep =
+  | "idle"
+  | "scraping"
+  | "extracting"
+  | "tailoring"
+  | "done"
+  | "error";
 
-export function TailorPanel({ cv, onApply }: {
+export function TailorPanel({
+  cv,
+  onApply,
+}: {
   cv: Record<string, unknown>;
   onApply: (update: TailorApplyUpdate) => void;
 }) {
@@ -63,8 +72,10 @@ export function TailorPanel({ cv, onApply }: {
   const applyDiff = (diff: TailorDiff) => {
     const update: TailorApplyUpdate = {};
     if (diff.section === "profile") update.profile = diff.proposed;
-    else if (diff.section === "skill") update.skill = diff.proposed.split("\n").filter(Boolean);
-    else if (diff.section === "competency") update.competency = diff.proposed.split("\n").filter(Boolean);
+    else if (diff.section === "skill")
+      update.skill = diff.proposed.split("\n").filter(Boolean);
+    else if (diff.section === "competency")
+      update.competency = diff.proposed.split("\n").filter(Boolean);
     else if (diff.section === "experience") {
       const id = diff.key.replace(/^experience:/, "");
       update.experiences = [{ id: id || undefined, details: diff.proposed }];
@@ -101,7 +112,10 @@ export function TailorPanel({ cv, onApply }: {
             rows={3}
             className="px-3 py-2 rounded bg-[#242424] text-[#e8e6e3] border border-[#333]"
           />
-          <button onClick={analyze} className="px-4 py-2 rounded bg-[#d4a853] text-[#0d0d0d] font-medium self-start">
+          <button
+            onClick={analyze}
+            type="button" className="px-4 py-2 rounded bg-[#d4a853] text-[#0d0d0d] font-medium self-start"
+          >
             Analyze
           </button>
         </div>
@@ -121,7 +135,9 @@ export function TailorPanel({ cv, onApply }: {
               diff={d}
               applied={appliedKeys.has(d.key)}
               onApply={() => applyDiff(d)}
-              onReject={() => setDiffs((prev) => prev.filter((x) => x.key !== d.key))}
+              onReject={() =>
+                setDiffs((prev) => prev.filter((x) => x.key !== d.key))
+              }
             />
           ))}
         </div>

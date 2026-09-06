@@ -1,4 +1,5 @@
-const BOILERPLATE = /^(jobs|login|sign in|sign up|menu|home|search|about|contact|privacy|terms|cookie|cookies|back to|apply now|save|share|report)/i;
+const BOILERPLATE =
+  /^(jobs|login|sign in|sign up|menu|home|search|about|contact|privacy|terms|cookie|cookies|back to|apply now|save|share|report)/i;
 const MAX_CHARS = 8000;
 
 export function extractMainText(fullText: string): string {
@@ -22,7 +23,9 @@ export async function scrapeJobAd(url: string): Promise<string> {
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30_000 });
     await page.waitForTimeout(1500);
-    const text: string = await page.evaluate(() => document.body?.innerText ?? "");
+    const text: string = await page.evaluate(
+      () => document.body?.innerText ?? "",
+    );
     return extractMainText(text);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

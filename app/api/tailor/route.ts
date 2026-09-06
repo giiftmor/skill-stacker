@@ -1,4 +1,7 @@
-import { runTailorPipeline, type TailorRequest } from "../../lib/tailor/pipeline";
+import {
+  runTailorPipeline,
+  type TailorRequest,
+} from "../../lib/tailor/pipeline";
 
 export const runtime = "nodejs";
 
@@ -15,15 +18,19 @@ export async function POST(request: Request) {
   }
 
   if (!body.jobUrl && !body.jobText?.trim()) {
-    return new Response(sse({ type: "error", message: "Provide jobUrl or jobText" }), {
-      headers: { "Content-Type": "text/event-stream" },
-    });
+    return new Response(
+      sse({ type: "error", message: "Provide jobUrl or jobText" }),
+      {
+        headers: { "Content-Type": "text/event-stream" },
+      },
+    );
   }
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
-      const send = (payload: unknown) => controller.enqueue(encoder.encode(sse(payload)));
+      const send = (payload: unknown) =>
+        controller.enqueue(encoder.encode(sse(payload)));
 
       const diffs = await runTailorPipeline({
         request: body,

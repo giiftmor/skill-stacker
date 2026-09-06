@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { guardNoFabrication, buildTailorDiffs } from "../tailor";
+import { buildTailorDiffs, guardNoFabrication } from "../tailor";
 import type { JobRequirements } from "../types";
 
 describe("guardNoFabrication", () => {
@@ -35,7 +35,9 @@ describe("buildTailorDiffs", () => {
     nice_to_have: [],
     responsibilities: [],
   };
-  const chatFn = vi.fn().mockResolvedValue("I led teams shipping React products.");
+  const chatFn = vi
+    .fn()
+    .mockResolvedValue("I led teams shipping React products.");
 
   it("returns a changed diff for a rewritten profile", async () => {
     const cv = { profile: "I worked on React." };
@@ -45,7 +47,11 @@ describe("buildTailorDiffs", () => {
     if (!profileDiff) return;
     expect(profileDiff.status).toBe("changed");
     expect(profileDiff.original).toBe("I worked on React.");
-    expect(chatFn).toHaveBeenCalledWith(expect.objectContaining({ prompt: expect.stringContaining("I worked on React.") }));
+    expect(chatFn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: expect.stringContaining("I worked on React."),
+      }),
+    );
   });
 
   it("skips empty sections", async () => {

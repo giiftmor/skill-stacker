@@ -1,5 +1,5 @@
-import { saveCVVersion } from "@/app/lib/db";
 import { NextResponse } from "next/server";
+import { saveCVVersion } from "@/app/lib/db";
 
 interface SnapshotRequest {
   json: () => Promise<Record<string, unknown>>;

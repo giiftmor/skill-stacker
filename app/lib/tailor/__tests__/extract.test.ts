@@ -14,7 +14,9 @@ afterEach(() => {
 
 describe("extractRequirements", () => {
   it("parses a valid requirements object", async () => {
-    vi.mocked(chat).mockResolvedValue(`{"must_have":["React"],"nice_to_have":["GraphQL"],"responsibilities":["Ship features"]}`);
+    vi.mocked(chat).mockResolvedValue(
+      `{"must_have":["React"],"nice_to_have":["GraphQL"],"responsibilities":["Ship features"]}`,
+    );
     const req = await extractRequirements("job text here");
     expect(req).toEqual({
       must_have: ["React"],
