@@ -6,6 +6,7 @@ import type { JobRequirements, TailorDiff } from "./types";
 export interface TailorRequest {
   jobUrl?: string;
   jobText?: string;
+  cv?: Record<string, unknown>;
 }
 
 export type TailorEvent =
