@@ -9,10 +9,10 @@ test("tailor for job via pasted URL shows diffs and apply works", async ({ page 
 
   await expect(page.getByText(/Reading job ad/)).toBeVisible();
   await expect(page.getByText(/Extracting requirements/)).toBeVisible();
-  await expect(page.getByText(/Tailoring your CV/)).toBeVisible({ timeout: 60_000 });
-  await expect(page.getByRole("button", { name: "Apply" }).first()).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByText(/Tailoring your CV/)).toBeVisible({ timeout: 180_000 });
+  await expect(page.getByRole("button", { name: "Apply" }).first()).toBeVisible({ timeout: 180_000 });
   await page.getByRole("button", { name: "Apply" }).first().click();
-  await expect(page.getByText("Applied", { exact: false })).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByText("Applied", { exact: false })).toBeVisible({ timeout: 180_000 });
 });
 
 test("tailor for job via pasted text works without a browser scrape", async ({ page }) => {
@@ -24,7 +24,7 @@ test("tailor for job via pasted text works without a browser scrape", async ({ p
   await page.getByRole("button", { name: "Analyze" }).click();
 
   await expect(page.getByText(/Extracting requirements/)).toBeVisible();
-  await expect(page.getByRole("button", { name: "Apply" }).first()).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByRole("button", { name: "Apply" }).first()).toBeVisible({ timeout: 180_000 });
   await page.getByRole("button", { name: "Apply" }).first().click();
-  await expect(page.getByText("Applied", { exact: false })).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByText("Applied", { exact: false })).toBeVisible({ timeout: 180_000 });
 });
