@@ -78,14 +78,16 @@
 - [x] Version restore creates new save point
 - [x] Max 20 versions per CV (auto-prune)
 
-## Phase 9: Polish & Testing ✅
+## Phase 9: Polish & Testing 🔄 (in progress)
 - [x] Remove all AI dead code (2026-09-06)
-- [ ] Lint pass (pre-existing issues; biome format fixes applied to changed files only)
-- [ ] Full flow test: create → select template → fill → preview → export (requires running stack)
-- [ ] Verify multi-page PDF, two-column, photo, theme colours (requires running stack)
-- [ ] Test auto-save indicator (requires running stack)
-- [ ] Test version history and restore (requires running stack)
-- [ ] Test photo upload and display (requires running stack)
+- [x] Lint pass on changed files (pre-existing 220-error debt across 80 files deferred)
+- [x] Unit tests: 21 passing (calculatePages + getTemplateClasses + pre-existing)
+- [x] E2E tests: 6 passing (installed chromium, fixed strict-mode h2, added live-preview test)
+- [x] Verified create → template select → editor flow via Playwright (no console errors)
+- [ ] Manual: verify multi-page PDF, two-column, photo, theme colours exports
+- [ ] Manual: test auto-save indicator
+- [ ] Manual: test version history and restore
+- [ ] Manual: test photo upload and display
 
 ---
 
