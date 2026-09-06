@@ -15,7 +15,10 @@ export async function scrapeJobAd(url: string): Promise<string> {
   let browser;
   try {
     const { chromium } = await import("playwright");
-    browser = await chromium.launch({ headless: true });
+    browser = await chromium.launch({
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30_000 });
     await page.waitForTimeout(1500);
