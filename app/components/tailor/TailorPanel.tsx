@@ -121,7 +121,7 @@ export function TailorPanel({ cv, onApply }: {
               diff={d}
               applied={appliedKeys.has(d.key)}
               onApply={() => applyDiff(d)}
-              onReject={() => setAppliedKeys((prev) => new Set(prev).add(d.key))}
+              onReject={() => setDiffs((prev) => prev.filter((x) => x.key !== d.key))}
             />
           ))}
         </div>

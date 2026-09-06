@@ -87,4 +87,27 @@ describe("TailorPanel", () => {
 
     expect(await screen.findByText(/May introduce facts not in your CV/)).toBeInTheDocument();
   });
+
+  it("rejects a diff and dismisses it from the list", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      body: sseStream([
+        { type: "diff", diffs: [diff] },
+        { type: "done", diffs: [diff] },
+      ]),
+    }) as unknown as typeof fetch);
+
+    render(<TailorPanel cv={{ profile: "I worked on React." }} onApply={() => {}} />);
+    fireEvent.change(screen.getByPlaceholderText("Paste a job-ad URL"), {
+      target: { value: "https://example.com/job" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Analyze" }));
+
+    await screen.findByText("Profile");
+
+    fireEvent.click(screen.getByRole("button", { name: "Reject" }));
+
+    expect(screen.queryByText("Profile")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Reject" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Apply" })).not.toBeInTheDocument();
+  });
 });
