@@ -2,9 +2,10 @@ import { describe, expect, it, vi, afterEach } from "vitest";
 import { chat } from "../../llm";
 import { extractRequirements } from "../extract";
 
-vi.mock("../../llm", () => ({
-  chat: vi.fn(),
-}));
+vi.mock("../../llm", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../llm")>();
+  return { ...actual, chat: vi.fn() };
+});
 
 afterEach(() => {
   vi.clearAllMocks();
