@@ -3,9 +3,11 @@
 ## [Unreleased]
 
 ### Added
+- 2026-09-06: Add AI CV Tailoring (Ollama) - SSE /api/tailor pipeline (scrape->extract->tailor->diff), Apply/Reject + fabricated-content guard, Playwright e2e
 - 2026-09-06: Live template preview refresh on the "New CV" page
 - 2026-09-06: Unit tests for `calculatePages` and `getTemplateClasses`
 - 2026-09-06: E2E test for live preview + fix strict-mode `h2` locator in template-selector spec
+- 2026-09-06: AI tailor e2e tests (URL + pasted-text paths) with R1-12 Apply-button fix (`b66c7c4`)
 
 ### Changed
 - 2026-09-06: Export `calculatePages` and `Section` from `CVPreview.tsx` for testability

@@ -89,6 +89,12 @@
 - [ ] Manual: test version history and restore
 - [ ] Manual: test photo upload and display
 
+## Phase 10: AI Tailor ✅
+- [x] SSE `/api/tailor` pipeline (scrape → extract → tailor → diffs) over Ollama
+- [x] Tailor-for-job panel on the edit page with real-time diffs + Apply/Reject
+- [x] Fabricated-content guard flags inventions (2026-09-06)
+- [x] Playwright e2e (URL + pasted-text paths)
+
 ---
 
 ## Template Definitions (7)
