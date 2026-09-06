@@ -35,6 +35,26 @@ Key findings:
 6. **react-pdf**: removed from the PDF flow entirely; browser-print is the single PDF path.
 7. **Preview UI**: one-page-at-a-time slide with functional prev/next.
 
+## Research findings (validated before plan)
+
+Empirical validation of the core print approach (Playwright → Chromium `page.pdf()`, `format A4`, `margin 0`):
+- A populated CV renders **4 `.cv-page`** elements; each measures **793.69px × 1122.52px** = exactly 210×297mm @96dpi.
+- Internal padding = 15mm on three sides, **106.69px bottom** (=15mm + former 50px).
+- Print produces **exactly 4 PDF pages**, one A4 sheet per `.cv-page` — no overflow, no blanks. The **browser-print + fixed-A4-page + `@page margin:0`** model is confirmed working.
+
+Component graph & export surfaces (all react-pdf PDF paths to replace):
+- `app/cvs/[id]/edit/page.tsx` is the live editor. It renders the legacy `CVBuilderForm` (line 172) which shows `Forms/ExportButtons.tsx` with **three buttons** all mapped through `handleExportToPdf` → `exportCV("pdf")`:
+  - **PDF** → react-pdf auto-download
+  - **Print to PDF** → currently the SAME auto-download (does not actually print)
+  - **Word** → `handleExportToDocx` → `exportCV("docx")` (keep)
+- `ExportModal.tsx` (`exportCV` PDF) — **not used by any page** (dead).
+- `CVBuilderApp.tsx` + `exportModule.tsx` (`exportToPdf` has its own react-pdf copy) — **not imported by any page** (dead legacy), sole consumer chain.
+- `app/cvs/[id]/preview/page.tsx` — full-screen preview, `showAllPages=true` (stacked), own `handlePrint` that copies `#cv-print-area` innerHTML into a **new window** (brittle).
+
+Tools available:
+- `react-to-print` `^3.2.0` is already a dependency (used only in dead `exportModule.tsx`). A clean path is `window.print()` on a live, always-rendered print container (single source of print CSS), rather than the brittle innerHTML copy.
+- `docx` section-properties API confirmed: `properties: { page: { size: { width, height }, margin: { top, right, bottom, left, header, footer, gutter } } }`. A4 in twips = 11905×16837; 15mm = 850 twips (`convertMillimetersToTwip`). So DOCX can set explicit A4 + 15mm margins (currently empty → lib defaults).
+
 ## Architecture
 
 ### 1. Single source of truth: `app/lib/printConfig.ts`
@@ -63,11 +83,13 @@ export const mmToPt = (mm: number) => (mm * 72) / 25.4;
 
 ### 3. Browser-engine Print/PDF (replaces react-pdf)
 
-- "Print / Save PDF" (preview page) and the edit-view print action render the full preview (`showAllPages=true`) in a `#cv-print-area` and call `window.print()`.
+- **Live print container**: always render a hidden-but-rendered `#cv-print-area` (full preview, `showAllPages=true`) alongside the slide preview. "Print / Save PDF" calls `window.print()` on the page with print CSS that shows only this container. (Validated: produces correct per-sheet A4 output.)
 - Print CSS (single source, injected once): `@page { size: A4; margin: 0 }`; each `.cv-page` renders at 210×297mm with its own 15mm padding; `.cv-page { break-after: page }` except the last.
-- Replace the brittle innerHTML-copy `handlePrint` with a straightforward `window.print()` of the live print container (fix styling/scoping issues).
-- `react-pdf` (`@react-pdf/renderer`, `pdfExport.tsx`, its `generatePDF`/`createPDFLink`) is removed from the flow. `exportDispatcher.ts` drops the "pdf" format (printing is triggered from the UI), keeping only DOCX. `exportCVToBlob` "pdf" branch is removed.
-- DOCX (`docxExport.ts`) sets explicit A4 + 15mm margins (and bottomExtra) via `sections[].properties` (previously empty → lib defaults), and reads fonts/colors from shared config.
+- Replace the brittle innerHTML-copy `handlePrint` on the preview page with the live print container + `window.print()`.
+- **Edit page buttons** (`Forms/ExportButtons.tsx`): make **"Print to PDF"** the true print action, and **remove the separate "PDF" auto-download button** (or point it to the same print flow) so there is one unambiguous PDF path. Word keeps `handleExportToDocx`.
+- `react-pdf` (`@react-pdf/renderer`, `pdfExport.tsx`, `generatePDF`/`createPDFLink`) removed. `exportDispatcher.ts` drops the "pdf" format; `exportCVToBlob` "pdf" branch removed. `exportModule.tsx`'s `exportToPdf` (react-pdf copy) is dead legacy — removed.
+- **Dead components to remove**: `ExportModal.tsx` (unused), and the `CVBuilderApp.tsx`/`exportModule.tsx` legacy chain if confirmed unreferenced after the edit page stops using `CVBuilderForm`'s PDF button.
+- DOCX (`docxExport.ts`) sets explicit A4 (11905×16837 twips) + 15mm margins (850 twips) via `sections[].properties` (previously empty → lib defaults), and reads fonts/colors from shared config.
 
 ### 4. Pagination correctness (& slide safety)
 
@@ -84,24 +106,30 @@ export const mmToPt = (mm: number) => (mm * 72) / 25.4;
 ## Testing
 
 - **Unit (Vitest)**:
-  - `printConfig`: `mmToPx`/`mmToPt` correctness; `PRINT_CONFIG` is the single source (assert `A4_DIMENSIONS`, pdf, docx all derive from it).
-  - `calculatePages`: existing tests (single/multi-page, canBreak split, non-breakable, zero-height, empty) kept + any slide-specific additions.
-  - `docxExport`: section properties emit A4 + 15mm margins.
-- **E2E (Playwright)**: `preview-page.spec.ts` extended to assert the slide shows one page at a time and prev/next actually change the page; `print` CSS yields A4 pages with `@page margin:0`.
+  - `printConfig`: `mmToPx`/`mmToPt` correctness; `PRINT_CONFIG` is the single source (assert `A4_DIMENSIONS` derives from it).
+  - `calculatePages`: existing tests kept + any slide-specific additions.
+  - `docxExport`: section properties emit A4 (11905×16837) + 15mm margins (twips).
+  - `exportDispatcher`: no longer accepts "pdf" (negative test).
+- **E2E (Playwright)**: 
+  - `preview-page.spec.ts` extended: slide shows one page at a time; prev/next change the page; indicator "n / total".
+  - Print regression: with print media emulated + `@page margin:0`, `page.pdf()` yields N pages matching the on-screen `.cv-page` count (reproduce the validated 4-page case; assert parity).
+  - Edit page: "Print to PDF" triggers print flow (no auto-download), "Word" still exports a `.docx`.
 - Manual visual check: preview ↔ printed PDF ↔ exported DOCX paper/margins match.
 
 ## Files touched
 
 - `app/lib/printConfig.ts` (new)
-- `app/components/ui/printStyles.ts` (derive from config; fix/remove dead `A4_PAGE_STYLE`)
+- `app/components/ui/printStyles.ts` (derive from config; remove dead `A4_PAGE_STYLE`)
 - `app/components/CVPreview.tsx` (config-driven constants; slide viewport)
-- `app/cvs/[id]/preview/page.tsx` (slide nav functional; print rework)
-- `app/cvs/[id]/edit/page.tsx` (slide paging; export routing)
+- `app/cvs/[id]/preview/page.tsx` (slide nav functional; print rework; remove innerHTML-copy `handlePrint`)
+- `app/cvs/[id]/edit/page.tsx` (slide paging; print handler; remove react-pdf export)
 - `app/cvs/new/page.tsx` (keep live preview; optional slide)
+- `app/components/Forms/ExportButtons.tsx` (one PDF path → print)
 - `app/lib/export/pdfExport.tsx` (remove)
-- `app/lib/export/exportDispatcher.ts` (remove/reroute pdf)
-- `app/lib/export/docxExport.ts` (explicit page/margins)
+- `app/lib/export/exportDispatcher.ts` (drop pdf; keep docx)
+- `app/lib/export/docxExport.ts` (explicit A4 + 15mm margins)
 - `app/globals.css` (consolidate print rules; `@page margin:0` in print)
+- Dead/legacy removal candidates (verify unreferenced): `app/components/ui/ExportModal.tsx`, `app/components/modules/exportModule.tsx` (react-pdf copy), `app/lib/templates/pdfStyles.ts`, and the `CVBuilderForm`/`ExportButtons` pdf wiring.
 - `package.json` (remove `@react-pdf/renderer`)
 - Tests: `app/*/__tests__/*`, `e2e/preview-page.spec.ts`
 
