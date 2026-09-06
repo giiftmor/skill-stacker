@@ -65,4 +65,44 @@ describe("runTailorPipeline", () => {
 
     expect(errors.some((m) => m.includes("blocked"))).toBe(true);
   });
+
+  it("continues with empty requirements when extraction fails", async () => {
+    const events: string[] = [];
+    mocks.extractRequirements.mockRejectedValue(new Error("parse boom"));
+    mocks.buildTailorDiffs.mockResolvedValue([]);
+
+    await runTailorPipeline({
+      request: { jobText: "paste me" },
+      cv: {},
+      onEvent: (e) => events.push(e.type + ":" + (e.type === "status" ? e.step : "")),
+    });
+
+    expect(mocks.extractRequirements).toHaveBeenCalledWith("paste me");
+    expect(mocks.buildTailorDiffs).toHaveBeenCalledWith(
+      expect.objectContaining({
+        cv: {},
+        requirements: { must_have: [], nice_to_have: [], responsibilities: [] },
+      }),
+    );
+    expect(events).toEqual(["status:extracting", "status:tailoring", "diff:"]);
+    expect(events.some((e) => e.startsWith("error"))).toBe(false);
+  });
+
+  it("emits an error event when the tailor stage fails", async () => {
+    const errors: string[] = [];
+    mocks.extractRequirements.mockResolvedValue({ must_have: [], nice_to_have: [], responsibilities: [] });
+    mocks.buildTailorDiffs.mockRejectedValue(new Error("llm down"));
+
+    await expect(
+      runTailorPipeline({
+        request: { jobText: "paste me" },
+        cv: {},
+        onEvent: (e) => {
+          if (e.type === "error") errors.push(e.message);
+        },
+      }),
+    ).resolves.toEqual([]);
+
+    expect(errors.some((m) => m.includes("llm down"))).toBe(true);
+  });
 });
