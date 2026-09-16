@@ -43,4 +43,19 @@ describe("extractRequirements", () => {
       }),
     );
   });
+
+  it("logs extraction counts and model", async () => {
+    process.env.NODE_ENV = "development";
+    process.env.LOG_LEVEL = "info";
+    const logs: string[] = [];
+    vi.spyOn(console, "info").mockImplementation((...a: unknown[]) =>
+      logs.push(String(a[0])),
+    );
+    vi.mocked(chat).mockResolvedValue(
+      `{"must_have":["React"],"nice_to_have":[],"responsibilities":[]}`,
+    );
+    const reqs = await extractRequirements("job ad text");
+    expect(reqs.must_have).toEqual(["React"]);
+    expect(logs.join("\n")).toContain("[tailor.extract]");
+  });
 });

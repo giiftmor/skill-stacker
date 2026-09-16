@@ -1,3 +1,5 @@
+import { logger } from "../log";
+
 const BOILERPLATE =
   /^(jobs|login|sign in|sign up|menu|home|search|about|contact|privacy|terms|cookie|cookies|back to|apply now|save|share|report)/i;
 const MAX_CHARS = 8000;
@@ -14,8 +16,10 @@ export function extractMainText(fullText: string): string {
 
 export async function scrapeJobAd(url: string): Promise<string> {
   let browser: import("playwright").Browser | undefined;
+  const t0 = Date.now();
   try {
     const { chromium } = await import("playwright");
+    logger.info("tailor.scrape", "launch", { url });
     browser = await chromium.launch({
       headless: true,
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
@@ -26,9 +30,21 @@ export async function scrapeJobAd(url: string): Promise<string> {
     const text: string = await page.evaluate(
       () => document.body?.innerText ?? "",
     );
-    return extractMainText(text);
+    const cleaned = extractMainText(text);
+    logger.info("tailor.scrape", "done", {
+      url,
+      chars: cleaned.length,
+      ms: Date.now() - t0,
+    });
+    return cleaned;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
+    logger.error(
+      "tailor.scrape",
+      "failed",
+      { url, ms: Date.now() - t0 },
+      err as Error,
+    );
     throw new Error(`Failed to read job ad at ${url}: ${msg}`);
   } finally {
     if (browser) await browser.close().catch(() => {});
