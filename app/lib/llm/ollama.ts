@@ -1,3 +1,4 @@
+import { logger } from "../log";
 import { llmConfig } from "./config";
 
 export async function chat(params: {
@@ -11,20 +12,44 @@ export async function chat(params: {
     { role: "user", content: params.prompt },
   ];
 
-  const res = await fetch(`${baseUrl}/api/chat`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model: params.model, messages, stream: false }),
+  const t0 = Date.now();
+  logger.info("llm.chat", "request", {
+    model: params.model,
+    baseUrl,
+    promptChars: params.prompt.length,
+    systemChars: params.system?.length ?? 0,
   });
 
-  if (!res.ok) {
-    throw new Error(`Ollama request failed: ${res.status} ${res.statusText}`);
-  }
+  try {
+    const res = await fetch(`${baseUrl}/api/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ model: params.model, messages, stream: false }),
+    });
 
-  const data = await res.json();
-  const content: string | undefined = data?.message?.content;
-  if (typeof content !== "string" || content.length === 0) {
-    throw new Error("Ollama returned no content");
+    if (!res.ok) {
+      throw new Error(`Ollama request failed: ${res.status} ${res.statusText}`);
+    }
+
+    const data = await res.json();
+    const content: string | undefined = data?.message?.content;
+    if (typeof content !== "string" || content.length === 0) {
+      throw new Error("Ollama returned no content");
+    }
+
+    logger.info("llm.chat", "response", {
+      model: params.model,
+      ms: Date.now() - t0,
+      responseChars: content.length,
+    });
+    return content;
+  } catch (err) {
+    logger.error(
+      "llm.chat",
+      "error",
+      { model: params.model, ms: Date.now() - t0 },
+      err as Error,
+    );
+    throw err;
   }
-  return content;
 }

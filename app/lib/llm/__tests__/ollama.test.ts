@@ -14,7 +14,7 @@ describe("llmConfig", () => {
     const { llmConfig } = await import("../config");
     expect(llmConfig()).toEqual({
       baseUrl: "http://100.85.216.53:11434",
-      extractModel: "qwen2.5-coder:14b",
+      extractModel: "qwen2.5:3b",
       tailorModel: "mistral:7b",
       fallbackModel: "llama3.1:8b",
     });
@@ -78,5 +78,44 @@ describe("chat", () => {
     await expect(chat({ model: "m1", prompt: "hi" })).rejects.toThrow(
       "Ollama request failed",
     );
+  });
+
+  it("logs request/response details with duration", async () => {
+    vi.stubEnv("LLM_BASE_URL", "http://llm:11434");
+    vi.stubEnv("NODE_ENV", "development");
+    const { chat } = await import("../ollama");
+    const infos: unknown[] = [];
+    vi.spyOn(console, "info").mockImplementation((...a: unknown[]) =>
+      infos.push(a[0]),
+    );
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ message: { content: "answer" } }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await chat({ model: "m1", prompt: "hi" });
+
+    const joined = infos.map(String).join("\n");
+    expect(joined).toContain("[llm.chat]");
+    expect(joined).toContain("model");
+    expect(joined).toContain("ms");
+  });
+
+  it("logs the error path with cause", async () => {
+    vi.stubEnv("LLM_BASE_URL", "http://llm:11434");
+    vi.stubEnv("NODE_ENV", "development");
+    const { chat } = await import("../ollama");
+    const errors: unknown[] = [];
+    vi.spyOn(console, "error").mockImplementation((...a: unknown[]) =>
+      errors.push(a[0]),
+    );
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(chat({ model: "m1", prompt: "hi" })).rejects.toThrow(
+      "Ollama request failed",
+    );
+    expect(errors.map(String).join("\n")).toContain("[llm.chat]");
   });
 });
