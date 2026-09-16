@@ -16,6 +16,7 @@
 - 2026-09-06: Removed unused deps `ts-node` and `@types/html2pdf.js`
 - 2026-09-06: Instrument `llm.chat` (ollama.ts) with request/response/error logging + durations
 - 2026-09-06: Instrument `runTailorPipeline` (pipeline.ts) with start/stage/done/aborted logging + durations
+- 2026-09-06: Instrument `scrapeJobAd` and `extractRequirements` with launch/done/failed and request/done logging
 
 ### Removed
 - 2026-09-06: Deleted all 6 disabled AI API routes (chat, completions, embeddings, models, responses, seed)
