@@ -10,6 +10,7 @@ import { TailorPanel } from "../../../components/tailor/TailorPanel";
 import Breadcrumb from "../../../components/ui/Breadcrumb";
 import Header from "../../../components/ui/Header";
 import UploadPhoto from "../../../components/ui/UploadPhoto";
+import VersionHistory from "../../../components/ui/VersionHistory";
 import { useAutoSave } from "../../../hooks/useAutoSave";
 import { exportCV } from "../../../lib/export/exportDispatcher";
 import type { TailorApplyUpdate } from "../../../lib/tailor/types";
@@ -43,6 +44,7 @@ export default function EditCVPage({ params }: { params: Promise<{ id: string }>
   const [additionalInfo, setAdditionalInfo] = useState([""]);
   const [loading, setLoading] = useState(true);
   const [templateSettings, setTemplateSettings] = useState<TemplateSettings | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
   const previewRef = useRef<HTMLDivElement>(null);
   const printRef = useRef<CVPreviewWrapperHandle>(null);
@@ -141,6 +143,62 @@ export default function EditCVPage({ params }: { params: Promise<{ id: string }>
     }
   };
 
+  const handleRestore = (restored: unknown) => {
+    const d = restored as {
+      personal?: {
+        fullName?: string;
+        title?: string;
+        phone?: string;
+        email?: string;
+        location?: string;
+        linkedin?: string;
+      };
+      profile?: string;
+      competency?: string[];
+      experiences?: Array<{ company: string; role: string; period: string; details: string }>;
+      education?: Array<{ institution: string; qualification: string; period: string }>;
+      certificate?: Array<{ name: string; date: string }>;
+      skill?: string[];
+      reference?: Array<{ name: string; company: string; role: string; email: string; phone: string }>;
+      additionalInfo?: string[];
+    };
+    const p = d.personal || {};
+    setPersonal({
+      fullName: p.fullName || "",
+      title: p.title || "",
+      phone: p.phone || "",
+      email: p.email || "",
+      location: p.location || "",
+      linkedin: p.linkedin || "",
+    });
+    setProfile(d.profile || "");
+    setCompetencies(d.competency?.length ? d.competency : [""]);
+    setExperiences(
+      d.experiences?.length
+        ? d.experiences.map((e) => ({ ...e, id: generateId() }))
+        : [{ id: generateId(), company: "", role: "", period: "", details: "" }],
+    );
+    setEducation(
+      d.education?.length
+        ? d.education.map((e) => ({ ...e, id: generateId() }))
+        : [{ id: generateId(), institution: "", qualification: "", period: "" }],
+    );
+    setCertificate(
+      d.certificate?.length
+        ? d.certificate.map((c) => ({ ...c, id: generateId() }))
+        : [{ id: generateId(), name: "", date: "" }],
+    );
+    setSkills(d.skill?.length ? d.skill : [""]);
+    setReference(
+      d.reference?.length
+        ? d.reference.map((r) => ({ ...r, id: generateId() }))
+        : [{ id: generateId(), name: "", company: "", role: "", email: "", phone: "" }],
+    );
+    setAdditionalInfo(d.additionalInfo?.length ? d.additionalInfo : [""]);
+    setHistoryOpen(false);
+    snapshotDoneRef.current = false;
+  };
+
   const updatePersonal = (field: string, value: string) => setPersonal((p) => ({ ...p, [field]: value }));
   const addExperience = () => setExperiences((e) => [...e, { id: generateId(), company: "", role: "", period: "", details: "" }]);
   const updateExperience = (id: string | number, field: string, value: string) => setExperiences((e) => e.map((item) => (item.id === id ? { ...item, [field]: value } : item)));
@@ -196,14 +254,31 @@ export default function EditCVPage({ params }: { params: Promise<{ id: string }>
         saveStatus={status}
         showSave
         actions={
-          <button
-            onClick={() => router.push(`/cvs/${cvId}/preview`)}
-            className="px-4 py-2 bg-[#d4a853] text-[#0d0d0d] hover:bg-[#b8923e] rounded font-semibold"
-          >
-            Preview
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={() => setHistoryOpen(true)}
+              className="px-4 py-2 border border-[#3a3a3a] text-[#e8e8e8] hover:bg-[#2a2a2a] rounded font-semibold"
+            >
+              History
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push(`/cvs/${cvId}/preview`)}
+              className="px-4 py-2 bg-[#d4a853] text-[#0d0d0d] hover:bg-[#b8923e] rounded font-semibold"
+            >
+              Preview
+            </button>
+          </>
         }
       />
+      {historyOpen && (
+        <VersionHistory
+          cvId={cvId}
+          onRestore={handleRestore}
+          onClose={() => setHistoryOpen(false)}
+        />
+      )}
       <Breadcrumb
         items={[
           { label: "My CVs", href: "/cvs" },
