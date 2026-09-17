@@ -3,6 +3,8 @@
 ## [Unreleased]
 
 ### Added
+- 2026-09-17: Version history + restore UI — `History` button on the edit page opens the `VersionHistory` modal; new `GET /api/cv/[id]/versions` and `POST /api/cv/[id]/versions/[versionId]/restore` routes; restoring commits the version server-side and saves a pre-restore save point
+- 2026-09-17: Add `e2e/qa-phase9.spec.ts` — Playwright QA covering exports (multi-page PDF, two-column, theme colours, DOCX), version-snapshot API, photo upload/display, version restore round-trip, version history modal, and auto-save indicator (evidence to `e2e/.qa-evidence/`)
 - 2026-09-06: Add AI CV Tailoring (Ollama) - SSE /api/tailor pipeline (scrape->extract->tailor->diff), Apply/Reject + fabricated-content guard, Playwright e2e
 - 2026-09-06: Live template preview refresh on the "New CV" page
 - 2026-09-06: Unit tests for `calculatePages` and `getTemplateClasses`
@@ -10,6 +12,7 @@
 - 2026-09-06: AI tailor e2e tests (URL + pasted-text paths) with R1-12 Apply-button fix (`b66c7c4`)
 
 ### Changed
+- 2026-09-17: `VersionHistory.tsx` now reads/writes through the new API routes instead of importing server-only `lib/versions` (which pulled `pg` into the client bundle), so the modal can actually be rendered
 - 2026-09-06: Export `calculatePages` and `Section` from `CVPreview.tsx` for testability
 - 2026-09-06: Replaced README boilerplate with actual project documentation
 - 2026-09-06: Updated AGENTS.md to reflect the real PostgreSQL/port-5252 stack
@@ -26,3 +29,4 @@
 - 2026-09-06: Deleted dead files `app/lib/env.ts` and `app/lib/db.ts.env`
 
 ### Fixed
+- 2026-09-17: PDF export rendered blank/broke for all font pairs — `getFontFamily()` returned CSS heading strings (e.g. "Arial, sans-serif") that were never registered with react-pdf, and the fallback "Helvetica" registration pointed at the blocked `fonts.gstatic.com` domain. `pdfExport.tsx` now maps font pairs to registered families (Roboto via cdnjs for default/modern/creative; built-in Times-Roman for classic/professional); verified via `e2e/qa-phase9.spec.ts` (multi-page two-column PDF with theme colours + Word export)
