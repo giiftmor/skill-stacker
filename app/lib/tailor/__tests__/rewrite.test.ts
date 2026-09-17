@@ -27,6 +27,25 @@ describe("guardNoFabrication", () => {
     );
     expect(out.ok).toBe(true);
   });
+
+  it("logs guard violations when the model invents facts", async () => {
+    process.env.NODE_ENV = "development";
+    process.env.LOG_LEVEL = "info";
+    const logs: string[] = [];
+    vi.spyOn(console, "info").mockImplementation((...a: unknown[]) =>
+      logs.push(String(a[0])),
+    );
+    const d = {
+      key: "profile",
+      section: "profile" as const,
+      label: "Profile",
+      original: "I know React.",
+      proposed: "I know React and Kubernetes.",
+      status: "changed" as const,
+    };
+    guardNoFabrication(d.original, d.proposed);
+    expect(logs.join("\n")).toContain("[tailor.guard]");
+  });
 });
 
 describe("buildTailorDiffs", () => {
@@ -58,5 +77,76 @@ describe("buildTailorDiffs", () => {
     const cv = { profile: "" };
     const diffs = await buildTailorDiffs({ cv, requirements, chatFn });
     expect(diffs.filter((d) => d.section === "profile")).toHaveLength(0);
+  });
+
+  it("emits onSection start/done for each tailored section", async () => {
+    const events: Array<{ status: string; key: string; label: string }> = [];
+    const cv = {
+      profile: "I worked on React.",
+      experiences: [
+        { id: 1, company: "Acme", role: "Dev", details: "Made things." },
+      ],
+      skill: ["React"],
+      competency: ["Leadership"],
+    };
+    await buildTailorDiffs({
+      cv,
+      requirements,
+      chatFn,
+      onSection: (status, key, label) => events.push({ status, key, label }),
+    });
+
+    expect(events.map((e) => e.status)).toEqual([
+      "start",
+      "done",
+      "start",
+      "done",
+      "start",
+      "done",
+      "start",
+      "done",
+    ]);
+    expect(events[0]).toMatchObject({ key: "profile", label: "Profile" });
+    expect(events[2]).toMatchObject({
+      key: "experience:1",
+      label: "Acme — Dev",
+    });
+    expect(events[4]).toMatchObject({ key: "skill", label: "Skills" });
+    expect(events[6]).toMatchObject({
+      key: "competency",
+      label: "Competencies",
+    });
+  });
+
+  it("does not emit onSection for empty sections", async () => {
+    const events: string[] = [];
+    const cv = { profile: "" };
+    await buildTailorDiffs({
+      cv,
+      requirements,
+      chatFn,
+      onSection: (status) => events.push(status),
+    });
+    expect(events).toEqual([]);
+  });
+
+  it("logs per-section tailoring with lengths", async () => {
+    process.env.NODE_ENV = "development";
+    process.env.LOG_LEVEL = "info";
+    const logs: string[] = [];
+    vi.spyOn(console, "info").mockImplementation((...a: unknown[]) =>
+      logs.push(String(a[0])),
+    );
+    const out = await buildTailorDiffs({
+      cv: { profile: "Experienced engineer with React." },
+      requirements: {
+        must_have: ["React"],
+        nice_to_have: [],
+        responsibilities: [],
+      },
+      chatFn,
+    });
+    expect(out).toHaveLength(1);
+    expect(logs.join("\n")).toContain("[tailor.rewrite]");
   });
 });

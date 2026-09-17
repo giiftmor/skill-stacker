@@ -1,4 +1,5 @@
 import { chat, llmConfig } from "../llm";
+import { logger } from "../log";
 import type { JobRequirements, TailorDiff } from "./types";
 
 const STOPWORDS = new Set(
@@ -23,12 +24,16 @@ export function guardNoFabrication(
     if (w.length < 4 || STOPWORDS.has(w)) continue;
     if (!srcTokens.has(w) && !invented.includes(w)) invented.push(w);
   }
-  return invented.length
-    ? {
-        ok: false,
-        reason: `May introduce facts not in your CV: ${invented.slice(0, 5).join(", ")}`,
-      }
-    : { ok: true };
+  if (invented.length) {
+    logger.info("tailor.guard", "violation", {
+      invented: invented.slice(0, 5),
+    });
+    return {
+      ok: false,
+      reason: `May introduce facts not in your CV: ${invented.slice(0, 5).join(", ")}`,
+    };
+  }
+  return { ok: true };
 }
 
 const SYSTEM =
@@ -52,7 +57,17 @@ export async function tailorSection(args: {
   ].join("\n");
 
   const prompt = `JOB REQUIREMENTS:\n${reqText}\n\nORIGINAL (${args.section}):\n${args.original}\n\nREWRITE:`;
+  const t0 = Date.now();
+  logger.info("tailor.rewrite", "start", {
+    section: args.section,
+    originalChars: args.original.length,
+  });
   const proposed = await run({ model: tailorModel, system: SYSTEM, prompt });
+  logger.info("tailor.rewrite", "done", {
+    section: args.section,
+    ms: Date.now() - t0,
+    proposedChars: proposed.trim().length,
+  });
   return { original: args.original, proposed: proposed.trim() };
 }
 
@@ -60,18 +75,21 @@ export async function buildTailorDiffs(args: {
   cv: Record<string, unknown>;
   requirements: JobRequirements;
   chatFn?: typeof chat;
+  onSection?: (status: "start" | "done", key: string, label: string) => void;
 }): Promise<TailorDiff[]> {
   const run = args.chatFn;
   const diffs: TailorDiff[] = [];
 
   const profile = (args.cv.profile as string | undefined) ?? "";
   if (profile.trim()) {
+    args.onSection?.("start", "profile", "Profile");
     const { original, proposed } = await tailorSection({
       section: "profile",
       original: profile,
       requirements: args.requirements,
       chatFn: run,
     });
+    args.onSection?.("done", "profile", "Profile");
     diffs.push({
       key: "profile",
       section: "profile",
@@ -92,14 +110,17 @@ export async function buildTailorDiffs(args: {
       `${Math.random().toString(36).slice(2)}`;
     const label =
       `${(exp.company as string) || ""} — ${(exp.role as string) || "Experience"}`.trim();
+    const key = `experience:${id}`;
+    args.onSection?.("start", key, label);
     const { original, proposed } = await tailorSection({
       section: `experience ${label}`,
       original: details,
       requirements: args.requirements,
       chatFn: run,
     });
+    args.onSection?.("done", key, label);
     diffs.push({
-      key: `experience:${id}`,
+      key,
       section: "experience",
       label: label || "Experience",
       original,
@@ -111,12 +132,14 @@ export async function buildTailorDiffs(args: {
   const skill = (args.cv.skill as string[] | undefined) ?? [];
   if (skill.some((s) => s.trim())) {
     const original = skill.join("\n");
+    args.onSection?.("start", "skill", "Skills");
     const { proposed } = await tailorSection({
       section: "skills",
       original,
       requirements: args.requirements,
       chatFn: run,
     });
+    args.onSection?.("done", "skill", "Skills");
     const normalized = proposed
       .split(/[\n,]+/)
       .map((s) => s.trim())
@@ -138,12 +161,14 @@ export async function buildTailorDiffs(args: {
   const competency = (args.cv.competency as string[] | undefined) ?? [];
   if (competency.some((c) => c.trim())) {
     const original = competency.join("\n");
+    args.onSection?.("start", "competency", "Competencies");
     const { proposed } = await tailorSection({
       section: "competencies",
       original,
       requirements: args.requirements,
       chatFn: run,
     });
+    args.onSection?.("done", "competency", "Competencies");
     const normalized = proposed
       .split(/[\n,]+/)
       .map((c) => c.trim())
