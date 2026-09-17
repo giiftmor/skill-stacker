@@ -3,6 +3,24 @@
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Fixed
+
+### Removed
+
+### Deprecated
+
+### Security
+
+
+## [0.2.0] - 2026-09-17
+
+AI CV Tailoring (Ollama SSE), env-gated structured logging, version history + restore, and PDF export font fix
+
+
+### Added
 - 2026-09-17: Dev-only model latency tester at `/delaytest`, backed by `GET /api/delaytest/models` and `POST /api/delaytest/{run,stream}` routes, for comparing Ollama model speed/validity
 - 2026-09-17: Version history + restore UI — `History` button on the edit page opens the `VersionHistory` modal; new `GET /api/cv/[id]/versions` and `POST /api/cv/[id]/versions/[versionId]/restore` routes; restoring commits the version server-side and saves a pre-restore save point
 - 2026-09-17: Add `e2e/qa-phase9.spec.ts` — Playwright QA covering exports (multi-page PDF, two-column, theme colours, DOCX), version-snapshot API, photo upload/display, version restore round-trip, version history modal, and auto-save indicator (evidence to `e2e/.qa-evidence/`)
