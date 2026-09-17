@@ -1,6 +1,6 @@
 // app/lib/export/pdfExport.ts - Template-aware PDF export
 import { Document, Page, Text, View, StyleSheet, Font, PDFDownloadLink } from "@react-pdf/renderer";
-import { TEMPLATES, THEMES, FONT_PAIRS, TemplateId } from "../templates/templateDefinitions";
+import { TEMPLATES, THEMES, TemplateId } from "../templates/templateDefinitions";
 
 Font.register({
   family: "Roboto",
@@ -9,16 +9,6 @@ Font.register({
     { src: "https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-regular-webfont.ttf", fontWeight: 400 },
     { src: "https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-medium-webfont.ttf", fontWeight: 500 },
     { src: "https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-bold-webfont.ttf", fontWeight: 700 },
-  ],
-});
-
-Font.register({
-  family: "Helvetica",
-  fonts: [
-    { src: "https://fonts.gstatic.com/s/roboto/v30/Roboto-Light.ttf", fontWeight: 300 },
-    { src: "https://fonts.gstatic.com/s/roboto/v30/Roboto-Regular.ttf", fontWeight: 400 },
-    { src: "https://fonts.gstatic.com/s/roboto/v30/Roboto-Medium.ttf", fontWeight: 500 },
-    { src: "https://fonts.gstatic.com/s/roboto/v30/Roboto-Bold.ttf", fontWeight: 700 },
   ],
 });
 
@@ -58,8 +48,14 @@ function getThemeColors(templateId: TemplateId, themeId?: string) {
 }
 
 function getFontFamily(fontPairId: string): string {
-  const pair = FONT_PAIRS.find((p) => p.id === fontPairId);
-  return pair?.heading || "Roboto";
+  const familyByPair: Record<string, string> = {
+    default: "Roboto",
+    modern: "Roboto",
+    classic: "Times-Roman",
+    professional: "Times-Roman",
+    creative: "Roboto",
+  };
+  return familyByPair[fontPairId] || "Roboto";
 }
 
 interface CVDocumentProps {
