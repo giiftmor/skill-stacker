@@ -78,7 +78,7 @@
 - [x] Version restore creates new save point
 - [x] Max 20 versions per CV (auto-prune)
 
-## Phase 9: Polish & Testing 🔄 (in progress)
+## Phase 9: Polish & Testing ✅
 - [x] Remove all AI dead code (2026-09-06)
 - [x] Lint pass on changed files (pre-existing 220-error debt across 80 files deferred)
 - [x] Unit tests: 21 passing (calculatePages + getTemplateClasses + pre-existing)
