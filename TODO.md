@@ -94,6 +94,7 @@
 - [x] Tailor-for-job panel on the edit page with real-time diffs + Apply/Reject
 - [x] Fabricated-content guard flags inventions (2026-09-06)
 - [x] Playwright e2e (URL + pasted-text paths)
+- [x] Dev-mode logging level (`LOG_LEVEL`) for all e2e flow steps (2026-09-06)
 
 ---
 

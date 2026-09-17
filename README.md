@@ -86,4 +86,9 @@ DB_NAME=cvbuilder
 DB_USER=postgres
 DB_PASSWORD=postgres
 HOST_PORT=5252
+LOG_LEVEL=info
 ```
+
+## Development logging
+
+Server flow logging is gated by `LOG_LEVEL` (`debug | info | warn | error`, default `info`). Set it in `.env` or override per-run (`LOG_LEVEL=warn docker compose up -d --force-recreate app`) to silence info/debug flow lines in `docker compose logs -f app`.

@@ -138,6 +138,13 @@ Env vars (with defaults):
 
 `LLM_PROVIDER` and `LLM_API_KEY` are inert.
 
+### Logging
+
+Server-side flow logging is gated by `LOG_LEVEL` (`debug | info | warn | error`, default `info`).
+All crucial e2e calls emit `[ts] [level] [scope:fn] message {"json"}` lines to `docker compose logs -f app`.
+Scopes: `llm.chat`, `tailor.pipeline`, `tailor.scrape`, `tailor.extract`, `tailor.rewrite`, `tailor.guard`,
+`api.tailor`, `api.cv*`, `api.upload`, `api.photo`, `db.write`. Unit tests force error-only logging automatically.
+
 ---
 
 ## Session Startup Checklist

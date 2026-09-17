@@ -19,6 +19,7 @@
 - 2026-09-06: Instrument `scrapeJobAd` and `extractRequirements` with launch/done/failed and request/done logging
 - 2026-09-06: Instrument `guardNoFabrication`, `tailorSection`, and the SSE `/api/tailor` route with stage/guard/request logging
 - 2026-09-06: Instrument CV CRUD routes (`api.cv`, `api.cv.item`), snapshot (`api.cv.snapshot`), upload (`api.upload`), photo (`api.photo`), storage (`storage.file`), and db writes (`db.write`) with scoped structured logs; removed `🟢`/`🟡` debug noise
+- 2026-09-06: Add env-gated structured logging (`LOG_LEVEL`) across AI-tailor, LLM, CV CRUD, upload, and db write flows; removed leftover debug markers in `/api/cv`
 
 ### Removed
 - 2026-09-06: Deleted all 6 disabled AI API routes (chat, completions, embeddings, models, responses, seed)
