@@ -1,16 +1,25 @@
 import { NextResponse } from "next/server";
-import { getCV, updateCV, deleteCV } from "@/app/lib/db";
+import { deleteCV, getCV, updateCV } from "@/app/lib/db";
+import { logger } from "../../../lib/log";
+
+function idFromParams(params: { id: string }): number {
+  const n = parseInt(params.id, 10);
+  return Number.isNaN(n) ? -1 : n;
+}
 
 // GET /api/cv/123 - Get CV with ID 123
 export async function GET(
   _: any,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  try {
-    const { id } = await params;
-    const cvId = parseInt(id); // Convert "123" to 123
+  const { id } = await params;
+  const cvId = idFromParams({ id });
+  logger.info("api.cv.item", "fetch requested", { cvId });
+  const t0 = Date.now();
 
-    if (isNaN(cvId)) {
+  try {
+    if (cvId === -1) {
+      logger.warn("api.cv.item", "invalid id", { id });
       return NextResponse.json(
         {
           success: false,
@@ -23,6 +32,7 @@ export async function GET(
     const cv = await getCV(cvId);
 
     if (!cv) {
+      logger.warn("api.cv.item", "not found", { cvId, ms: Date.now() - t0 });
       return NextResponse.json(
         {
           success: false,
@@ -32,6 +42,8 @@ export async function GET(
       );
     }
 
+    logger.info("api.cv.item", "fetch returned", { cvId, ms: Date.now() - t0 });
+
     return NextResponse.json(
       {
         success: true,
@@ -40,7 +52,12 @@ export async function GET(
       { status: 200 },
     );
   } catch (error) {
-    console.error("Error in GET /api/cv/[id]:", error);
+    logger.error(
+      "api.cv.item",
+      "fetch failed",
+      { cvId, ms: Date.now() - t0 },
+      error as Error,
+    );
     return NextResponse.json(
       {
         success: false,
@@ -57,11 +74,14 @@ export async function PUT(
   request: { json: () => any },
   { params }: { params: Promise<{ id: string }> },
 ) {
-  try {
-    const { id } = await params;
-    const cvId = parseInt(id);
+  const { id } = await params;
+  const cvId = idFromParams({ id });
+  logger.info("api.cv.item", "update requested", { cvId });
+  const t0 = Date.now();
 
-    if (isNaN(cvId)) {
+  try {
+    if (cvId === -1) {
+      logger.warn("api.cv.item", "invalid id", { id });
       return NextResponse.json(
         {
           success: false,
@@ -73,6 +93,10 @@ export async function PUT(
 
     const data = await request.json();
     const result = await updateCV(cvId, data);
+    logger.info("api.cv.item", "update returned", {
+      cvId,
+      ms: Date.now() - t0,
+    });
 
     if (!result) {
       return NextResponse.json(
@@ -93,7 +117,12 @@ export async function PUT(
       { status: 200 },
     );
   } catch (error) {
-    console.error("Error in PUT /api/cv/[id]:", error);
+    logger.error(
+      "api.cv.item",
+      "update failed",
+      { cvId, ms: Date.now() - t0 },
+      error as Error,
+    );
     return NextResponse.json(
       {
         success: false,
@@ -110,11 +139,14 @@ export async function DELETE(
   _: any,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  try {
-    const { id } = await params;
-    const cvId = parseInt(id);
+  const { id } = await params;
+  const cvId = idFromParams({ id });
+  logger.info("api.cv.item", "delete requested", { cvId });
+  const t0 = Date.now();
 
-    if (isNaN(cvId)) {
+  try {
+    if (cvId === -1) {
+      logger.warn("api.cv.item", "invalid id", { id });
       return NextResponse.json(
         {
           success: false,
@@ -125,6 +157,10 @@ export async function DELETE(
     }
 
     await deleteCV(cvId);
+    logger.info("api.cv.item", "delete returned", {
+      cvId,
+      ms: Date.now() - t0,
+    });
 
     return NextResponse.json(
       {
@@ -134,7 +170,12 @@ export async function DELETE(
       { status: 200 },
     );
   } catch (error) {
-    console.error("Error in DELETE /api/cv/[id]:", error);
+    logger.error(
+      "api.cv.item",
+      "delete failed",
+      { cvId, ms: Date.now() - t0 },
+      error as Error,
+    );
     return NextResponse.json(
       {
         success: false,

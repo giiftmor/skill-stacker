@@ -1,22 +1,30 @@
 // app/cvs/[id]/edit/page.tsx - Edit CV
 "use client";
-import { useState, useEffect, useRef, use } from "react";
 import { useRouter } from "next/navigation";
-import Header from "../../../components/ui/Header";
-import Breadcrumb from "../../../components/ui/Breadcrumb";
+import { use, useCallback, useEffect, useRef, useState } from "react";
 import CVBuilderForm from "../../../components/CVBuilderForm";
-import CVPreviewWrapper from "../../../components/CVPreviewWrapper";
-import { useAutoSave } from "../../../hooks/useAutoSave";
-import { TemplateId, TemplateSettings } from "../../../lib/templates/templateDefinitions";
-import { exportCV } from "../../../lib/export/exportDispatcher";
+import CVPreviewWrapper, {
+  type CVPreviewWrapperHandle,
+} from "../../../components/CVPreviewWrapper";
+import { TailorPanel } from "../../../components/tailor/TailorPanel";
+import Breadcrumb from "../../../components/ui/Breadcrumb";
+import Header from "../../../components/ui/Header";
 import UploadPhoto from "../../../components/ui/UploadPhoto";
+import VersionHistory from "../../../components/ui/VersionHistory";
+import { useAutoSave } from "../../../hooks/useAutoSave";
+import { exportCV } from "../../../lib/export/exportDispatcher";
+import type { TailorApplyUpdate } from "../../../lib/tailor/types";
+import type {
+  TemplateId,
+  TemplateSettings,
+} from "../../../lib/templates/templateDefinitions";
 
 export default function EditCVPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const router = useRouter();
   const cvId = parseInt(resolvedParams.id, 10);
 
-  const generateId = () => Math.random().toString(36).substr(2, 9);
+  const generateId = useCallback(() => Math.random().toString(36).substr(2, 9), []);
 
   const [personal, setPersonal] = useState({
     fullName: "",
@@ -36,15 +44,13 @@ export default function EditCVPage({ params }: { params: Promise<{ id: string }>
   const [additionalInfo, setAdditionalInfo] = useState([""]);
   const [loading, setLoading] = useState(true);
   const [templateSettings, setTemplateSettings] = useState<TemplateSettings | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
   const previewRef = useRef<HTMLDivElement>(null);
-  const printRef = useRef<any>(null);
+  const printRef = useRef<CVPreviewWrapperHandle>(null);
+  const snapshotDoneRef = useRef(false);
 
-  useEffect(() => {
-    loadCV();
-  }, [cvId]);
-
-  const loadCV = async () => {
+  const loadCV = useCallback(async () => {
     try {
       const response = await fetch(`/api/cv/${cvId}`);
       const data = await response.json();
@@ -60,11 +66,27 @@ export default function EditCVPage({ params }: { params: Promise<{ id: string }>
         });
         setProfile(cv.profile || "");
         setCompetencies(cv.competency?.length > 0 ? cv.competency : [""]);
-        setExperiences(cv.experiences?.length > 0 ? cv.experiences.map((e: any) => ({ ...e, id: generateId() })) : [{ id: generateId(), company: "", role: "", period: "", details: "" }]);
-        setEducation(cv.education?.length > 0 ? cv.education.map((e: any) => ({ ...e, id: generateId() })) : [{ id: generateId(), institution: "", qualification: "", period: "" }]);
-        setCertificate(cv.certificate?.length > 0 ? cv.certificate.map((c: any) => ({ ...c, id: generateId() })) : [{ id: generateId(), name: "", date: "" }]);
+        setExperiences(
+          cv.experiences?.length > 0
+            ? cv.experiences.map((e: { company: string; role: string; period: string; details: string }) => ({ ...e, id: generateId() }))
+            : [{ id: generateId(), company: "", role: "", period: "", details: "" }],
+        );
+        setEducation(
+          cv.education?.length > 0
+            ? cv.education.map((e: { institution: string; qualification: string; period: string }) => ({ ...e, id: generateId() }))
+            : [{ id: generateId(), institution: "", qualification: "", period: "" }],
+        );
+        setCertificate(
+          cv.certificate?.length > 0
+            ? cv.certificate.map((c: { name: string; date: string }) => ({ ...c, id: generateId() }))
+            : [{ id: generateId(), name: "", date: "" }],
+        );
         setSkills(cv.skill?.length > 0 ? cv.skill : [""]);
-        setReference(cv.reference?.length > 0 ? cv.reference.map((r: any) => ({ ...r, id: generateId() })) : [{ id: generateId(), name: "", company: "", role: "", email: "", phone: "" }]);
+        setReference(
+          cv.reference?.length > 0
+            ? cv.reference.map((r: { name: string; company: string; role: string; email: string; phone: string }) => ({ ...r, id: generateId() }))
+            : [{ id: generateId(), name: "", company: "", role: "", email: "", phone: "" }],
+        );
         setAdditionalInfo(cv.additionalInfo?.length > 0 ? cv.additionalInfo : [""]);
 
         if (cv.template_settings) {
@@ -77,7 +99,11 @@ export default function EditCVPage({ params }: { params: Promise<{ id: string }>
     } finally {
       setLoading(false);
     }
-  };
+  }, [cvId, generateId]);
+
+  useEffect(() => {
+    loadCV();
+  }, [loadCV]);
 
   const handleSave = async (data: Record<string, unknown>) => {
     await fetch(`/api/cv/${cvId}`, {
@@ -93,6 +119,85 @@ export default function EditCVPage({ params }: { params: Promise<{ id: string }>
     onSave: handleSave,
     enabled: !loading,
   });
+
+  const handleTailorApply = (update: TailorApplyUpdate) => {
+    if (!snapshotDoneRef.current) {
+      fetch(`/api/cv/${cvId}/snapshot`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(cvData),
+      });
+      snapshotDoneRef.current = true;
+    }
+    if (update.profile !== undefined) setProfile(update.profile);
+    if (update.skill !== undefined) setSkills(update.skill);
+    if (update.competency !== undefined) setCompetencies(update.competency);
+    const experiences = update.experiences;
+    if (experiences && experiences.length > 0) {
+      setExperiences((prev) =>
+        prev.map((exp, i) => {
+          const detail = experiences[i];
+          return detail ? { ...exp, details: detail.details } : exp;
+        }),
+      );
+    }
+  };
+
+  const handleRestore = (restored: unknown) => {
+    const d = restored as {
+      personal?: {
+        fullName?: string;
+        title?: string;
+        phone?: string;
+        email?: string;
+        location?: string;
+        linkedin?: string;
+      };
+      profile?: string;
+      competency?: string[];
+      experiences?: Array<{ company: string; role: string; period: string; details: string }>;
+      education?: Array<{ institution: string; qualification: string; period: string }>;
+      certificate?: Array<{ name: string; date: string }>;
+      skill?: string[];
+      reference?: Array<{ name: string; company: string; role: string; email: string; phone: string }>;
+      additionalInfo?: string[];
+    };
+    const p = d.personal || {};
+    setPersonal({
+      fullName: p.fullName || "",
+      title: p.title || "",
+      phone: p.phone || "",
+      email: p.email || "",
+      location: p.location || "",
+      linkedin: p.linkedin || "",
+    });
+    setProfile(d.profile || "");
+    setCompetencies(d.competency?.length ? d.competency : [""]);
+    setExperiences(
+      d.experiences?.length
+        ? d.experiences.map((e) => ({ ...e, id: generateId() }))
+        : [{ id: generateId(), company: "", role: "", period: "", details: "" }],
+    );
+    setEducation(
+      d.education?.length
+        ? d.education.map((e) => ({ ...e, id: generateId() }))
+        : [{ id: generateId(), institution: "", qualification: "", period: "" }],
+    );
+    setCertificate(
+      d.certificate?.length
+        ? d.certificate.map((c) => ({ ...c, id: generateId() }))
+        : [{ id: generateId(), name: "", date: "" }],
+    );
+    setSkills(d.skill?.length ? d.skill : [""]);
+    setReference(
+      d.reference?.length
+        ? d.reference.map((r) => ({ ...r, id: generateId() }))
+        : [{ id: generateId(), name: "", company: "", role: "", email: "", phone: "" }],
+    );
+    setAdditionalInfo(d.additionalInfo?.length ? d.additionalInfo : [""]);
+    setHistoryOpen(false);
+    snapshotDoneRef.current = false;
+  };
 
   const updatePersonal = (field: string, value: string) => setPersonal((p) => ({ ...p, [field]: value }));
   const addExperience = () => setExperiences((e) => [...e, { id: generateId(), company: "", role: "", period: "", details: "" }]);
@@ -149,14 +254,31 @@ export default function EditCVPage({ params }: { params: Promise<{ id: string }>
         saveStatus={status}
         showSave
         actions={
-          <button
-            onClick={() => router.push(`/cvs/${cvId}/preview`)}
-            className="px-4 py-2 bg-[#d4a853] text-[#0d0d0d] hover:bg-[#b8923e] rounded font-semibold"
-          >
-            Preview
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={() => setHistoryOpen(true)}
+              className="px-4 py-2 border border-[#3a3a3a] text-[#e8e8e8] hover:bg-[#2a2a2a] rounded font-semibold"
+            >
+              History
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push(`/cvs/${cvId}/preview`)}
+              className="px-4 py-2 bg-[#d4a853] text-[#0d0d0d] hover:bg-[#b8923e] rounded font-semibold"
+            >
+              Preview
+            </button>
+          </>
         }
       />
+      {historyOpen && (
+        <VersionHistory
+          cvId={cvId}
+          onRestore={handleRestore}
+          onClose={() => setHistoryOpen(false)}
+        />
+      )}
       <Breadcrumb
         items={[
           { label: "My CVs", href: "/cvs" },
@@ -164,6 +286,9 @@ export default function EditCVPage({ params }: { params: Promise<{ id: string }>
         ]}
       />
       <main className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <TailorPanel cv={cvData} onApply={handleTailorApply} />
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-2">
             <div className="mb-4">

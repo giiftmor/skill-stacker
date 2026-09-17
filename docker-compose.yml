@@ -31,10 +31,11 @@ services:
       - DB_NAME=cvbuilder
       - DB_USER=postgres
       - DB_PASSWORD=postgres
-      - LLM_PROVIDER=${LLM_PROVIDER:-local}
-      - LLM_BASE_URL=${LLM_BASE_URL:-http://localhost:1234}
-      - LLM_MODEL=${LLM_MODEL:-}
-      - LLM_API_KEY=${LLM_API_KEY:-}
+      - LLM_PROVIDER=${LLM_PROVIDER:-ollama}
+      - LLM_BASE_URL=${LLM_BASE_URL:-http://100.85.216.53:11434}
+      - LLM_MODEL_EXTRACT=${LLM_MODEL_EXTRACT:-qwen2.5-coder:14b}
+      - LLM_MODEL_TAILOR=${LLM_MODEL_TAILOR:-mistral:7b}
+      - LLM_MODEL=${LLM_MODEL:-llama3.1:8b}
     volumes:
       - ./scripts:/app/scripts:ro
       - ./uploads:/app/uploads

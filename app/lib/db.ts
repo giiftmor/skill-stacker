@@ -1,5 +1,6 @@
 // app/lib/db.ts - PostgreSQL Version
 import { Pool, QueryResult } from "pg";
+import { logger } from "./log";
 
 let pool: Pool | null = null;
 
@@ -243,6 +244,7 @@ export async function saveCV(data: {
   additionalInfo: string[];
   templateSettings?: TemplateSettings;
 }) {
+  const t0 = Date.now();
   const client = await getPool().connect();
 
   try {
@@ -261,7 +263,7 @@ export async function saveCV(data: {
         data.personal.location,
         data.personal.linkedin,
         data.profile,
-        data.templateSettings ? JSON.stringify(data.templateSettings) : '{}',
+        data.templateSettings ? JSON.stringify(data.templateSettings) : "{}",
       ],
     );
     const cvId = cvResult.rows[0].id;
@@ -283,7 +285,9 @@ export async function saveCV(data: {
     }
 
     // Insert education
-    for (const edu of data.education.filter((e) => e.institution || e.qualification)) {
+    for (const edu of data.education.filter(
+      (e) => e.institution || e.qualification,
+    )) {
       await client.query(
         "INSERT INTO education (cv_id, institution, qualification, period) VALUES ($1, $2, $3, $4)",
         [cvId, edu.institution, edu.qualification, edu.period],
@@ -316,17 +320,27 @@ export async function saveCV(data: {
 
     // Insert additional info
     for (const info of data.additionalInfo.filter(Boolean)) {
-      await client.query("INSERT INTO additional_info (cv_id, info) VALUES ($1, $2)", [
-        cvId,
-        info,
-      ]);
+      await client.query(
+        "INSERT INTO additional_info (cv_id, info) VALUES ($1, $2)",
+        [cvId, info],
+      );
     }
 
     await client.query("COMMIT");
+    logger.info("db.write", "done", {
+      fn: "saveCV",
+      cvId,
+      ms: Date.now() - t0,
+    });
     return { success: true, cvId };
   } catch (error) {
     await client.query("ROLLBACK");
-    console.error("Error saving CV:", error);
+    logger.error(
+      "db.write",
+      "save failed",
+      { fn: "saveCV", cvId: undefined, ms: Date.now() - t0 },
+      error as Error,
+    );
     throw error;
   } finally {
     client.release();
@@ -349,10 +363,9 @@ export async function getCV(id: number) {
 
   try {
     // Get CV basic info
-    const cvResult = await client.query(
-      "SELECT * FROM cvs WHERE id = $1",
-      [id],
-    );
+    const cvResult = await client.query("SELECT * FROM cvs WHERE id = $1", [
+      id,
+    ]);
     if (cvResult.rows.length === 0) {
       throw new Error("CV not found");
     }
@@ -415,8 +428,25 @@ export async function getCV(id: number) {
 
 // Delete CV
 export async function deleteCV(id: number) {
-  await getPool().query("DELETE FROM cvs WHERE id = $1", [id]);
-  return { success: true };
+  const t0 = Date.now();
+  try {
+    const result = await getPool().query("DELETE FROM cvs WHERE id = $1", [id]);
+    logger.info("db.write", "done", {
+      fn: "deleteCV",
+      cvId: id,
+      deleted: result.rowCount ?? 0,
+      ms: Date.now() - t0,
+    });
+    return { success: true };
+  } catch (error) {
+    logger.error(
+      "db.write",
+      "delete failed",
+      { fn: "deleteCV", cvId: id, ms: Date.now() - t0 },
+      error as Error,
+    );
+    throw error;
+  }
 }
 
 // Test database connection
@@ -471,6 +501,7 @@ export async function updateCV(
     additionalInfo: string[];
   },
 ) {
+  const t0 = Date.now();
   const client = await getPool().connect();
 
   try {
@@ -520,7 +551,9 @@ export async function updateCV(
     }
 
     // Insert education
-    for (const edu of data.education.filter((e) => e.institution || e.qualification)) {
+    for (const edu of data.education.filter(
+      (e) => e.institution || e.qualification,
+    )) {
       await client.query(
         "INSERT INTO education (cv_id, institution, qualification, period) VALUES ($1, $2, $3, $4)",
         [cvId, edu.institution, edu.qualification, edu.period],
@@ -529,16 +562,18 @@ export async function updateCV(
 
     // Insert certificates
     for (const cert of data.certificate.filter((c) => c.name || c.date)) {
-      await client.query("INSERT INTO certificates (cv_id, name, date) VALUES ($1, $2, $3)", [
-        cvId,
-        cert.name,
-        cert.date,
-      ]);
+      await client.query(
+        "INSERT INTO certificates (cv_id, name, date) VALUES ($1, $2, $3)",
+        [cvId, cert.name, cert.date],
+      );
     }
 
     // Insert skills
     for (const skill of data.skill.filter(Boolean)) {
-      await client.query("INSERT INTO skills (cv_id, skill) VALUES ($1, $2)", [cvId, skill]);
+      await client.query("INSERT INTO skills (cv_id, skill) VALUES ($1, $2)", [
+        cvId,
+        skill,
+      ]);
     }
 
     // Insert references
@@ -551,14 +586,27 @@ export async function updateCV(
 
     // Insert additional info
     for (const info of data.additionalInfo.filter(Boolean)) {
-      await client.query("INSERT INTO additional_info (cv_id, info) VALUES ($1, $2)", [cvId, info]);
+      await client.query(
+        "INSERT INTO additional_info (cv_id, info) VALUES ($1, $2)",
+        [cvId, info],
+      );
     }
 
     await client.query("COMMIT");
+    logger.info("db.write", "done", {
+      fn: "updateCV",
+      cvId,
+      ms: Date.now() - t0,
+    });
     return { success: true, cvId };
   } catch (error) {
     await client.query("ROLLBACK");
-    console.error("Error updating CV:", error);
+    logger.error(
+      "db.write",
+      "update failed",
+      { fn: "updateCV", cvId, ms: Date.now() - t0 },
+      error as Error,
+    );
     throw error;
   } finally {
     client.release();
@@ -566,13 +614,16 @@ export async function updateCV(
 }
 
 // Photo management functions
-export async function saveCVPhoto(cvId: number, photoData: {
-  filename: string;
-  original_name: string;
-  mime_type: string;
-  size: number;
-  url: string;
-}) {
+export async function saveCVPhoto(
+  cvId: number,
+  photoData: {
+    filename: string;
+    original_name: string;
+    mime_type: string;
+    size: number;
+    url: string;
+  },
+) {
   const client = await getPool().connect();
 
   try {
@@ -584,7 +635,14 @@ export async function saveCVPhoto(cvId: number, photoData: {
       `INSERT INTO cv_photos (cv_id, filename, original_name, mime_type, size, url)
        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
-      [cvId, photoData.filename, photoData.original_name, photoData.mime_type, photoData.size, photoData.url],
+      [
+        cvId,
+        photoData.filename,
+        photoData.original_name,
+        photoData.mime_type,
+        photoData.size,
+        photoData.url,
+      ],
     );
 
     return { success: true, photo: result.rows[0] };
@@ -607,12 +665,17 @@ export async function deleteCVPhoto(cvId: number) {
 }
 
 // Version management functions
-export async function saveCVVersion(cvId: number, data: Record<string, unknown>) {
+export async function saveCVVersion(
+  cvId: number,
+  data: Record<string, unknown>,
+) {
+  const t0 = Date.now();
   const client = await getPool().connect();
 
   try {
     // Auto-prune: keep only 20 most recent versions
-    await client.query(`
+    await client.query(
+      `
       DELETE FROM cv_versions
       WHERE cv_id = $1 AND id NOT IN (
         SELECT id FROM cv_versions
@@ -620,7 +683,9 @@ export async function saveCVVersion(cvId: number, data: Record<string, unknown>)
         ORDER BY created_at DESC
         LIMIT 19
       )
-    `, [cvId]);
+    `,
+      [cvId],
+    );
 
     // Insert new version
     const result = await client.query(
@@ -629,6 +694,13 @@ export async function saveCVVersion(cvId: number, data: Record<string, unknown>)
        RETURNING *`,
       [cvId, JSON.stringify(data)],
     );
+
+    logger.info("db.write", "done", {
+      fn: "saveCVVersion",
+      cvId,
+      versionId: result.rows[0]?.id,
+      ms: Date.now() - t0,
+    });
 
     return { success: true, version: result.rows[0] };
   } finally {
@@ -644,7 +716,9 @@ export async function getCVVersions(cvId: number): Promise<CVVersion[]> {
   return result.rows;
 }
 
-export async function getCVVersion(versionId: number): Promise<CVVersion | null> {
+export async function getCVVersion(
+  versionId: number,
+): Promise<CVVersion | null> {
   const result = await getPool().query(
     "SELECT * FROM cv_versions WHERE id = $1",
     [versionId],
@@ -662,10 +736,13 @@ export async function getCVWithSettings(id: number) {
 }
 
 // Update CV template settings
-export async function updateCVTemplateSettings(cvId: number, settings: TemplateSettings) {
-  await getPool().query(
-    "UPDATE cvs SET template_settings = $1 WHERE id = $2",
-    [JSON.stringify(settings), cvId],
-  );
+export async function updateCVTemplateSettings(
+  cvId: number,
+  settings: TemplateSettings,
+) {
+  await getPool().query("UPDATE cvs SET template_settings = $1 WHERE id = $2", [
+    JSON.stringify(settings),
+    cvId,
+  ]);
   return { success: true };
 }

@@ -119,13 +119,31 @@ docker ps
 - **Node.js version**: >=20.x (Next.js 16, React 19)
 - **Database**: PostgreSQL 16 (dockerized) — database `cvbuilder`
 - **No ORM**: Direct SQL via the `pg` driver (`app/lib/db.ts`)
-- **LLM Support**: disabled (AI routes removed)
+- **LLM Support**: AI CV Tailoring — live Ollama-backed SSE pipeline
 - **Build system**: Next.js 16 with Turbopack
 - **Entry point**: Port 5252 (no nginx reverse proxy)
 
-### LLM Configuration (Removed)
+### LLM Configuration
 
-AI endpoints were removed in Sep 2026. `.env` may still reference `LLM_*` variables, but they are inert.
+AI CV Tailoring runs an SSE pipeline (`/api/tailor`) over Ollama: **scrape → extract → tailor → diff**, surfaced in the Tailor-for-job panel on the edit page with Apply/Reject per diff and a fabricated-content guard. Playwright's chromium is used for URL scraping. The container may not have network access to `LLM_BASE_URL` — add a host network/route when testing real Ollama e2e.
+
+Env vars (with defaults):
+
+| Var | Default |
+|-----|---------|
+| `LLM_BASE_URL` | `http://100.85.216.53:11434` |
+| `LLM_MODEL_EXTRACT` | `qwen2.5-coder:14b` |
+| `LLM_MODEL_TAILOR` | `mistral:7b` |
+| `LLM_MODEL` | `llama3.1:8b` (fallback) |
+
+`LLM_PROVIDER` and `LLM_API_KEY` are inert.
+
+### Logging
+
+Server-side flow logging is gated by `LOG_LEVEL` (`debug | info | warn | error`, default `info`).
+All crucial e2e calls emit `[ts] [level] [scope:fn] message {"json"}` lines to `docker compose logs -f app`.
+Scopes: `llm.chat`, `tailor.pipeline`, `tailor.scrape`, `tailor.extract`, `tailor.rewrite`, `tailor.guard`,
+`api.tailor`, `api.cv*`, `api.upload`, `api.photo`, `db.write`. Unit tests force error-only logging automatically.
 
 ---
 

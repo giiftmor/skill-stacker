@@ -78,16 +78,23 @@
 - [x] Version restore creates new save point
 - [x] Max 20 versions per CV (auto-prune)
 
-## Phase 9: Polish & Testing 🔄 (in progress)
+## Phase 9: Polish & Testing ✅
 - [x] Remove all AI dead code (2026-09-06)
 - [x] Lint pass on changed files (pre-existing 220-error debt across 80 files deferred)
 - [x] Unit tests: 21 passing (calculatePages + getTemplateClasses + pre-existing)
 - [x] E2E tests: 6 passing (installed chromium, fixed strict-mode h2, added live-preview test)
 - [x] Verified create → template select → editor flow via Playwright (no console errors)
-- [ ] Manual: verify multi-page PDF, two-column, photo, theme colours exports
-- [ ] Manual: test auto-save indicator
-- [ ] Manual: test version history and restore
-- [ ] Manual: test photo upload and display
+- [x] Manual: verify multi-page PDF, two-column, photo, theme colours exports (2026-09-17; e2e/qa-phase9.spec.ts)
+- [x] Manual: test auto-save indicator (2026-09-17; Saving → Saved via throttled PUT)
+- [x] Manual: test version history and restore (2026-09-17; snapshot row verified in cv_versions; restore wired 2026-09-17 via History modal + `/api/cv/[id]/versions[/[versionId]/restore]`; restore creates a pre-restore save point)
+- [x] Manual: test photo upload and display (2026-09-17; editor + preview + /api/photo/[cvId])
+
+## Phase 10: AI Tailor ✅
+- [x] SSE `/api/tailor` pipeline (scrape → extract → tailor → diffs) over Ollama
+- [x] Tailor-for-job panel on the edit page with real-time diffs + Apply/Reject
+- [x] Fabricated-content guard flags inventions (2026-09-06)
+- [x] Playwright e2e (URL + pasted-text paths)
+- [x] Dev-mode logging level (`LOG_LEVEL`) for all e2e flow steps (2026-09-06)
 
 ---
 
