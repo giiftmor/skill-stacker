@@ -18,6 +18,7 @@
 - 2026-09-06: Instrument `runTailorPipeline` (pipeline.ts) with start/stage/done/aborted logging + durations
 - 2026-09-06: Instrument `scrapeJobAd` and `extractRequirements` with launch/done/failed and request/done logging
 - 2026-09-06: Instrument `guardNoFabrication`, `tailorSection`, and the SSE `/api/tailor` route with stage/guard/request logging
+- 2026-09-06: Instrument CV CRUD routes (`api.cv`, `api.cv.item`), snapshot (`api.cv.snapshot`), upload (`api.upload`), photo (`api.photo`), storage (`storage.file`), and db writes (`db.write`) with scoped structured logs; removed `🟢`/`🟡` debug noise
 
 ### Removed
 - 2026-09-06: Deleted all 6 disabled AI API routes (chat, completions, embeddings, models, responses, seed)
