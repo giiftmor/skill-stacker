@@ -1,6 +1,7 @@
 // app/lib/storage.ts - File Storage Module
 import fs from "fs";
 import path from "path";
+import { logger } from "./log";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/app/uploads";
 
@@ -10,25 +11,37 @@ export function ensureUploadDir() {
   }
 }
 
-export async function uploadFile(file: File, cvId: number): Promise<{
+export async function uploadFile(
+  file: File,
+  cvId: number,
+): Promise<{
   filename: string;
   original_name: string;
   mime_type: string;
   size: number;
   url: string;
 }> {
+  logger.info("storage.file", "save requested", { cvId, fileName: file.name });
+  const t0 = Date.now();
   ensureUploadDir();
-  
+
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
-  
+
   const timestamp = Date.now();
   const ext = path.extname(file.name);
   const filename = `${cvId}_${timestamp}${ext}`;
   const filepath = path.join(UPLOAD_DIR, filename);
-  
+
   fs.writeFileSync(filepath, buffer);
-  
+
+  logger.info("storage.file", "saved", {
+    cvId,
+    filename,
+    size: buffer.length,
+    ms: Date.now() - t0,
+  });
+
   return {
     filename,
     original_name: file.name,
@@ -69,7 +82,7 @@ export function getFileMimeType(filename: string): string {
 
 export function cleanupCVFiles(cvId: number): void {
   if (!fs.existsSync(UPLOAD_DIR)) return;
-  
+
   const files = fs.readdirSync(UPLOAD_DIR);
   for (const file of files) {
     if (file.startsWith(`${cvId}_`)) {

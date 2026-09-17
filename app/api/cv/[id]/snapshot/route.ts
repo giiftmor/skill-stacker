@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { saveCVVersion } from "@/app/lib/db";
+import { logger } from "../../../../lib/log";
 
 interface SnapshotRequest {
   json: () => Promise<Record<string, unknown>>;
@@ -9,22 +10,29 @@ export async function POST(
   request: SnapshotRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const { id } = await params;
+  const cvId = parseInt(id, 10);
+  const t0 = Date.now();
+
+  if (Number.isNaN(cvId)) {
+    logger.warn("api.cv.snapshot", "invalid id", { id });
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Invalid CV ID",
+      },
+      { status: 400 },
+    );
+  }
+
   try {
-    const { id } = await params;
-    const cvId = parseInt(id, 10);
-
-    if (Number.isNaN(cvId)) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid CV ID",
-        },
-        { status: 400 },
-      );
-    }
-
     const data = await request.json();
-    await saveCVVersion(cvId, data);
+    const version = await saveCVVersion(cvId, data);
+    logger.info("api.cv.snapshot", "snapshot saved", {
+      cvId,
+      versionId: version?.version?.id,
+      ms: Date.now() - t0,
+    });
 
     return NextResponse.json(
       {
@@ -34,7 +42,12 @@ export async function POST(
       { status: 200 },
     );
   } catch (error) {
-    console.error("Error in POST /api/cv/[id]/snapshot:", error);
+    logger.error(
+      "api.cv.snapshot",
+      "snapshot failed",
+      { cvId, ms: Date.now() - t0 },
+      error as Error,
+    );
     return NextResponse.json(
       {
         success: false,
