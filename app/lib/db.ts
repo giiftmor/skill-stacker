@@ -1,6 +1,10 @@
 // app/lib/db.ts - PostgreSQL Version
 import { Pool, QueryResult } from "pg";
 import { logger } from "./log";
+import {
+  hasFlagsToSections, readinessFromSections,
+  type SectionKey,
+} from "./readiness";
 
 let pool: Pool | null = null;
 
@@ -67,6 +71,7 @@ export async function initDb() {
         linkedin VARCHAR(255),
         profile TEXT,
         template_settings JSONB DEFAULT '{}',
+        ready_override BOOLEAN DEFAULT false,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
@@ -75,6 +80,11 @@ export async function initDb() {
     // Add template_settings column if it doesn't exist
     await client.query(`
       ALTER TABLE cvs ADD COLUMN IF NOT EXISTS template_settings JSONB DEFAULT '{}'
+    `);
+
+    // Add ready_override column if it doesn't exist
+    await client.query(`
+      ALTER TABLE cvs ADD COLUMN IF NOT EXISTS ready_override BOOLEAN DEFAULT false
     `);
 
     // Create index if not exists
@@ -349,12 +359,61 @@ export async function saveCV(data: {
 
 // Get all CVs
 export async function getAllCVs() {
-  const result = await getPool().query(
-    `SELECT id, full_name as "fullName", title, phone, email, location, linkedin, profile,
-            created_at as "createdAt", updated_at as "updatedAt"
-     FROM cvs ORDER BY updated_at DESC`,
-  );
-  return result.rows;
+  const result = await getPool().query(`
+    SELECT
+      cvs.id,
+      cvs.full_name as "fullName",
+      cvs.title,
+      cvs.phone,
+      cvs.email,
+      cvs.location,
+      cvs.linkedin,
+      cvs.profile,
+      cvs.created_at as "createdAt",
+      cvs.updated_at as "updatedAt",
+      cvs.ready_override as "readyOverride",
+      (cvs.full_name IS NOT NULL AND cvs.full_name <> '') AS "hasPersonal",
+      (cvs.profile IS NOT NULL AND cvs.profile <> '') AS "hasProfile",
+      EXISTS (SELECT 1 FROM competencies c WHERE c.cv_id = cvs.id AND c.competency <> '') AS "hasCompetency",
+      EXISTS (SELECT 1 FROM experiences e WHERE e.cv_id = cvs.id AND (e.company <> '' OR e.details <> '')) AS "hasExperiences",
+      EXISTS (SELECT 1 FROM education ed WHERE ed.cv_id = cvs.id AND ed.institution <> '') AS "hasEducation",
+      EXISTS (SELECT 1 FROM certificates ce WHERE ce.cv_id = cvs.id AND ce.name <> '') AS "hasCertificate",
+      EXISTS (SELECT 1 FROM skills s WHERE s.cv_id = cvs.id AND s.skill <> '') AS "hasSkill",
+      EXISTS (SELECT 1 FROM reference_list r WHERE r.cv_id = cvs.id AND r.name <> '') AS "hasReference",
+      EXISTS (SELECT 1 FROM additional_info a WHERE a.cv_id = cvs.id AND a.info <> '') AS "hasAdditionalInfo"
+    FROM cvs
+    ORDER BY cvs.updated_at DESC
+  `);
+
+  return result.rows.map((row) => {
+    const flags: Partial<Record<SectionKey, boolean>> = {
+      personal: row.hasPersonal,
+      profile: row.hasProfile,
+      competency: row.hasCompetency,
+      experiences: row.hasExperiences,
+      education: row.hasEducation,
+      certificate: row.hasCertificate,
+      skill: row.hasSkill,
+      reference: row.hasReference,
+      additionalInfo: row.hasAdditionalInfo,
+    };
+    const sections = hasFlagsToSections(flags);
+    return {
+      id: row.id,
+      fullName: row.fullName,
+      title: row.title,
+      phone: row.phone,
+      email: row.email,
+      location: row.location,
+      linkedin: row.linkedin,
+      profile: row.profile,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      readyOverride: row.readyOverride,
+      sections,
+      readinessPercent: readinessFromSections(sections),
+    };
+  });
 }
 
 // Get single CV
@@ -745,4 +804,15 @@ export async function updateCVTemplateSettings(
     cvId,
   ]);
   return { success: true };
+}
+
+export async function setCVReady(
+  cvId: number,
+  ready: boolean,
+): Promise<{ success: true; cvId: number }> {
+  await getPool().query(
+    "UPDATE cvs SET ready_override = $1 WHERE id = $2",
+    [ready, cvId],
+  );
+  return { success: true, cvId };
 }
