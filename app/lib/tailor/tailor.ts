@@ -189,3 +189,28 @@ export async function buildTailorDiffs(args: {
 
   return diffs;
 }
+
+export async function rewriteSection(args: {
+  section: string;
+  original: string;
+  instruction?: string;
+  sourceText?: string;
+  chatFn?: typeof chat;
+}): Promise<{ proposed: string; guard: { ok: boolean; reason?: string } }> {
+  const { section, original, instruction, sourceText, chatFn: fn } = args;
+  const base = (sourceText ?? original).trim();
+  const sourceBlock = base
+    ? `SOURCE (${section}):\n${base}`
+    : `SOURCE (${section}):\n${original}`;
+  const directive =
+    instruction?.trim()
+      ? `ADDITIONAL INSTRUCTION: ${instruction}\n`
+      : "Polish the text to be concise, specific, and professional, staying faithful to the source facts.";
+  const prompt = `${sourceBlock}\n\n${directive}\nREWRITE:`;
+  const proposed = (await (fn ?? chat)({
+    model: llmConfig().tailorModel,
+    system: SYSTEM,
+    prompt,
+  })).trim();
+  return { proposed, guard: guardNoFabrication(base || original, proposed) };
+}
