@@ -1,8 +1,7 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
-test.describe("CV List", () => {
-  test("loads the CV list page", async ({ page }) => {
-    await page.goto("/cvs");
-    await expect(page.locator("h1, h2").first()).toBeVisible();
-  });
+test("roster loads with a title and a create action", async ({ page }) => {
+  await page.goto("/cvs");
+  await expect(page.getByTestId("roster-title")).toBeVisible();
+  await expect(page.getByRole("link", { name: /New client CV/ })).toBeVisible();
 });
