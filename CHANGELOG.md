@@ -4,6 +4,7 @@
 
 ### Added
 - 2026-09-22: Design spec `docs/superpowers/specs/2026-09-22-ui-studio-guided-editorial-design.md` — light-theme "Guided + Editorial" UI rebuild (Roster / Guided Capture / Editorial Editor workspaces), with manual "Mark ready" override, approved direction; no implementation yet
+- 2026-09-22: Implementation plan `docs/superpowers/plans/2026-09-22-ui-studio-guided-editorial.md` — 11-task execution plan (readiness lib → tokens → ready_override/APIs → Roster → form/preview restyle → rewrite endpoint → Guided Capture → Editorial Editor → inspector tailor + command menu → verification/release)
 
 ### Changed
 
