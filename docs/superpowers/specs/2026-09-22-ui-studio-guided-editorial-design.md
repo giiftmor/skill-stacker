@@ -30,7 +30,7 @@ The backend, data model, export pipeline, auto-save, version history, and the CV
 4. **Three workspaces**, not five: Roster, Guided Capture, Editorial Editor. `/cvs/[id]/preview` retained (restyled) so existing links/e2e keep working; the editor becomes the primary review surface.
 5. **Inline, not accordion**: clicking a rendered section opens an in-place editor bound to the same state (reusing the existing `Forms/*` bodies). No contentEditable; the preview always re-renders from live state.
 6. **AI location**: Tailor-for-job moves into the inspector rail (same SSE pipeline, same guard, same Apply/Reject). A new small per-section `rewrite` endpoint powers both "polish this section/bullet" in the editor and "Suggested summary" in Guided Capture.
-7. **Readiness signaling**: new lightweight, derivable `readiness` score (section-level + per-CV summary) computed from existing content — no new columns. Used by the roster status dots, the capture progress meter, and the inspector checklist.
+7. **Readiness signaling**: new lightweight, derivable `readiness` score (section-level + per-CV summary) computed from existing content — no new columns for the metric itself. One additive boolean `ready_override` column carries the manual "mark ready" decision (idempotent `ADD COLUMN IF NOT EXISTS`, matching the existing `template_settings` migration style).
 8. **Non-blocking deletions & confirms**: kill raw `confirm()`; use inline popover confirms / toast-undo.
 9. **Scope restraint**: no auth, no client-embedded sharing, no new templates, no cover letters, no reordering engine. Presentation/IA rework on a stable core.
 10. **Completeness metric is advisory** (data-driven, never blocks): "80% ready" informs queueing, not gating.
@@ -47,7 +47,8 @@ The backend, data model, export pipeline, auto-save, version history, and the CV
 
 - Left rail: brand + nav (Client CVs / Export queue / AI tailor log). Export queue + tailor log may be placeholders for now (see Out of scope) — do not build empty dead screens; keep the rail minimal with only what exists.
 - Main: filter chips (All / Drafting / Ready to send), CV rows with small A4 thumbnail (mini section-bar preview), name + headline + page count, readiness pill, and per-CV thin page-progress bars. Row actions: **Open** (→ editor), overflow **Delete** (inline popover confirm), **Duplicate**, quick **PDF**.
-- Status derivation: `ready` = all standard sections non-empty ∨ explicit user "mark ready" toggle (see D); `drafting` = some content; `empty` = no content. Sort by updated_at desc; empty-state becomes a two-step "start your first client CV" explainer.
+- Status derivation: `ready` = all standard sections non-empty **∨** manual "Mark ready" override (`ready_override`); `drafting` = some content; `empty` = no content. Sort by updated_at desc; empty-state becomes a two-step "start your first client CV" explainer.
+- **Mark ready**: the row overflow menu offers "Mark ready" / "Clear ready mark", toggling `ready_override` via a tiny `POST /api/cv/[id]/ready` route (updates only that column). The toggle also lives in the editor chrome so a consultant can flip a CV to Ready the moment the client confirms. Override is orthogonal to the data-derived readiness — the pill shows the effective status and a subtle "manual" tag when overridden.
 - Data: extend `GET /api/cv` → include per-CV `sections: string[]` (non-empty section keys) and a computed `readiness` percent. List stays cheap (no thumbnail render server-side; thumbnails are CSS-generated from section presence).
 
 ### B · Guided Capture (`/cvs/new`; new `app/components/capture/`)
@@ -75,7 +76,7 @@ The backend, data model, export pipeline, auto-save, version history, and the CV
 
 - `sectionReadiness(sectionKey, data)` → `'none' | 'partial' | 'full'` from non-null, non-empty content (weighted: e.g., experience details bullet count).
 - `cvReadiness(data)` → `{ percent, sections: Array<{key,label,state}> }`. Single source used by Roster (server-side JSON mirrors it), Capture meter, and Inspector checklist.
-- Server: `GET /api/cv` computes the same percent from stored JSON in one pass. No new columns, no migration.
+- Server: `GET /api/cv` computes the same percent from stored JSON in one pass and returns `ready_override`. Persistence for the manual override (`POST /api/cv/[id]/ready` → `ALTER TABLE ... ADD COLUMN IF NOT EXISTS ready_override BOOLEAN DEFAULT false` + single-column `UPDATE`) is the only schema touch.
 
 ## Error handling / edge cases
 
@@ -105,6 +106,7 @@ New:
 - `app/components/capture/GuidedCapture.tsx`, `CaptureStepper.tsx`, `StepPersonal.tsx`, `StepWork.tsx`, `StepEducation.tsx`, `StepStyle.tsx`
 - `app/lib/readiness.ts` (+ `__tests__/readiness.test.ts`)
 - `app/api/tailor/rewrite/route.ts`
+- `app/api/cv/[id]/ready/route.ts` (toggle `ready_override` column)
 - `e2e/roster.spec.ts`, `e2e/guided-capture.spec.ts`, `e2e/inline-editing.spec.ts` (new flows; existing specs updated for selector drift)
 
 Modified:
@@ -113,10 +115,10 @@ Modified:
 - `app/cvs/page.tsx` (roster), `app/cvs/new/page.tsx` (stepper), `app/cvs/[id]/edit/page.tsx` (editorial), `app/cvs/[id]/preview/page.tsx` (restyle)
 - `app/components/CVBuilderForm.tsx` (retired/absorbed into SectionEditor; form components stay)
 - `app/components/ui/Header.tsx` (superseded by EditorialChrome; kept for preview page)
-- `app/api/cv/route.ts` (list → include readiness + non-empty sections)
+- `app/api/cv/route.ts` (list → include readiness + non-empty sections), `app/lib/db.ts` (idempotent `ready_override` column)
 - `e2e/*.spec.ts` (selector updates), any existing specs referencing removed copy
 
-Not touched: `app/lib/tailor/*` core (reused), `app/lib/export/*`, `app/lib/db.ts` (no migration), `CVPreview` pagination core, API save/photo/versions routes, `Dockerfile`/`docker-compose.yml`.
+Not touched: `app/lib/tailor/*` core (reused), `app/lib/export/*`, `CVPreview` pagination core, API save/photo/versions routes, `Dockerfile`/`docker-compose.yml`.
 
 ## Out of scope (future)
 
