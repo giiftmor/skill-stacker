@@ -48,13 +48,13 @@ export default function UploadPhoto({ cvId, onUploadComplete }: UploadPhotoProps
 
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-[#e8e6e3]">Photo</label>
+      <label className="block text-sm font-medium text-ink">Photo</label>
       {preview ? (
         <div className="relative w-32 h-32">
           <img
             src={preview}
             alt="CV Photo"
-            className="w-32 h-32 object-cover rounded-lg border border-[#333]"
+            className="w-32 h-32 object-cover rounded-lg border border-hairline"
           />
           <label className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center text-white cursor-pointer rounded-lg opacity-0 hover:opacity-100 transition-opacity">
             <span>Change</span>
@@ -67,9 +67,9 @@ export default function UploadPhoto({ cvId, onUploadComplete }: UploadPhotoProps
           </label>
         </div>
       ) : (
-        <label className="flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed border-[#444] rounded-lg cursor-pointer hover:border-[#d4a853] transition-colors bg-[#242424]">
-          <Camera className="text-[#666] w-6 h-6" />
-          <span className="text-sm text-[#666] mt-1">
+        <label className="flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed border-hairline rounded-lg cursor-pointer hover:border-accent transition-colors bg-surface">
+          <Camera className="text-muted w-6 h-6" />
+          <span className="text-sm text-muted mt-1">
             {uploading ? "Uploading..." : "Add Photo"}
           </span>
           <input

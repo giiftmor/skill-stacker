@@ -4,9 +4,9 @@ import type { ProfileFormProps } from "../../types/global";
 
 const ProfileForm: React.FC<ProfileFormProps> = ({ profile, setProfile }) => (
   <div>
-    <label className="block text-sm font-medium text-[#e8e6e3]">Profile</label>
+    <label className="block text-sm font-medium text-ink">Profile</label>
     <textarea
-      className="w-full bg-[#242424] border border-[#333] rounded-lg px-3 py-2.5 text-[#e8e6e3] placeholder:text-[#666] text-sm focus:outline-none focus:border-[#d4a853] focus:ring-2 focus:ring-[#d4a85315] transition-all duration-200 min-h-[80px]"
+      className="w-full bg-surface border border-hairline rounded-lg px-3 py-2.5 text-ink placeholder:text-muted text-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft transition-all duration-200 min-h-[80px]"
       rows={4}
       value={profile}
       onChange={(e) => setProfile(e.target.value)}

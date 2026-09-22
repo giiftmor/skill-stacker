@@ -32,17 +32,17 @@ const PersonalInfoForm = ({ personal, updatePersonal }: PersonalInfoFormProps) =
   };
 
   const getInputClass = (field: string) => {
-    const baseClass = "w-full bg-[#242424] border rounded-lg px-3 py-2.5 text-[#e8e6e3] placeholder:text-[#666] text-sm focus:outline-none focus:ring-2 transition-all duration-200";
+    const baseClass = "w-full bg-surface border rounded-lg px-3 py-2.5 text-ink placeholder:text-muted text-sm focus:outline-none focus:ring-2 transition-all duration-200";
     if (touched[field] && errors[field]) {
       return `${baseClass} border-[#dc4444] focus:border-[#dc4444] focus:ring-[#dc444422]`;
     }
-    return `${baseClass} border-[#333] focus:border-[#d4a853] focus:ring-[#d4a85315]`;
+    return `${baseClass} border-hairline focus:border-accent focus:ring-accent-soft`;
   };
 
   return (
     <div className="space-y-3">
       <div>
-        <label className="block text-sm font-medium text-[#e8e6e3]">
+        <label className="block text-sm font-medium text-ink">
           Full name <span className="text-[#dc4444]">*</span>
         </label>
         <input
@@ -58,7 +58,7 @@ const PersonalInfoForm = ({ personal, updatePersonal }: PersonalInfoFormProps) =
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-[#e8e6e3]">
+        <label className="block text-sm font-medium text-ink">
           Title (e.g., Retail Assistant)
         </label>
         <input
@@ -75,7 +75,7 @@ const PersonalInfoForm = ({ personal, updatePersonal }: PersonalInfoFormProps) =
 
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className="block text-sm font-medium text-[#e8e6e3]">Phone</label>
+          <label className="block text-sm font-medium text-ink">Phone</label>
           <input
             className={getInputClass("phone")}
             value={personal.phone}
@@ -89,7 +89,7 @@ const PersonalInfoForm = ({ personal, updatePersonal }: PersonalInfoFormProps) =
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-[#e8e6e3]">Email</label>
+          <label className="block text-sm font-medium text-ink">Email</label>
           <input
             type="email"
             className={getInputClass("email")}
@@ -105,7 +105,7 @@ const PersonalInfoForm = ({ personal, updatePersonal }: PersonalInfoFormProps) =
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-[#e8e6e3]">
+        <label className="block text-sm font-medium text-ink">
           Location
         </label>
         <input
@@ -121,7 +121,7 @@ const PersonalInfoForm = ({ personal, updatePersonal }: PersonalInfoFormProps) =
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-[#e8e6e3]">
+        <label className="block text-sm font-medium text-ink">
           LinkedIn Profile (Optional)
         </label>
         <input

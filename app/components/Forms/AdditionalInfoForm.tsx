@@ -8,14 +8,14 @@ const AdditionalInfoForm = ({
   removeAdditionalInfo,
 }: AdditionalInfoFormProps) => (
   <div>
-    <label className="block text-sm font-medium text-[#e8e6e3]">
+    <label className="block text-sm font-medium text-ink">
       Personal Information
     </label>
     <div className="space-y-2 mt-2">
       {additionalInfo.map((info, idx) => (
         <div key={idx} className="flex gap-2">
           <input
-            className="flex-1 bg-[#242424] border border-[#333] rounded-lg px-3 py-2.5 text-[#e8e6e3] placeholder:text-[#666] text-sm focus:outline-none focus:border-[#d4a853] focus:ring-2 focus:ring-[#d4a85315] transition-all duration-200"
+            className="flex-1 bg-surface border border-hairline rounded-lg px-3 py-2.5 text-ink placeholder:text-muted text-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft transition-all duration-200"
             value={info}
             onChange={(e) => updateAdditionalInfo(idx, e.target.value)}
             placeholder="Additional details"
@@ -29,7 +29,7 @@ const AdditionalInfoForm = ({
         </div>
       ))}
       <button
-        className="mt-2 px-4 py-2 bg-[#d4a85315] text-[#d4a853] hover:bg-[#d4a85325] border border-[#d4a85340] rounded-lg transition-all duration-200"
+        className="mt-2 px-4 py-2 bg-accent-soft text-accent hover:bg-accent-soft border border-accent-soft rounded-lg transition-all duration-200"
         onClick={addAdditionalInfo}
       >
         Add More
