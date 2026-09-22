@@ -100,18 +100,18 @@ export default function PreviewCVPage({ params }: { params: Promise<{ id: string
   };
 
   if (loading) {
-    return <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center animate-pulse-subtle text-[#8a8a8a]">Loading...</div>;
+    return <div className="min-h-screen bg-canvas flex items-center justify-center animate-pulse-subtle text-muted">Loading...</div>;
   }
 
   return (
-    <div className="min-h-screen bg-[#0d0d0d] flex flex-col">
+    <div className="min-h-screen bg-canvas flex flex-col">
       <Header
         title="Preview CV"
         actions={
           <div className="flex gap-2">
             <button
               onClick={handlePrint}
-              className="px-4 py-2 bg-[#d4a853] text-[#0d0d0d] hover:bg-[#b8923e] rounded font-semibold"
+              className="px-4 py-2 bg-accent text-white hover:bg-accent rounded font-semibold"
             >
               Print / Save PDF
             </button>
@@ -130,7 +130,7 @@ export default function PreviewCVPage({ params }: { params: Promise<{ id: string
           <button
             onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
             disabled={currentPage === 0}
-            className="flex-shrink-0 w-12 h-12 bg-[#1a1a1a] border border-[#333] rounded-full flex items-center justify-center text-[#e8e6e3] hover:border-[#d4a853] hover:text-[#d4a853] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="flex-shrink-0 w-12 h-12 bg-surface border border-hairline rounded-full flex items-center justify-center text-ink hover:border-accent hover:text-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             aria-label="Previous page"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -163,7 +163,7 @@ export default function PreviewCVPage({ params }: { params: Promise<{ id: string
           <button
             onClick={() => setCurrentPage((p) => Math.min(totalPages - 1, p + 1))}
             disabled={currentPage >= totalPages - 1}
-            className="flex-shrink-0 w-12 h-12 bg-[#1a1a1a] border border-[#333] rounded-full flex items-center justify-center text-[#e8e6e3] hover:border-[#d4a853] hover:text-[#d4a853] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="flex-shrink-0 w-12 h-12 bg-surface border border-hairline rounded-full flex items-center justify-center text-ink hover:border-accent hover:text-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             aria-label="Next page"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -173,23 +173,23 @@ export default function PreviewCVPage({ params }: { params: Promise<{ id: string
         </div>
       </main>
 
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#1a1a1a] border border-[#333] rounded-full px-4 py-2 flex items-center gap-3">
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-surface border border-hairline rounded-full px-4 py-2 flex items-center gap-3">
         <button
           onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
           disabled={currentPage === 0}
-          className="w-8 h-8 rounded-full bg-[#242424] hover:bg-[#333] flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed text-[#e8e6e3]"
+          className="w-8 h-8 rounded-full bg-surface hover:bg-desk flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed text-ink"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <span className="text-sm font-medium text-[#e8e6e3] min-w-[60px] text-center">
+        <span className="text-sm font-medium text-ink min-w-[60px] text-center">
           {currentPage + 1} / {totalPages}
         </span>
         <button
           onClick={() => setCurrentPage((p) => Math.min(totalPages - 1, p + 1))}
           disabled={currentPage >= totalPages - 1}
-          className="w-8 h-8 rounded-full bg-[#242424] hover:bg-[#333] flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed text-[#e8e6e3]"
+          className="w-8 h-8 rounded-full bg-surface hover:bg-desk flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed text-ink"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
