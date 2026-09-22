@@ -7,6 +7,7 @@
 - 2026-09-22: Implementation plan `docs/superpowers/plans/2026-09-22-ui-studio-guided-editorial.md` — 11-task execution plan (readiness lib → tokens → ready_override/APIs → Roster → form/preview restyle → rewrite endpoint → Guided Capture → Editorial Editor → inspector tailor + command menu → verification/release)
 
 ### Changed
+- 2026-09-22: Restyle CV preview page chrome and shared `Header` to T2 light tokens (className-only; `#cv-print-area` and templates untouched) — Task 6 of the UI Studio Guided/Editorial rebuild (`4794c5c`)
 
 ### Fixed
 
