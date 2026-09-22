@@ -8,6 +8,7 @@
 
 ### Changed
 - 2026-09-22: Restyle CV preview page chrome and shared `Header` to T2 light tokens (className-only; `#cv-print-area` and templates untouched) — Task 6 of the UI Studio Guided/Editorial rebuild (`4794c5c`)
+- 2026-09-22: Add `POST /api/tailor/rewrite` — generic per-section rewrite endpoint wrapping `rewriteSection()` with the no-fabrication guard, plus unit coverage — Task 7 of the UI Studio Guided/Editorial rebuild (`73e4eda`)
 
 ### Fixed
 
