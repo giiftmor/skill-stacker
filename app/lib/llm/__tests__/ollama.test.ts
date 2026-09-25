@@ -14,7 +14,7 @@ describe("llmConfig", () => {
     const { llmConfig } = await import("../config");
     expect(llmConfig()).toEqual({
       baseUrl: "http://100.85.216.53:11434",
-      extractModel: "qwen2.5:3b",
+      extractModel: "qwen2.5-coder:14b",
       tailorModel: "mistral:7b",
       fallbackModel: "llama3.1:8b",
     });

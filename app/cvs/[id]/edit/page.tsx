@@ -26,6 +26,7 @@ import {
   SECTION_LABELS,
   type SectionKey,
 } from "../../../lib/readiness";
+import { applyExperienceUpdates } from "../../../lib/tailor/applyExperiences";
 import type { TailorApplyUpdate } from "../../../lib/tailor/types";
 import type {
   TemplateId,
@@ -256,12 +257,7 @@ export default function EditCVPage({
     if (update.competency !== undefined) setCompetencies(update.competency);
     const experiences = update.experiences;
     if (experiences && experiences.length > 0) {
-      setExperiences((prev) =>
-        prev.map((exp, i) => {
-          const detail = experiences[i];
-          return detail ? { ...exp, details: detail.details } : exp;
-        }),
-      );
+      setExperiences((prev) => applyExperienceUpdates(prev, experiences));
     }
     if (update.profile !== undefined) setHighlightKey("profile");
     if (update.skill !== undefined) setHighlightKey("skill");
