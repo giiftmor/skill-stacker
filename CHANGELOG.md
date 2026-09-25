@@ -3,6 +3,24 @@
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Fixed
+
+### Removed
+
+### Deprecated
+
+### Security
+
+
+## [0.2.1] - 2026-09-25
+
+Light-theme Guided + Editorial UI rebuild: roster readiness, guided capture wizard, editorial editor with inspector + command palette, AI tailor in the inspector rail; ready_override + PATCH template + rewrite endpoints
+
+
+### Added
 - 2026-09-22: Light-theme Guided + Editorial UI rebuild — Roster (`/cvs`) with readiness dots/mark-ready/quick PDF/duplicate, 4-step Guided Capture (`/cvs/new`), Editorial Editor with inline section editing + inspector (checklist, style, Tailor-for-job) + command palette; `ready_override` column + `POST /api/cv/[id]/ready`, `PATCH /api/cv/[id]/template`, `POST /api/tailor/rewrite`; Fraunces/Mulish + `--font-heading` fix
 - 2026-09-22: Design spec `docs/superpowers/specs/2026-09-22-ui-studio-guided-editorial-design.md` — light-theme "Guided + Editorial" UI rebuild (Roster / Guided Capture / Editorial Editor workspaces), with manual "Mark ready" override, approved direction; no implementation yet
 - 2026-09-22: Implementation plan `docs/superpowers/plans/2026-09-22-ui-studio-guided-editorial.md` — 11-task execution plan (readiness lib → tokens → ready_override/APIs → Roster → form/preview restyle → rewrite endpoint → Guided Capture → Editorial Editor → inspector tailor + command menu → verification/release)
