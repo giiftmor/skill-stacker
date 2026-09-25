@@ -1,6 +1,6 @@
 // app/components/CVPreview.tsx - Section Overflow Pagination with Navigation
 
-import type { ReactNode } from "react";
+import type { KeyboardEvent, ReactNode } from "react";
 import {
   forwardRef,
   useCallback,
@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
+import type { SectionKey } from "@/app/lib/readiness";
 import { getTemplateClasses } from "../lib/templates/tailwindStyles";
 import {
   FONT_PAIRS,
@@ -104,6 +105,23 @@ interface CVPreviewComponentProps extends CVPreviewProps {
   onPageChange?: (page: number) => void;
   onTotalPagesChange?: (total: number) => void;
   showAllPages?: boolean;
+  onSectionClick?: (key: string) => void;
+  highlightKey?: string | null;
+}
+
+// Template preview section keys are not the readiness `SectionKey`s: the
+// templates name their header/sidebar blocks differently and use singular
+// section names. Map them so the editor receives readiness keys.
+const PREVIEW_KEY_TO_SECTION: Record<string, SectionKey> = {
+  header: "personal",
+  experience: "experiences",
+  "sidebar-header": "personal",
+  "sidebar-skills": "skill",
+  "sidebar-competency": "competency",
+};
+
+function toSectionKey(key: string): string {
+  return PREVIEW_KEY_TO_SECTION[key] ?? key;
 }
 
 const CVPreview = forwardRef<HTMLDivElement, CVPreviewComponentProps>(
@@ -121,6 +139,8 @@ const CVPreview = forwardRef<HTMLDivElement, CVPreviewComponentProps>(
       currentPage = 0,
       onTotalPagesChange,
       showAllPages = false,
+      onSectionClick,
+      highlightKey = null,
       templateId = "classic",
       themeId,
       fontPairId,
@@ -245,6 +265,24 @@ const CVPreview = forwardRef<HTMLDivElement, CVPreviewComponentProps>(
 
     const isTwoColumn = templateId === "twoColumn";
 
+    const sectionProps = (key: string) => {
+      const sectionKey = toSectionKey(key);
+      return {
+        role: onSectionClick ? ("button" as const) : undefined,
+        tabIndex: onSectionClick ? 0 : undefined,
+        "aria-label": onSectionClick ? `Edit section ${sectionKey}` : undefined,
+        onClick: onSectionClick ? () => onSectionClick(sectionKey) : undefined,
+        onKeyDown: onSectionClick
+          ? (event: KeyboardEvent<HTMLDivElement>) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                onSectionClick(sectionKey);
+              }
+            }
+          : undefined,
+      };
+    };
+
     const displayedPages = showAllPages
       ? allPages
       : [allPages[currentPage] || allPages[0]];
@@ -363,66 +401,78 @@ const CVPreview = forwardRef<HTMLDivElement, CVPreviewComponentProps>(
                   >
                     {pageSections
                       .filter((s) => s.key.startsWith("sidebar-"))
-                      .map((section) => (
-                        <div
-                          key={section.key}
-                          ref={setSectionRef(section.key)}
-                          data-measure-key={section.key}
-                          className={`cv-section-wrapper ${showBreakLines && section.clipFrom ? "break-line-indicator" : ""} ${showBreakLines && section.isOverflow ? "overflow-indicator" : ""}`}
-                          style={{
-                            maxHeight: section.clipFrom
-                              ? `${section.clipFrom}px`
-                              : undefined,
-                            overflow: section.clipFrom ? "hidden" : undefined,
-                          }}
-                        >
-                          {section.content}
-                        </div>
-                      ))}
+                      .map((section) => {
+                        const sectionKey = toSectionKey(section.key);
+                        return (
+                          <div
+                            key={section.key}
+                            ref={setSectionRef(section.key)}
+                            data-measure-key={section.key}
+                            className={`cv-section-wrapper ${showBreakLines && section.clipFrom ? "break-line-indicator" : ""} ${showBreakLines && section.isOverflow ? "overflow-indicator" : ""} ${highlightKey === sectionKey ? "ring-2 ring-accent" : ""}`}
+                            style={{
+                              maxHeight: section.clipFrom
+                                ? `${section.clipFrom}px`
+                                : undefined,
+                              overflow: section.clipFrom ? "hidden" : undefined,
+                            }}
+                            {...sectionProps(section.key)}
+                          >
+                            {section.content}
+                          </div>
+                        );
+                      })}
                   </div>
                   <div className="w-2/3 pl-4">
                     {pageSections
                       .filter((s) => !s.key.startsWith("sidebar-"))
-                      .map((section) => (
-                        <div
-                          key={section.key}
-                          ref={setSectionRef(section.key)}
-                          data-measure-key={section.key}
-                          className={`cv-section-wrapper ${showBreakLines && section.clipFrom ? "break-line-indicator" : ""} ${showBreakLines && section.isOverflow ? "overflow-indicator" : ""}`}
-                          style={{
-                            maxHeight: section.clipFrom
-                              ? `${section.clipFrom}px`
-                              : undefined,
-                            overflow: section.clipFrom ? "hidden" : undefined,
-                          }}
-                        >
-                          {section.content}
-                        </div>
-                      ))}
+                      .map((section) => {
+                        const sectionKey = toSectionKey(section.key);
+                        return (
+                          <div
+                            key={section.key}
+                            ref={setSectionRef(section.key)}
+                            data-measure-key={section.key}
+                            className={`cv-section-wrapper ${showBreakLines && section.clipFrom ? "break-line-indicator" : ""} ${showBreakLines && section.isOverflow ? "overflow-indicator" : ""} ${highlightKey === sectionKey ? "ring-2 ring-accent" : ""}`}
+                            style={{
+                              maxHeight: section.clipFrom
+                                ? `${section.clipFrom}px`
+                                : undefined,
+                              overflow: section.clipFrom ? "hidden" : undefined,
+                            }}
+                            {...sectionProps(section.key)}
+                          >
+                            {section.content}
+                          </div>
+                        );
+                      })}
                   </div>
                 </div>
               ) : (
                 <div className="cv-content">
-                  {pageSections.map((section) => (
-                    <div
-                      key={section.key}
-                      ref={setSectionRef(section.key)}
-                      data-measure-key={section.key}
-                      className={`cv-section-wrapper ${
-                        showBreakLines && section.clipFrom
-                          ? "break-line-indicator"
-                          : ""
-                      } ${showBreakLines && section.isOverflow ? "overflow-indicator" : ""}`}
-                      style={{
-                        maxHeight: section.clipFrom
-                          ? `${section.clipFrom}px`
-                          : undefined,
-                        overflow: section.clipFrom ? "hidden" : undefined,
-                      }}
-                    >
-                      {section.content}
-                    </div>
-                  ))}
+                  {pageSections.map((section) => {
+                    const sectionKey = toSectionKey(section.key);
+                    return (
+                      <div
+                        key={section.key}
+                        ref={setSectionRef(section.key)}
+                        data-measure-key={section.key}
+                        className={`cv-section-wrapper ${
+                          showBreakLines && section.clipFrom
+                            ? "break-line-indicator"
+                            : ""
+                        } ${showBreakLines && section.isOverflow ? "overflow-indicator" : ""} ${highlightKey === sectionKey ? "ring-2 ring-accent" : ""}`}
+                        style={{
+                          maxHeight: section.clipFrom
+                            ? `${section.clipFrom}px`
+                            : undefined,
+                          overflow: section.clipFrom ? "hidden" : undefined,
+                        }}
+                        {...sectionProps(section.key)}
+                      >
+                        {section.content}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
               {!showAllPages && (
@@ -448,16 +498,20 @@ const CVPreview = forwardRef<HTMLDivElement, CVPreviewComponentProps>(
               boxSizing: "border-box",
             }}
           >
-            {sections.map((section) => (
-              <div
-                key={section.key}
-                ref={setSectionRef(section.key)}
-                data-measure-key={section.key}
-                className="cv-section-wrapper"
-              >
-                {section.content}
-              </div>
-            ))}
+            {sections.map((section) => {
+              const sectionKey = toSectionKey(section.key);
+              return (
+                <div
+                  key={section.key}
+                  ref={setSectionRef(section.key)}
+                  data-measure-key={section.key}
+                  className={`cv-section-wrapper ${highlightKey === sectionKey ? "ring-2 ring-accent" : ""}`}
+                  {...sectionProps(section.key)}
+                >
+                  {section.content}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

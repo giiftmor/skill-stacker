@@ -1,5 +1,5 @@
-import { CVPreviewWrapperHandle } from "../components/CVPreviewWrapper";
 import type { ReactNode } from "react";
+import type { CVPreviewWrapperHandle } from "../components/CVPreviewWrapper";
 
 // Personal Information Types
 type PersonalInfo = {
@@ -263,7 +263,7 @@ type TemplatePreviewProps = {
     body: string;
   };
   photoUrl?: string;
-}
+};
 
 type TemplateSection = {
   key: string;
@@ -272,16 +272,24 @@ type TemplateSection = {
   canBreak: boolean;
   isOverflow?: boolean;
   clipFrom?: number;
-}
+};
 
 type TemplateSectionsResult = {
   sidebar?: TemplateSection[];
   main: TemplateSection[];
-}
+};
 
-type TemplateComponent = (props: TemplatePreviewProps) => TemplateSectionsResult;
+type TemplateComponent = (
+  props: TemplatePreviewProps,
+) => TemplateSectionsResult;
 
 export type {
+  // Data Types
+  PersonalInfo,
+  Experience,
+  Education,
+  Certificate,
+  Reference,
   //Form Props
   PersonalInfoFormProps,
   ProfileFormProps,
@@ -292,14 +300,12 @@ export type {
   SkillsFormProps,
   ReferencesFormProps,
   AdditionalInfoFormProps,
-
   //Function/Component Props
   ExportButtonsProps,
   CVPreviewProps,
   CVPreviewWrapperProps,
   CVBuilderFormProps,
   ExportFunctionProps,
-
   // Template types
   TemplatePreviewProps,
   TemplateSection,

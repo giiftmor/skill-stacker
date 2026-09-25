@@ -164,7 +164,10 @@ test("Phase 9: photo upload shows preview + API serves it", async ({
     timeout: 15000,
   });
 
-  const input = page.locator('input[type="file"]');
+  await page.locator('[aria-label^="Edit section personal"]').first().click();
+  const input = page.locator(
+    '[data-testid="section-editor"] input[type="file"]',
+  );
   await input.setInputFiles({
     name: "qa.png",
     mimeType: "image/png",
@@ -264,6 +267,7 @@ test("Phase 9: version restore round-trips data and creates save point", async (
   await expect(page.getByRole("button", { name: /Preview/ })).toBeVisible({
     timeout: 15000,
   });
+  await page.locator('[aria-label^="Edit section personal"]').first().click();
   await expect(page.getByPlaceholder("Enter your full name")).toHaveValue(
     "Archived Persona",
   );
@@ -302,7 +306,9 @@ test("Phase 9: auto-save indicator transitions Saving -> Saved", async ({
     timeout: 15000,
   });
 
+  await page.locator('[aria-label^="Edit section personal"]').first().click();
   await page.getByPlaceholder("Enter your full name").fill("Auto Save QA");
+  await page.getByTestId("section-save").click(); // Done commits -> triggers useAutoSave PUT
   await expect(page.getByText("Saving...")).toBeVisible({ timeout: 45000 });
   await page.screenshot({
     path: path.join(EVIDENCE_DIR, "auto-save-saving.png"),
