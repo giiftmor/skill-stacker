@@ -12,6 +12,8 @@ import PersonalInfoForm from "../../../components/Forms/PersonalInfoForm";
 import ProfileForm from "../../../components/Forms/ProfileForm";
 import ReferencesForm from "../../../components/Forms/ReferencesForm";
 import SkillsForm from "../../../components/Forms/SkillsForm";
+import { TailorPanel } from "../../../components/tailor/TailorPanel";
+import { CommandMenu } from "../../../components/ui/CommandMenu";
 import { EditorialChrome } from "../../../components/ui/EditorialChrome";
 import { InspectorRail } from "../../../components/ui/InspectorRail";
 import { SectionEditor } from "../../../components/ui/SectionEditor";
@@ -88,6 +90,7 @@ export default function EditCVPage({
   );
   const [highlightKey, setHighlightKey] = useState<string | null>(null);
   const [readyOverride, setReadyOverride] = useState(false);
+  const [commandOpen, setCommandOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -197,6 +200,23 @@ export default function EditCVPage({
     loadCV();
   }, [loadCV]);
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (
+        e.key === "/" ||
+        (e.metaKey && e.key === "k") ||
+        (e.ctrlKey && e.key === "k")
+      ) {
+        const tag = (e.target as HTMLElement)?.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA") return;
+        e.preventDefault();
+        setCommandOpen((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   const handleSave = async (data: Record<string, unknown>) => {
     await fetch(`/api/cv/${cvId}`, {
       method: "PUT",
@@ -243,6 +263,11 @@ export default function EditCVPage({
         }),
       );
     }
+    if (update.profile !== undefined) setHighlightKey("profile");
+    if (update.skill !== undefined) setHighlightKey("skill");
+    if (update.competency !== undefined) setHighlightKey("competency");
+    if (update.experiences?.length) setHighlightKey("experiences");
+    setTimeout(() => setHighlightKey(null), 1600);
   };
 
   const handleRestore = (restored: unknown) => {
@@ -901,9 +926,22 @@ export default function EditCVPage({
           onThemeChange={(t) => applyTemplateSettings({ theme: t })}
           onFontPairChange={(t) => applyTemplateSettings({ fontPair: t })}
           onEditSection={openSectionEditor}
-          tailorSlot={null}
+          tailorSlot={
+            <TailorPanel
+              cv={cvData as Record<string, unknown>}
+              onApply={handleTailorApply}
+            />
+          }
         />
       </div>
+      <CommandMenu
+        open={commandOpen}
+        onClose={() => setCommandOpen(false)}
+        onJump={(key) => openSectionEditor(key as SectionKey)}
+        onExportPdf={handleExportToPdf}
+        onExportDocx={handleExportToDocx}
+        onBack={() => router.push("/cvs")}
+      />
       {historyOpen && (
         <VersionHistory
           cvId={cvId}
