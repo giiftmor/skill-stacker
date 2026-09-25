@@ -9,6 +9,8 @@
 ### Changed
 - 2026-09-22: Restyle CV preview page chrome and shared `Header` to T2 light tokens (className-only; `#cv-print-area` and templates untouched) — Task 6 of the UI Studio Guided/Editorial rebuild (`4794c5c`)
 - 2026-09-22: Add `POST /api/tailor/rewrite` — generic per-section rewrite endpoint wrapping `rewriteSection()` with the no-fabrication guard, plus unit coverage — Task 7 of the UI Studio Guided/Editorial rebuild (`73e4eda`)
+- 2026-09-25: Rebuild the editor as a light-theme editorial workspace — click-to-edit CV sections, readiness inspector rail with style controls, template persistence via `PATCH /api/cv/[id]/template`, and a chrome header with mark-ready toggle; retires `CVBuilderForm`/`CVBuilderApp` — Task 9 of the UI Studio Guided/Editorial rebuild (`8c513b8`)
+- 2026-09-25: Guided Capture wizard on `/cvs/new` with live draft preview and editor handoff — Task 8 of the UI Studio Guided/Editorial rebuild (`b20e56f`)
 
 ### Fixed
 
