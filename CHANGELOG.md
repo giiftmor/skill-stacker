@@ -7,6 +7,7 @@
 ### Changed
 
 ### Fixed
+- 2026-09-25: Tailor Apply now matches experience diffs by id (`String`-normalized) instead of array index, so tailoring the Nth experience no longer overwrites the first; id-less updates keep legacy positional behaviour — Task 11 fold-in (`4e0c304`)
 
 ### Removed
 
