@@ -1,104 +1,14 @@
-// app/components/CVPreview.tsx - Section Overflow Pagination with Navigation
+// app/components/CVPreview.tsx - Measured A4 block pagination with editor hooks
 
 import type { KeyboardEvent, ReactNode } from "react";
-import {
-  forwardRef,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import type { SectionKey } from "@/app/lib/readiness";
-import { getTemplateClasses } from "../lib/templates/tailwindStyles";
-import {
-  FONT_PAIRS,
-  TEMPLATES,
-  THEMES,
-} from "../lib/templates/templateDefinitions";
+import { forwardRef, useCallback, useEffect } from "react";
+import { usePagination } from "../hooks/usePagination";
+import type { SectionKey } from "../lib/readiness";
 import type { CVPreviewProps } from "../types/global";
-import { getTemplateSections, type TemplatePreviewProps } from "./templates";
-import { A4_DIMENSIONS } from "./ui/printStyles";
+import FormattedText from "./FormattedText";
 
-const mmToPx = (mm: number) => (mm * 96) / 25.4;
-
-const A4_HEIGHT_PX = mmToPx(297);
-const A4_PADDING_PX = mmToPx(15);
-const BOTTOM_MARGIN_PX = 50;
-const USABLE_HEIGHT_PX = A4_HEIGHT_PX - 2 * A4_PADDING_PX - BOTTOM_MARGIN_PX;
-const MIN_SPLIT_THRESHOLD = A4_PADDING_PX;
-
-function resolveColors(templateId?: string, themeId?: string) {
-  const template = templateId ? TEMPLATES[templateId] : null;
-  if (!template) return null;
-  let colors = { ...template.colorScheme };
-  if (themeId) {
-    const themeGroup = Object.values(THEMES).find((g) =>
-      g.some((t) => t.id === themeId),
-    );
-    const foundTheme = themeGroup?.find((t) => t.id === themeId);
-    if (foundTheme) {
-      colors = { ...foundTheme.colors };
-    }
-  }
-  return colors;
-}
-
-function resolveFontPair(fontPairId?: string) {
-  if (!fontPairId) return null;
-  return FONT_PAIRS.find((f) => f.id === fontPairId) || null;
-}
-
-export interface Section {
-  key: string;
-  content: ReactNode;
-  estimatedHeight: number;
-  canBreak: boolean;
-  isOverflow?: boolean;
-  clipFrom?: number;
-}
-
-const DEBUG_MODE = false;
-
-export function calculatePages(
-  sections: Section[],
-  pageHeight: number = USABLE_HEIGHT_PX,
-): Section[][] {
-  if (pageHeight <= 0) pageHeight = USABLE_HEIGHT_PX;
-
-  const pages: Section[][] = [[]];
-  let currentPageHeight = 0;
-
-  sections.forEach((section) => {
-    const sectionHeight = section.estimatedHeight;
-    const remainingSpace = pageHeight - currentPageHeight;
-
-    if (sectionHeight <= remainingSpace) {
-      pages[pages.length - 1].push(section);
-      currentPageHeight += sectionHeight;
-    } else if (section.canBreak && remainingSpace > MIN_SPLIT_THRESHOLD) {
-      pages[pages.length - 1].push({
-        ...section,
-        clipFrom: remainingSpace,
-      });
-
-      pages.push([
-        {
-          ...section,
-          isOverflow: true,
-          estimatedHeight: sectionHeight - remainingSpace,
-        },
-      ]);
-
-      currentPageHeight = sectionHeight - remainingSpace;
-    } else {
-      pages.push([section]);
-      currentPageHeight = sectionHeight;
-    }
-  });
-
-  return pages.filter((page) => page.length > 0);
-}
+type Item = { id: string; node: ReactNode };
+type Block = { id: string; key: SectionKey; node: ReactNode };
 
 interface CVPreviewComponentProps extends CVPreviewProps {
   currentPage?: number;
@@ -107,21 +17,6 @@ interface CVPreviewComponentProps extends CVPreviewProps {
   showAllPages?: boolean;
   onSectionClick?: (key: string) => void;
   highlightKey?: string | null;
-}
-
-// Template preview section keys are not the readiness `SectionKey`s: the
-// templates name their header/sidebar blocks differently and use singular
-// section names. Map them so the editor receives readiness keys.
-const PREVIEW_KEY_TO_SECTION: Record<string, SectionKey> = {
-  header: "personal",
-  experience: "experiences",
-  "sidebar-header": "personal",
-  "sidebar-skills": "skill",
-  "sidebar-competency": "competency",
-};
-
-function toSectionKey(key: string): string {
-  return PREVIEW_KEY_TO_SECTION[key] ?? key;
 }
 
 const CVPreview = forwardRef<HTMLDivElement, CVPreviewComponentProps>(
@@ -136,384 +31,233 @@ const CVPreview = forwardRef<HTMLDivElement, CVPreviewComponentProps>(
       skill,
       reference,
       additionalInfo,
+      className,
+      previewRef,
       currentPage = 0,
       onTotalPagesChange,
       showAllPages = false,
       onSectionClick,
       highlightKey = null,
-      templateId = "classic",
-      themeId,
-      fontPairId,
-      photoUrl,
     },
     ref,
   ) => {
-    const [debugEnabled, setDebugEnabled] = useState(false);
-    const [showBreakLines, setShowBreakLines] = useState(false);
-    const sectionRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-    const measuredHeights = useMemo(() => new Map<string, number>(), []);
-
-    const colors = useMemo(
-      () => resolveColors(templateId, themeId),
-      [templateId, themeId],
-    );
-    const fontPair = useMemo(() => resolveFontPair(fontPairId), [fontPairId]);
-    const templateStyle = useMemo(
-      () => getTemplateClasses(templateId, themeId),
-      [templateId, themeId],
+    const setRootRef = useCallback(
+      (node: HTMLDivElement | null) => {
+        if (typeof ref === "function") ref(node);
+        else if (ref) ref.current = node;
+        if (typeof previewRef === "function") previewRef(node);
+        else if (previewRef) previewRef.current = node;
+      },
+      [ref, previewRef],
     );
 
-    const templateProps: TemplatePreviewProps = useMemo(
-      () => ({
-        personal,
-        profile,
-        competency,
-        experiences,
-        education,
-        certificate,
-        skill,
-        reference,
-        additionalInfo,
-        colors: colors || {
-          primary: "#333",
-          secondary: "#555",
-          accent: "#666",
-          text: "#333",
-          background: "#fff",
-        },
-        fontPair: fontPair
-          ? { heading: fontPair.heading, body: fontPair.body }
-          : { heading: "Arial, sans-serif", body: "Arial, sans-serif" },
-        photoUrl,
-      }),
-      [
-        personal,
-        profile,
-        competency,
-        experiences,
-        education,
-        certificate,
-        skill,
-        reference,
-        additionalInfo,
-        photoUrl,
-        colors,
-        fontPair,
-      ],
+    const blocks: Block[] = [];
+
+    // The heading travels with the first item of its section so a heading is
+    // never left alone at the bottom of a page.
+    const section = (title: string, key: SectionKey, items: Item[]) => {
+      items.forEach((item, i) => {
+        blocks.push({
+          id: `${key}-${item.id}`,
+          key,
+          node: (
+            <>
+              {i === 0 && <h2 className="heading_1">{title}</h2>}
+              {item.node}
+            </>
+          ),
+        });
+      });
+    };
+
+    blocks.push({
+      id: "personal-header",
+      key: "personal",
+      node: (
+        <header className="flex flex-col items-center">
+          <h1 className="user-name">{personal.fullName || "Your Name"}</h1>
+          <p className="professional-title">
+            {personal.title || "Your Professional Title"}
+          </p>
+          <div className="normal-text space-x-4">
+            {[personal.phone, personal.email, personal.location]
+              .filter(Boolean)
+              .join("  |  ")}
+          </div>
+        </header>
+      ),
+    });
+
+    if (profile) {
+      blocks.push({
+        id: "profile-body",
+        key: "profile",
+        node: <p className="normal-text">{profile}</p>,
+      });
+    }
+
+    section(
+      "Core Competencies",
+      "competency",
+      competency.filter(Boolean).map((c, i) => ({
+        id: `${i}-${c}`,
+        node: <li className="normal-text ml-5 list-disc">{c}</li>,
+      })),
     );
 
-    const templateResult = useMemo(
-      () => getTemplateSections(templateId, templateProps),
-      [templateId, templateProps],
+    section(
+      "Career History",
+      "experiences",
+      experiences
+        .filter((e) => e.company || e.role)
+        .map((exp, i) => ({
+          id: `${i}-${exp.id ?? ""}-${exp.company}-${exp.period}-${exp.role}`,
+          node: (
+            <div>
+              <div className="flex justify-between">
+                <h3 className="institution-name">{exp.company}</h3>
+                <span className="text-sm text-gray-600">{exp.period}</span>
+              </div>
+              <h4 className="text-gray-800 mb-2">{exp.role}</h4>
+              {exp.details && (
+                <FormattedText className="normal-text">
+                  {String(exp.details)}
+                </FormattedText>
+              )}
+            </div>
+          ),
+        })),
     );
 
-    const sections = useMemo<Section[]>(() => {
-      if (templateResult.sidebar) {
-        return templateResult.sidebar.concat(templateResult.main);
-      }
-      return templateResult.main;
-    }, [templateResult]);
+    section(
+      "Education & Qualifications",
+      "education",
+      education
+        .filter((e) => e.institution || e.qualification)
+        .map((ed, i) => ({
+          id: `${i}-${ed.id ?? ""}-${ed.institution}-${ed.qualification}`,
+          node: (
+            <div>
+              <div className="flex justify-between">
+                <h3 className="institution-name">{ed.institution}</h3>
+                <span className="text-sm text-gray-600">{ed.period}</span>
+              </div>
+              <h4 className="text-gray-800">{ed.qualification}</h4>
+            </div>
+          ),
+        })),
+    );
 
-    const sectionsWithHeights = useMemo(() => {
-      return sections.map((section) => ({
-        ...section,
-        actualHeight:
-          measuredHeights.get(section.key) || section.estimatedHeight,
-      }));
-    }, [sections, measuredHeights]);
+    section(
+      "Certificates",
+      "certificate",
+      certificate
+        .filter((c) => c.name || c.date)
+        .map((c, i) => ({
+          id: `${i}-${c.id ?? ""}-${c.name}-${c.date}`,
+          node: (
+            <p className="normal-text">
+              <strong className="uppercase">{c.name}</strong> ({c.date})
+            </p>
+          ),
+        })),
+    );
 
-    const allPages = useMemo(() => {
-      const sectionData = sectionsWithHeights.map((s) => ({
-        key: s.key,
-        content: s.content,
-        estimatedHeight: s.actualHeight,
-        canBreak: s.canBreak,
-        isOverflow: s.isOverflow,
-        clipFrom: s.clipFrom,
-      }));
-      return calculatePages(sectionData);
-    }, [sectionsWithHeights]);
+    section(
+      "Technical Skills",
+      "skill",
+      skill.filter(Boolean).map((s, i) => ({
+        id: `${i}-${s}`,
+        node: <li className="normal-text ml-5 list-disc">{s}</li>,
+      })),
+    );
+
+    section(
+      "References",
+      "reference",
+      reference
+        .filter((r) => r.name || r.company)
+        .map((r, i) => ({
+          id: `${i}-${r.id ?? ""}-${r.name}-${r.company}`,
+          node: (
+            <div className="normal-text flex flex-col">
+              <strong>{r.name}</strong>
+              <span>{r.role}</span>
+              <span>{r.company}</span>
+              <span>{r.email}</span>
+              <span>{r.phone}</span>
+            </div>
+          ),
+        })),
+    );
+
+    section(
+      "Additional Information",
+      "additionalInfo",
+      additionalInfo.filter(Boolean).map((t, i) => ({
+        id: `${i}-${t}`,
+        node: <p className="normal-text">{t}</p>,
+      })),
+    );
+
+    const { measurerRef, pages } = usePagination(blocks.length);
 
     useEffect(() => {
-      if (onTotalPagesChange) {
-        onTotalPagesChange(allPages.length);
-      }
-    }, [allPages.length, onTotalPagesChange]);
+      onTotalPagesChange?.(pages.length);
+    }, [pages.length, onTotalPagesChange]);
 
-    const toggleDebug = () => {
-      setDebugEnabled((prev) => !prev);
-    };
+    const start = Math.max(0, currentPage);
+    const sliced = showAllPages ? pages : pages.slice(start, start + 1);
+    const displayedPages = sliced.length > 0 ? sliced : pages.slice(0, 1);
 
-    const toggleBreakLines = () => {
-      setShowBreakLines((prev) => !prev);
-    };
-
-    const getTotalHeight = (pageSections: Section[]) => {
-      return pageSections.reduce((sum, s) => sum + s.estimatedHeight, 0);
-    };
-
-    const setSectionRef = useCallback(
-      (key: string) => (el: HTMLDivElement | null) => {
-        if (el) {
-          sectionRefs.current.set(key, el);
-        } else {
-          sectionRefs.current.delete(key);
-        }
-      },
-      [],
-    );
-
-    const isTwoColumn = templateId === "twoColumn";
-
-    const sectionProps = (key: string) => {
-      const sectionKey = toSectionKey(key);
+    const blockProps = (key: SectionKey) => {
+      if (!onSectionClick) return {};
       return {
-        role: onSectionClick ? ("button" as const) : undefined,
-        tabIndex: onSectionClick ? 0 : undefined,
-        "aria-label": onSectionClick ? `Edit section ${sectionKey}` : undefined,
-        onClick: onSectionClick ? () => onSectionClick(sectionKey) : undefined,
-        onKeyDown: onSectionClick
-          ? (event: KeyboardEvent<HTMLDivElement>) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                onSectionClick(sectionKey);
-              }
-            }
-          : undefined,
+        role: "button",
+        tabIndex: 0,
+        "aria-label": `Edit section ${key}`,
+        onClick: () => onSectionClick(key),
+        onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            onSectionClick(key);
+          }
+        },
       };
     };
 
-    const displayedPages = showAllPages
-      ? allPages
-      : [allPages[currentPage] || allPages[0]];
-
     return (
-      <div ref={ref} className="cv-preview-wrapper">
-        {templateStyle && <style>{templateStyle}</style>}
-        {DEBUG_MODE && (
-          <div className="fixed top-4 right-4 z-50 flex gap-2">
-            <button
-              type="button"
-              onClick={toggleDebug}
-              className="px-3 py-1 bg-gray-800 text-white text-xs rounded opacity-50 hover:opacity-100"
-            >
-              {debugEnabled ? "Hide Heights" : "Show Heights"}
-            </button>
-            <button
-              type="button"
-              onClick={toggleBreakLines}
-              className={`px-3 py-1 text-xs rounded opacity-50 hover:opacity-100 ${
-                showBreakLines
-                  ? "bg-red-600 text-white"
-                  : "bg-gray-800 text-white"
-              }`}
-            >
-              {showBreakLines ? "Hide Breaks" : "Show Breaks"}
-            </button>
-          </div>
-        )}
-
-        <style>{`
-          .break-line-indicator {
-            position: relative;
-          }
-          .break-line-indicator::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: repeating-linear-gradient(
-              90deg,
-              #ef4444 0,
-              #ef4444 8px,
-              transparent 8px,
-              transparent 16px
-            );
-          }
-          .overflow-indicator {
-            position: relative;
-          }
-          .overflow-indicator::before {
-            content: '▼ overflow';
-            position: absolute;
-            top: -18px;
-            left: 0;
-            font-size: 10px;
-            color: #f97316;
-            font-weight: bold;
-          }
-        `}</style>
-
-        {displayedPages.length > 0 ? (
-          displayedPages.map((pageSections, pageIndex) => (
-            <div
-              key={`page-${pageIndex}`}
-              className="cv-page bg-white mx-auto shadow-lg print:shadow-none"
-              style={{
-                width: A4_DIMENSIONS.width,
-                minHeight: A4_DIMENSIONS.height,
-                height: A4_DIMENSIONS.height,
-                padding: A4_DIMENSIONS.padding,
-                paddingBottom: `${A4_PADDING_PX + BOTTOM_MARGIN_PX}px`,
-                boxSizing: "border-box",
-              }}
-            >
-              {debugEnabled && (
-                <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs p-2 z-10 max-h-full overflow-auto">
-                  <strong>Page {pageIndex + 1}:</strong>
-                  <ul className="mt-1">
-                    {pageSections.map((section) => {
-                      const measured = measuredHeights.get(section.key);
-                      const diff = measured
-                        ? `(${measured - section.estimatedHeight > 0 ? "+" : ""}${measured - section.estimatedHeight}px)`
-                        : "";
-                      return (
-                        <li
-                          key={section.key}
-                          className={section.clipFrom ? "text-yellow-300" : ""}
-                        >
-                          {section.key}: {section.estimatedHeight}px {diff}
-                          {section.clipFrom &&
-                            ` [SPLIT @ ${section.clipFrom}px]`}
-                          {section.isOverflow && ` [CONTINUED]`}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                  <div className="mt-1 border-t pt-1">
-                    Total: {getTotalHeight(pageSections)}px / {USABLE_HEIGHT_PX}
-                    px
-                  </div>
-                </div>
-              )}
-              {isTwoColumn ? (
-                <div className="flex h-full">
-                  <div
-                    className="w-1/3 overflow-hidden"
-                    style={{
-                      margin: `-${A4_PADDING_PX}px`,
-                      marginRight: 0,
-                      padding: `${A4_PADDING_PX}px`,
-                      paddingRight: 0,
-                    }}
-                  >
-                    {pageSections
-                      .filter((s) => s.key.startsWith("sidebar-"))
-                      .map((section) => {
-                        const sectionKey = toSectionKey(section.key);
-                        return (
-                          <div
-                            key={section.key}
-                            ref={setSectionRef(section.key)}
-                            data-measure-key={section.key}
-                            className={`cv-section-wrapper ${showBreakLines && section.clipFrom ? "break-line-indicator" : ""} ${showBreakLines && section.isOverflow ? "overflow-indicator" : ""} ${highlightKey === sectionKey ? "ring-2 ring-accent" : ""}`}
-                            style={{
-                              maxHeight: section.clipFrom
-                                ? `${section.clipFrom}px`
-                                : undefined,
-                              overflow: section.clipFrom ? "hidden" : undefined,
-                            }}
-                            {...sectionProps(section.key)}
-                          >
-                            {section.content}
-                          </div>
-                        );
-                      })}
-                  </div>
-                  <div className="w-2/3 pl-4">
-                    {pageSections
-                      .filter((s) => !s.key.startsWith("sidebar-"))
-                      .map((section) => {
-                        const sectionKey = toSectionKey(section.key);
-                        return (
-                          <div
-                            key={section.key}
-                            ref={setSectionRef(section.key)}
-                            data-measure-key={section.key}
-                            className={`cv-section-wrapper ${showBreakLines && section.clipFrom ? "break-line-indicator" : ""} ${showBreakLines && section.isOverflow ? "overflow-indicator" : ""} ${highlightKey === sectionKey ? "ring-2 ring-accent" : ""}`}
-                            style={{
-                              maxHeight: section.clipFrom
-                                ? `${section.clipFrom}px`
-                                : undefined,
-                              overflow: section.clipFrom ? "hidden" : undefined,
-                            }}
-                            {...sectionProps(section.key)}
-                          >
-                            {section.content}
-                          </div>
-                        );
-                      })}
-                  </div>
-                </div>
-              ) : (
-                <div className="cv-content">
-                  {pageSections.map((section) => {
-                    const sectionKey = toSectionKey(section.key);
-                    return (
-                      <div
-                        key={section.key}
-                        ref={setSectionRef(section.key)}
-                        data-measure-key={section.key}
-                        className={`cv-section-wrapper ${
-                          showBreakLines && section.clipFrom
-                            ? "break-line-indicator"
-                            : ""
-                        } ${showBreakLines && section.isOverflow ? "overflow-indicator" : ""} ${highlightKey === sectionKey ? "ring-2 ring-accent" : ""}`}
-                        style={{
-                          maxHeight: section.clipFrom
-                            ? `${section.clipFrom}px`
-                            : undefined,
-                          overflow: section.clipFrom ? "hidden" : undefined,
-                        }}
-                        {...sectionProps(section.key)}
-                      >
-                        {section.content}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-              {!showAllPages && (
-                <div className="page-number text-xs text-gray-400 text-center absolute bottom-2 left-0 right-0">
-                  Page {currentPage + 1} of {allPages.length}
-                </div>
-              )}
-              {showAllPages && (
-                <div className="page-number text-xs text-gray-400 text-center absolute bottom-2 left-0 right-0">
-                  Page {pageIndex + 1} of {allPages.length}
-                </div>
-              )}
+      <div ref={setRootRef} className={className}>
+        <div className="cv-measurer" ref={measurerRef} aria-hidden>
+          {blocks.map((block) => (
+            <div key={block.id} className="cv-block">
+              {block.node}
             </div>
-          ))
-        ) : (
+          ))}
+        </div>
+
+        {displayedPages.map((blockIndexes) => (
           <div
-            className="cv-page bg-white mx-auto shadow-lg print:shadow-none"
-            style={{
-              width: A4_DIMENSIONS.width,
-              minHeight: A4_DIMENSIONS.height,
-              padding: A4_DIMENSIONS.padding,
-              paddingBottom: `${A4_PADDING_PX + BOTTOM_MARGIN_PX}px`,
-              boxSizing: "border-box",
-            }}
+            key={blockIndexes.length ? blocks[blockIndexes[0]].id : "page"}
+            className="cv-page"
           >
-            {sections.map((section) => {
-              const sectionKey = toSectionKey(section.key);
+            {blockIndexes.map((blockIndex) => {
+              const { id, key, node } = blocks[blockIndex];
               return (
                 <div
-                  key={section.key}
-                  ref={setSectionRef(section.key)}
-                  data-measure-key={section.key}
-                  className={`cv-section-wrapper ${highlightKey === sectionKey ? "ring-2 ring-accent" : ""}`}
-                  {...sectionProps(section.key)}
+                  key={id}
+                  className={`cv-block ${
+                    highlightKey === key ? "ring-accent ring-2" : ""
+                  }`}
+                  data-cvkey={key}
+                  {...blockProps(key)}
                 >
-                  {section.content}
+                  {node}
                 </div>
               );
             })}
           </div>
-        )}
+        ))}
       </div>
     );
   },

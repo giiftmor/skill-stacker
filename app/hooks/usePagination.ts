@@ -29,7 +29,7 @@ export function usePagination(blockCount: number) {
     if (el) ro.observe(el);
     document.fonts?.ready.then(measure);
     return () => ro.disconnect();
-  }, [measure, blockCount]);
+  }, [measure]);
 
   return { measurerRef, pages };
 }
