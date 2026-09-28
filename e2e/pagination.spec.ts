@@ -115,16 +115,32 @@ async function pdfPageCount(page: Page) {
 }
 
 test.describe("measured A4 pagination", () => {
-  test("splits a long CV into multiple A4 pages", async ({ page, request }) => {
-    const cvId = await seedLongCv(request);
+  let cvId: number;
+
+  test.beforeAll(async ({ request }) => {
+    cvId = await seedLongCv(request);
+  });
+
+  test.afterAll(async ({ request }) => {
+    if (cvId) {
+      await request.delete(`/api/cv/${cvId}`);
+    }
+  });
+
+  test("splits a long CV into multiple A4 pages", async ({ page }) => {
     await openPreview(page, cvId);
 
     const total = await slideTotal(page);
     expect(total).toBeGreaterThan(1);
 
-    const printPages = await settlePrintTree(page, total);
-    expect(printPages).toBeGreaterThan(1);
-    expect(printPages).toBe(total);
+    // The print tree is laid out (and therefore paginated) even in screen
+    // media, so it must already show every page before any print settle.
+    await expect
+      .poll(() => page.locator(`${PRINT_AREA} .cv-page`).count(), {
+        timeout: 20_000,
+        message: "print tree should already be paginated in screen media",
+      })
+      .toBe(total);
 
     const slides = await page.locator(`${SLIDE} .cv-page`).count();
     expect(slides).toBe(1);
@@ -148,10 +164,14 @@ test.describe("measured A4 pagination", () => {
     expect(blockParity.printed).toBe(blockParity.measured);
   });
 
-  test("no page overflows its own box", async ({ page, request }) => {
-    const cvId = await seedLongCv(request);
+  test("no page overflows its own box", async ({ page }) => {
     await openPreview(page, cvId);
-    await settlePrintTree(page, await slideTotal(page));
+    await expect
+      .poll(() => page.locator(`${PRINT_AREA} .cv-page`).count(), {
+        timeout: 20_000,
+        message: "print tree should already be paginated in screen media",
+      })
+      .toBeGreaterThan(1);
 
     const report = await page.$$eval(`${PRINT_AREA} .cv-page`, (els) =>
       els.map((el) => {
@@ -188,10 +208,18 @@ test.describe("measured A4 pagination", () => {
       expect(pageReport.spillPastContentBox).toBeLessThanOrEqual(1);
       expect(pageReport.headingAlone).toBe(false);
     }
+
+    // The on-screen slide page must not overflow either (screen media).
+    const slideOverflow = await page
+      .locator(`${SLIDE} .cv-page`)
+      .evaluate(
+        (el) =>
+          (el as HTMLElement).scrollHeight - (el as HTMLElement).clientHeight,
+      );
+    expect(slideOverflow).toBeLessThanOrEqual(1);
   });
 
-  test("pages stay white in dark mode", async ({ page, request }) => {
-    const cvId = await seedLongCv(request);
+  test("pages stay white in dark mode", async ({ page }) => {
     await openPreview(page, cvId);
     await page.emulateMedia({ colorScheme: "dark" });
 
@@ -220,24 +248,27 @@ test.describe("measured A4 pagination", () => {
 
   test("printed PDF page count equals print tree page count", async ({
     page,
-    request,
   }) => {
-    const cvId = await seedLongCv(request);
     await openPreview(page, cvId);
 
     const total = await slideTotal(page);
-    const previewCount = await settlePrintTree(page, total);
-    expect(previewCount).toBeGreaterThan(1);
+    expect(total).toBeGreaterThan(1);
 
+    // Regression: the snapshot must already carry every page with NO print
+    // settle and NO waiting — print output is captured from the paginated tree
+    // that exists before print media is ever applied.
     const pdfPages = await pdfPageCount(page);
-    expect(pdfPages).toBe(previewCount);
+    expect(pdfPages).toBe(total);
+
+    const settled = await settlePrintTree(page, total);
+    expect(settled).toBe(total);
+    const pdfAfterSettle = await pdfPageCount(page);
+    expect(pdfAfterSettle).toBe(total);
   });
 
   test("measurer and slide hidden in print, print tree visible", async ({
     page,
-    request,
   }) => {
-    const cvId = await seedLongCv(request);
     await openPreview(page, cvId);
     await settlePrintTree(page, await slideTotal(page));
 
@@ -256,11 +287,7 @@ test.describe("measured A4 pagination", () => {
     ).toBeHidden();
   });
 
-  test("slide shows one page at a time and navigates", async ({
-    page,
-    request,
-  }) => {
-    const cvId = await seedLongCv(request);
+  test("slide shows one page at a time and navigates", async ({ page }) => {
     await openPreview(page, cvId);
 
     const total = await slideTotal(page);
