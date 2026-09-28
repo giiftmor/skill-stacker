@@ -6,6 +6,17 @@ import Breadcrumb from "../../../components/ui/Breadcrumb";
 import CVPreviewWrapper from "../../../components/CVPreviewWrapper";
 import type { TemplateSettings } from "../../../lib/templates/templateDefinitions";
 
+const PAGE_KEYS_FORWARD = new Set(["ArrowRight", "PageDown"]);
+const PAGE_KEYS_BACK = new Set(["ArrowLeft", "PageUp"]);
+
+function isTypingTarget(target: EventTarget | null): boolean {
+  const el = target as HTMLElement | null;
+  if (!el || typeof el.tagName !== "string") return false;
+  if (el.isContentEditable) return true;
+  const tag = el.tagName.toUpperCase();
+  return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+}
+
 export default function PreviewCVPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const cvId = parseInt(resolvedParams.id, 10);
@@ -31,8 +42,6 @@ export default function PreviewCVPage({ params }: { params: Promise<{ id: string
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  const [showPrint, setShowPrint] = useState(true);
-  const printRef = { current: null as any };
 
   useEffect(() => {
     loadCV();
@@ -72,32 +81,23 @@ export default function PreviewCVPage({ params }: { params: Promise<{ id: string
     }
   };
 
-  const handlePrint = () => {
-    setShowPrint(true);
-    setTimeout(() => {
-      const printContent = document.getElementById("cv-print-area");
-      if (printContent) {
-        const printWindow = window.open("", "_blank");
-        if (printWindow) {
-          printWindow.document.write("<!DOCTYPE html>");
-          printWindow.document.write("<html><head><title>CV</title>");
-          printWindow.document.write("<style>");
-          printWindow.document.write(`
-            @page { size: A4; margin: 0; }
-            body { margin: 0; }
-            .cv-page { page-break-after: always; }
-            .cv-page:last-child { page-break-after: auto; }
-          `);
-          printWindow.document.write("</style>");
-          printWindow.document.write("</head><body>");
-          printWindow.document.write(printContent.innerHTML);
-          printWindow.document.write("</body></html>");
-          printWindow.document.close();
-          printWindow.print();
-        }
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const key = event.key;
+      const forward = PAGE_KEYS_FORWARD.has(key);
+      const back = PAGE_KEYS_BACK.has(key);
+      if (!forward && !back) return;
+      if (isTypingTarget(event.target)) return;
+      event.preventDefault();
+      if (forward) {
+        setCurrentPage((p) => Math.min(Math.max(totalPages - 1, 0), p + 1));
+      } else {
+        setCurrentPage((p) => Math.max(0, p - 1));
       }
-    }, 100);
-  };
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [totalPages]);
 
   if (loading) {
     return <div className="min-h-screen bg-canvas flex items-center justify-center animate-pulse-subtle text-muted">Loading...</div>;
@@ -105,27 +105,30 @@ export default function PreviewCVPage({ params }: { params: Promise<{ id: string
 
   return (
     <div className="min-h-screen bg-canvas flex flex-col">
-      <Header
-        title="Preview CV"
-        actions={
-          <div className="flex gap-2">
-            <button
-              onClick={handlePrint}
-              className="px-4 py-2 bg-accent text-white hover:bg-accent rounded font-semibold"
-            >
-              Print / Save PDF
-            </button>
-          </div>
-        }
-      />
-      <Breadcrumb
-        items={[
-          { label: "My CVs", href: "/cvs" },
-          { label: personal.fullName || "Preview", href: `/cvs/${cvId}/edit` },
-          { label: "Preview" },
-        ]}
-      />
-      <main className="flex-1 flex items-center justify-center px-4 py-8">
+      <div className="no-print">
+        <Header
+          title="Preview CV"
+          actions={
+            <div className="flex gap-2">
+              <button
+                onClick={() => window.print()}
+                className="px-4 py-2 bg-accent text-white hover:bg-accent rounded font-semibold"
+              >
+                Print / Save PDF
+              </button>
+            </div>
+          }
+        />
+        <Breadcrumb
+          items={[
+            { label: "My CVs", href: "/cvs" },
+            { label: personal.fullName || "Preview", href: `/cvs/${cvId}/edit` },
+            { label: "Preview" },
+          ]}
+        />
+      </div>
+
+      <main className="no-print flex-1 flex items-center justify-center px-4 py-8">
         <div className="flex items-center gap-4 w-full max-w-4xl">
           <button
             onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
@@ -138,7 +141,7 @@ export default function PreviewCVPage({ params }: { params: Promise<{ id: string
             </svg>
           </button>
 
-          <div className="flex-1 flex justify-center">
+          <div className="flex-1 flex justify-center" data-testid="cv-slide">
             <CVPreviewWrapper
               personal={personal}
               profile={profile}
@@ -156,7 +159,7 @@ export default function PreviewCVPage({ params }: { params: Promise<{ id: string
               currentPage={currentPage}
               onPageChange={setCurrentPage}
               onTotalPagesChange={setTotalPages}
-              showAllPages={showPrint}
+              showAllPages={false}
             />
           </div>
 
@@ -173,7 +176,10 @@ export default function PreviewCVPage({ params }: { params: Promise<{ id: string
         </div>
       </main>
 
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-surface border border-hairline rounded-full px-4 py-2 flex items-center gap-3">
+      <div
+        className="no-print fixed bottom-6 left-1/2 -translate-x-1/2 bg-surface border border-hairline rounded-full px-4 py-2 flex items-center gap-3"
+        data-testid="page-controls"
+      >
         <button
           onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
           disabled={currentPage === 0}
@@ -183,7 +189,10 @@ export default function PreviewCVPage({ params }: { params: Promise<{ id: string
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <span className="text-sm font-medium text-ink min-w-[60px] text-center">
+        <span
+          className="text-sm font-medium text-ink min-w-[60px] text-center"
+          data-testid="page-indicator"
+        >
           {currentPage + 1} / {totalPages}
         </span>
         <button
