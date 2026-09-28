@@ -114,7 +114,7 @@ test("Phase 9: export multi-page PDF + Word with two-column and theme", async ({
   });
 
   const pdfDownloadPromise = page.waitForEvent("download");
-  await page.getByRole("button", { name: "PDF", exact: true }).click();
+  await page.getByRole("button", { name: "Quick PDF", exact: true }).click();
   const pdfDownload = await pdfDownloadPromise;
   expect(pdfDownload.suggestedFilename()).toBe("QA_Two_Column_CV.pdf");
   const pdfPath = path.join(EVIDENCE_DIR, "two-column.pdf");

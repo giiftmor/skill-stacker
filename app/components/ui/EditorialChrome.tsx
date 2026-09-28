@@ -72,7 +72,7 @@ export function EditorialChrome({
           onClick={onExportPdf}
           className="rounded-md bg-accent px-3 py-1.5 text-sm text-white"
         >
-          PDF
+          Quick PDF
         </button>
         <button
           type="button"
