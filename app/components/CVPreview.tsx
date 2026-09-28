@@ -34,6 +34,7 @@ const CVPreview = forwardRef<HTMLDivElement, CVPreviewComponentProps>(
       className,
       previewRef,
       currentPage = 0,
+      onPageChange,
       onTotalPagesChange,
       showAllPages = false,
       onSectionClick,
@@ -205,6 +206,12 @@ const CVPreview = forwardRef<HTMLDivElement, CVPreviewComponentProps>(
     useEffect(() => {
       onTotalPagesChange?.(pages.length);
     }, [pages.length, onTotalPagesChange]);
+
+    useEffect(() => {
+      if (currentPage > pages.length - 1) {
+        onPageChange?.(Math.max(0, pages.length - 1));
+      }
+    }, [currentPage, pages.length, onPageChange]);
 
     const start = Math.max(0, currentPage);
     const sliced = showAllPages ? pages : pages.slice(start, start + 1);
