@@ -20,9 +20,7 @@ function mulberry32(seed: number): () => number {
 }
 
 const sums = (pages: number[][], heights: number[]): number[] =>
-  pages.map((page) =>
-    page.reduce((total, i) => total + (heights[i] ?? 0), 0),
-  );
+  pages.map((page) => page.reduce((total, i) => total + (heights[i] ?? 0), 0));
 
 describe("pagination constants", () => {
   it("derives A4 metrics from CSS mm at 96dpi", () => {
