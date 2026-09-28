@@ -54,7 +54,9 @@ test("inline edit commits to the canvas and autosaves", async ({
     .fill("Now with more words added to satisfy the length rule.");
   await page.getByTestId("section-save").click();
 
-  await expect(page.getByText(/Now with more words added/)).toBeVisible();
+  await expect(
+    page.locator(".cv-page").getByText(/Now with more words added/),
+  ).toBeVisible();
   await expect(page.getByText("Saving...")).toBeVisible({ timeout: 45000 });
 });
 
