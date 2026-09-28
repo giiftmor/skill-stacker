@@ -115,9 +115,17 @@ h2.heading_1 {
    =================================== */
 
 @media print {
-  .no-print,
-  .cv-measurer {
+  .no-print {
     display: none !important;
+  }
+  /* Keep the measurer laid out (display:none would zero every child height and
+     collapse the live pagination to one clipped page when print media applies).
+     It stays unpainted and occupies no page space. */
+  .cv-measurer {
+    display: block !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    overflow: hidden !important;
   }
   html,
   body {
