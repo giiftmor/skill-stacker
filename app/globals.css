@@ -110,6 +110,20 @@ h2.heading_1 {
   padding-bottom: 12px;
 }
 
+/* The print tree is kept laid out off screen at ALL times (same recipe as the
+   measurer) so it is already paginated before the user prints. display:none
+   would zero every child height and collapse it to one clipped page at print
+   time, and repagination after print media applies happens too late for the
+   print snapshot. */
+.print-area {
+  position: absolute;
+  left: -99999px;
+  top: 0;
+  width: 210mm;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 /* ===================================
    PRINT STYLES
    =================================== */
@@ -146,6 +160,12 @@ h2.heading_1 {
   .cv-block {
     break-inside: avoid;
     page-break-inside: avoid;
+  }
+  .print-area {
+    position: static;
+    left: auto;
+    top: auto;
+    visibility: visible;
   }
 }
 

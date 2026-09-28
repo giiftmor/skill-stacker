@@ -88,6 +88,7 @@ export default function PreviewCVPage({ params }: { params: Promise<{ id: string
       const back = PAGE_KEYS_BACK.has(key);
       if (!forward && !back) return;
       if (isTypingTarget(event.target)) return;
+      if (event.altKey || event.ctrlKey || event.metaKey) return;
       event.preventDefault();
       if (forward) {
         setCurrentPage((p) => Math.min(Math.max(totalPages - 1, 0), p + 1));
@@ -206,7 +207,7 @@ export default function PreviewCVPage({ params }: { params: Promise<{ id: string
         </button>
       </div>
 
-      <div id="cv-print-area" className="hidden print:block">
+      <div id="cv-print-area" className="print-area">
         <CVPreviewWrapper
           personal={personal}
           profile={profile}
