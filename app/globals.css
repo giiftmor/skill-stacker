@@ -5,7 +5,7 @@
   --foreground: #1c2520;
 }
 
-@theme inline {
+@theme {
   --color-canvas: #f6f4ef;
   --color-desk: #efede8;
   --color-surface: #ffffff;
