@@ -27,6 +27,32 @@ body {
   font-family: var(--font-sans), sans-serif;
 }
 
+html {
+  color-scheme: light;
+}
+[data-theme="dark"] {
+  color-scheme: dark;
+  --color-canvas: #121714;
+  --color-desk: #171d1a;
+  --color-surface: #1b221e;
+  --color-ink: #e8e6e3;
+  --color-muted: #9aa6a0;
+  --color-faint: #6b7570;
+  --color-hairline: #29332d;
+  --color-accent: #4ec4b6;
+  --color-accent-soft: #1a302c;
+  --color-status-good: #34d399;
+  --color-status-warn: #f5a623;
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    /* biome-ignore lint/complexity/noImportantStyles: the reset must outrank transition utilities */
+    transition-duration: 0.01ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: the reset must outrank animation utilities */
+    animation-duration: 0.01ms !important;
+  }
+}
+
 /* ===================================
    CV PREVIEW STYLES (MS Word to CSS)
    =================================== */
