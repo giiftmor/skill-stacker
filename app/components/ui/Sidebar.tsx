@@ -5,6 +5,7 @@ import {
   CircleHelp,
   Eye,
   FileText,
+  Inbox,
   LayoutDashboard,
   LayoutTemplate,
   Pencil,
@@ -23,98 +24,111 @@ interface SidebarProps {
 
 const SOON_ITEMS = [
   { label: "Dashboard", icon: LayoutDashboard },
+  { label: "Tailor queue", icon: Inbox },
   { label: "Templates", icon: LayoutTemplate },
   { label: "Shared", icon: Share2 },
   { label: "Settings", icon: Settings },
   { label: "Help", icon: CircleHelp },
 ];
 
+const ITEM_BASE =
+  "flex min-h-10 w-full items-center gap-2 rounded-md border-l-2 px-2 text-left text-sm transition-colors focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none";
+
+const ACTIVE_ITEM = "border-accent bg-accent-soft font-semibold text-accent";
+
+const INACTIVE_ITEM =
+  "border-transparent text-muted hover:bg-desk hover:text-ink";
+
+const DISABLED_ITEM = "cursor-default border-transparent text-muted";
+
 export default function AppSidebar({ active, cvId }: SidebarProps) {
   const pathname = usePathname();
 
   const isActive = (section: ShellSection, href: string) =>
-    active ? active === section : pathname === href;
+    active ? active === section : pathname.startsWith(href);
 
-  const navItemClass = (isOn: boolean) =>
-    [
-      "flex min-h-10 w-full items-center gap-2 rounded-md px-2 text-left text-sm transition-colors focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none",
-      isOn
-        ? "border-l-2 border-accent bg-accent-soft pl-[6px] font-semibold text-accent"
-        : "border-l-2 border-transparent text-muted hover:bg-desk hover:text-ink",
-    ].join(" ");
+  const hasCv = Number.isFinite(cvId);
+  const editHref = `/cvs/${cvId}/edit`;
+  const previewHref = `/cvs/${cvId}/preview`;
 
   return (
     <aside
       data-testid="app-sidebar"
       className="no-print sticky top-14 max-h-[calc(100vh-3.5rem)] w-44 shrink-0 self-start overflow-y-auto border-r border-hairline bg-surface p-2"
     >
-      <Link
-        href="/cvs"
-        data-testid="nav-my-cvs"
-        aria-current={isActive("cvs", "/cvs") ? "page" : undefined}
-        className={navItemClass(isActive("cvs", "/cvs"))}
-      >
-        <FileText size={15} aria-hidden="true" className="shrink-0" />
-        My CVs
-      </Link>
-
-      <Link
-        href="/cvs/new"
-        data-testid="nav-new-cv"
-        className="mt-1.5 flex min-h-10 items-center justify-center gap-1.5 rounded-md border border-dashed border-hairline px-2 text-sm font-semibold text-accent transition-colors hover:bg-accent-soft focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
-      >
-        <Plus size={14} aria-hidden="true" />
-        New CV
-      </Link>
-
-      {cvId !== undefined && (
-        <>
-          <Link
-            href={`/cvs/${cvId}/edit`}
-            data-testid="nav-edit-cv"
-            aria-current={
-              isActive("edit", `/cvs/${cvId}/edit`) ? "page" : undefined
-            }
-            className={navItemClass(isActive("edit", `/cvs/${cvId}/edit`))}
-          >
-            <Pencil size={15} aria-hidden="true" className="shrink-0" />
-            Edit CV
-          </Link>
-          <Link
-            href={`/cvs/${cvId}/preview`}
-            data-testid="nav-preview"
-            aria-current={
-              isActive("preview", `/cvs/${cvId}/preview`) ? "page" : undefined
-            }
-            className={navItemClass(
-              isActive("preview", `/cvs/${cvId}/preview`),
-            )}
-          >
-            <Eye size={15} aria-hidden="true" className="shrink-0" />
-            Preview
-          </Link>
-        </>
-      )}
-
-      <div className="my-2 border-t border-hairline" />
-
-      <ul className="flex flex-col gap-0.5">
-        {SOON_ITEMS.map(({ label, icon: Icon }) => (
-          <li key={label}>
-            <span
-              aria-disabled="true"
-              data-testid={`nav-soon-${label.toLowerCase()}`}
-              className={navItemClass(false)}
+      <nav aria-label="CVs">
+        <ul className="flex flex-col gap-0.5">
+          <li>
+            <Link
+              href="/cvs"
+              data-testid="nav-my-cvs"
+              aria-current={isActive("cvs", "/cvs") ? "page" : undefined}
+              className={`${ITEM_BASE} ${isActive("cvs", "/cvs") ? ACTIVE_ITEM : INACTIVE_ITEM}`}
             >
-              <Icon size={15} aria-hidden="true" className="shrink-0" />
-              <span className="flex-1 truncate">{label}</span>
-              <span className="text-[10px] tracking-wide text-faint">
-                Coming soon
-              </span>
-            </span>
+              <FileText size={15} aria-hidden="true" className="shrink-0" />
+              My CVs
+            </Link>
           </li>
-        ))}
-      </ul>
+
+          <li>
+            <Link
+              href="/cvs/new"
+              data-testid="nav-new-cv"
+              className="mt-1.5 flex min-h-10 items-center justify-center gap-1.5 rounded-md border border-dashed border-hairline px-2 text-sm font-semibold text-accent transition-colors hover:bg-accent-soft focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
+            >
+              <Plus size={14} aria-hidden="true" />
+              New CV
+            </Link>
+          </li>
+
+          {hasCv && (
+            <>
+              <li>
+                <Link
+                  href={editHref}
+                  data-testid="nav-edit-cv"
+                  aria-current={isActive("edit", editHref) ? "page" : undefined}
+                  className={`${ITEM_BASE} ${isActive("edit", editHref) ? ACTIVE_ITEM : INACTIVE_ITEM}`}
+                >
+                  <Pencil size={15} aria-hidden="true" className="shrink-0" />
+                  Edit CV
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href={previewHref}
+                  data-testid="nav-preview"
+                  aria-current={
+                    isActive("preview", previewHref) ? "page" : undefined
+                  }
+                  className={`${ITEM_BASE} ${isActive("preview", previewHref) ? ACTIVE_ITEM : INACTIVE_ITEM}`}
+                >
+                  <Eye size={15} aria-hidden="true" className="shrink-0" />
+                  Preview
+                </Link>
+              </li>
+            </>
+          )}
+
+          <li className="my-2 border-t border-hairline" aria-hidden="true" />
+
+          {SOON_ITEMS.map(({ label, icon: Icon }) => (
+            <li key={label}>
+              <span
+                aria-disabled="true"
+                data-testid={`nav-soon-${label.toLowerCase().replace(/\s+/g, "-")}`}
+                className={`${ITEM_BASE} ${DISABLED_ITEM}`}
+              >
+                <Icon size={15} aria-hidden="true" className="shrink-0" />
+                <span className="flex-1 truncate">{label}</span>
+                <span className="text-[10px] tracking-wide text-faint">
+                  Coming soon
+                </span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </nav>
     </aside>
   );
 }

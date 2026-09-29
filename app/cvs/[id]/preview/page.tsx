@@ -119,7 +119,7 @@ export default function PreviewCVPage({
           <div className="flex items-center justify-end gap-2 px-4 pt-4">
             <button
               onClick={() => window.print()}
-              className="flex min-h-10 items-center rounded-md bg-accent px-4 text-sm font-semibold text-white transition-colors hover:bg-accent-strong focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
+              className="flex min-h-10 items-center rounded-md bg-accent px-4 text-sm font-semibold text-white transition-colors hover:bg-desk hover:text-ink focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
             >
               Print / Save PDF
             </button>

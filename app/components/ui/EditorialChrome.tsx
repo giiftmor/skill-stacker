@@ -30,7 +30,7 @@ export function EditorialChrome({
 }) {
   const router = useRouter();
   return (
-    <header className="sticky top-0 z-20 border-b border-hairline bg-surface">
+    <header className="sticky top-14 z-20 border-b border-hairline bg-surface">
       <div className="flex items-center gap-3 px-4 py-2.5">
         <Link
           href="/cvs"
