@@ -46,7 +46,7 @@ export default function AppSidebar({ active, cvId }: SidebarProps) {
   return (
     <aside
       data-testid="app-sidebar"
-      className="no-print sticky top-0 flex h-screen w-44 shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-hairline bg-surface p-2"
+      className="no-print sticky top-14 max-h-[calc(100vh-3.5rem)] w-44 shrink-0 self-start overflow-y-auto border-r border-hairline bg-surface p-2"
     >
       <Link
         href="/cvs"
