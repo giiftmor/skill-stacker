@@ -1,9 +1,8 @@
 // app/cvs/[id]/preview/page.tsx - Full Screen Preview with Pagination
 "use client";
-import { useState, useEffect, use } from "react";
-import Header from "../../../components/ui/Header";
-import Breadcrumb from "../../../components/ui/Breadcrumb";
+import { use, useEffect, useState } from "react";
 import CVPreviewWrapper from "../../../components/CVPreviewWrapper";
+import AppShell from "../../../components/ui/AppShell";
 import type { TemplateSettings } from "../../../lib/templates/templateDefinitions";
 
 const PAGE_KEYS_FORWARD = new Set(["ArrowRight", "PageDown"]);
@@ -17,7 +16,11 @@ function isTypingTarget(target: EventTarget | null): boolean {
   return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
 }
 
-export default function PreviewCVPage({ params }: { params: Promise<{ id: string }> }) {
+export default function PreviewCVPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const resolvedParams = use(params);
   const cvId = parseInt(resolvedParams.id, 10);
 
@@ -37,7 +40,8 @@ export default function PreviewCVPage({ params }: { params: Promise<{ id: string
   const [skill, setSkills] = useState<string[]>([]);
   const [reference, setReference] = useState<any[]>([]);
   const [additionalInfo, setAdditionalInfo] = useState<string[]>([]);
-  const [templateSettings, setTemplateSettings] = useState<TemplateSettings | null>(null);
+  const [templateSettings, setTemplateSettings] =
+    useState<TemplateSettings | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(0);
@@ -101,130 +105,173 @@ export default function PreviewCVPage({ params }: { params: Promise<{ id: string
   }, [totalPages]);
 
   if (loading) {
-    return <div className="min-h-screen bg-canvas flex items-center justify-center animate-pulse-subtle text-muted">Loading...</div>;
+    return (
+      <div className="min-h-screen bg-canvas flex items-center justify-center animate-pulse-subtle text-muted">
+        Loading...
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-canvas flex flex-col">
-      <div className="no-print">
-        <Header
-          title="Preview CV"
-          actions={
-            <div className="flex gap-2">
-              <button
-                onClick={() => window.print()}
-                className="px-4 py-2 bg-accent text-white hover:bg-accent rounded font-semibold"
-              >
-                Print / Save PDF
-              </button>
-            </div>
-          }
-        />
-        <Breadcrumb
-          items={[
-            { label: "My CVs", href: "/cvs" },
-            { label: personal.fullName || "Preview", href: `/cvs/${cvId}/edit` },
-            { label: "Preview" },
-          ]}
-        />
-      </div>
-
-      <main className="no-print flex-1 flex items-center justify-center px-4 py-8">
-        <div className="flex items-center gap-4 w-full max-w-4xl">
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
-            disabled={currentPage === 0}
-            className="flex-shrink-0 w-12 h-12 bg-surface border border-hairline rounded-full flex items-center justify-center text-ink hover:border-accent hover:text-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            aria-label="Previous page"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-
-          <div className="flex-1 flex justify-center" data-testid="cv-slide">
-            <CVPreviewWrapper
-              personal={personal}
-              profile={profile}
-              competency={competency}
-              experiences={experiences}
-              education={education}
-              certificate={certificate}
-              skill={skill}
-              reference={reference}
-              additionalInfo={additionalInfo}
-              templateId={templateSettings?.template}
-              themeId={templateSettings?.theme}
-              fontPairId={templateSettings?.fontPair}
-              photoUrl={photoUrl}
-              currentPage={currentPage}
-              onPageChange={setCurrentPage}
-              onTotalPagesChange={setTotalPages}
-              showAllPages={false}
-            />
+    <AppShell active="preview" cvId={cvId} title={personal.fullName}>
+      <div className="flex min-h-0 flex-1 flex-col bg-canvas print:block">
+        <div className="no-print flex flex-1 flex-col">
+          <div className="flex items-center justify-end gap-2 px-4 pt-4">
+            <button
+              onClick={() => window.print()}
+              className="flex min-h-10 items-center rounded-md bg-accent px-4 text-sm font-semibold text-white transition-colors hover:bg-accent-strong focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
+            >
+              Print / Save PDF
+            </button>
           </div>
 
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(totalPages - 1, p + 1))}
-            disabled={currentPage >= totalPages - 1}
-            className="flex-shrink-0 w-12 h-12 bg-surface border border-hairline rounded-full flex items-center justify-center text-ink hover:border-accent hover:text-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            aria-label="Next page"
+          <main className="no-print flex flex-1 items-center justify-center px-4 py-6">
+            <div className="flex w-full max-w-4xl items-center gap-4">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
+                disabled={currentPage === 0}
+                className="h-12 w-12 flex-shrink-0 flex items-center justify-center rounded-full border border-hairline bg-surface text-ink transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-30"
+                aria-label="Previous page"
+              >
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </button>
+
+              <div
+                className="flex flex-1 justify-center"
+                data-testid="cv-slide"
+              >
+                <CVPreviewWrapper
+                  personal={personal}
+                  profile={profile}
+                  competency={competency}
+                  experiences={experiences}
+                  education={education}
+                  certificate={certificate}
+                  skill={skill}
+                  reference={reference}
+                  additionalInfo={additionalInfo}
+                  templateId={templateSettings?.template}
+                  themeId={templateSettings?.theme}
+                  fontPairId={templateSettings?.fontPair}
+                  photoUrl={photoUrl}
+                  currentPage={currentPage}
+                  onPageChange={setCurrentPage}
+                  onTotalPagesChange={setTotalPages}
+                  showAllPages={false}
+                />
+              </div>
+
+              <button
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages - 1, p + 1))
+                }
+                disabled={currentPage >= totalPages - 1}
+                className="h-12 w-12 flex-shrink-0 flex items-center justify-center rounded-full border border-hairline bg-surface text-ink transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-30"
+                aria-label="Next page"
+              >
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </button>
+            </div>
+          </main>
+
+          <div
+            className="no-print fixed bottom-6 left-1/2 flex -translate-x-1/2 items-center gap-3 rounded-full border border-hairline bg-surface px-4 py-2"
+            data-testid="page-controls"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
+              disabled={currentPage === 0}
+              className="grid h-8 w-8 place-items-center rounded-full bg-surface text-ink hover:bg-desk disabled:cursor-not-allowed disabled:opacity-30"
+              aria-label="Previous page (pager)"
+            >
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
+            <span
+              className="min-w-[60px] text-center text-sm font-medium text-ink"
+              data-testid="page-indicator"
+            >
+              {currentPage + 1} / {totalPages}
+            </span>
+            <button
+              onClick={() =>
+                setCurrentPage((p) => Math.min(totalPages - 1, p + 1))
+              }
+              disabled={currentPage >= totalPages - 1}
+              className="grid h-8 w-8 place-items-center rounded-full bg-surface text-ink hover:bg-desk disabled:cursor-not-allowed disabled:opacity-30"
+              aria-label="Next page (pager)"
+            >
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
-      </main>
 
-      <div
-        className="no-print fixed bottom-6 left-1/2 -translate-x-1/2 bg-surface border border-hairline rounded-full px-4 py-2 flex items-center gap-3"
-        data-testid="page-controls"
-      >
-        <button
-          onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
-          disabled={currentPage === 0}
-          className="w-8 h-8 rounded-full bg-surface hover:bg-desk flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed text-ink"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <span
-          className="text-sm font-medium text-ink min-w-[60px] text-center"
-          data-testid="page-indicator"
-        >
-          {currentPage + 1} / {totalPages}
-        </span>
-        <button
-          onClick={() => setCurrentPage((p) => Math.min(totalPages - 1, p + 1))}
-          disabled={currentPage >= totalPages - 1}
-          className="w-8 h-8 rounded-full bg-surface hover:bg-desk flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed text-ink"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
+        <div id="cv-print-area" className="print-area">
+          <CVPreviewWrapper
+            personal={personal}
+            profile={profile}
+            competency={competency}
+            experiences={experiences}
+            education={education}
+            certificate={certificate}
+            skill={skill}
+            reference={reference}
+            additionalInfo={additionalInfo}
+            templateId={templateSettings?.template}
+            themeId={templateSettings?.theme}
+            fontPairId={templateSettings?.fontPair}
+            photoUrl={photoUrl}
+            showAllPages={true}
+          />
+        </div>
       </div>
-
-      <div id="cv-print-area" className="print-area">
-        <CVPreviewWrapper
-          personal={personal}
-          profile={profile}
-          competency={competency}
-          experiences={experiences}
-          education={education}
-          certificate={certificate}
-          skill={skill}
-          reference={reference}
-          additionalInfo={additionalInfo}
-          templateId={templateSettings?.template}
-          themeId={templateSettings?.theme}
-          fontPairId={templateSettings?.fontPair}
-          photoUrl={photoUrl}
-          showAllPages={true}
-        />
-      </div>
-    </div>
+    </AppShell>
   );
 }

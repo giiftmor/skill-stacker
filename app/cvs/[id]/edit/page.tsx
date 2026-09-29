@@ -13,6 +13,7 @@ import ProfileForm from "../../../components/Forms/ProfileForm";
 import ReferencesForm from "../../../components/Forms/ReferencesForm";
 import SkillsForm from "../../../components/Forms/SkillsForm";
 import { TailorPanel } from "../../../components/tailor/TailorPanel";
+import AppShell from "../../../components/ui/AppShell";
 import { CommandMenu } from "../../../components/ui/CommandMenu";
 import { EditorialChrome } from "../../../components/ui/EditorialChrome";
 import { InspectorRail } from "../../../components/ui/InspectorRail";
@@ -859,105 +860,107 @@ export default function EditCVPage({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center animate-pulse-subtle text-[#8a8a8a]">
+      <div className="flex min-h-screen animate-pulse-subtle items-center justify-center bg-canvas text-muted">
         Loading...
       </div>
     );
   }
 
   return (
-    <main className="flex min-h-screen flex-col bg-desk">
-      <EditorialChrome
-        name={personal.fullName || "Untitled CV"}
-        onChangeName={(value) =>
-          setPersonal((p) => ({ ...p, fullName: value }))
-        }
-        saveStatus={status}
-        cvId={cvId}
-        onHistory={() => setHistoryOpen(true)}
-        onExportPdf={handleExportToPdf}
-        onExportDocx={handleExportToDocx}
-        onToggleReady={toggleReady}
-        isReadySet={readyOverride}
-      />
-      <div className="flex flex-1 justify-center gap-0 overflow-auto p-8 lg:justify-between">
-        <div className="w-full max-w-[794px]">
-          <div className="mx-auto rounded-md bg-white p-4 shadow-sm">
-            <CVPreview
-              personal={personal}
-              profile={profile}
-              competency={competency}
-              experiences={experiences}
-              education={education}
-              certificate={certificate}
-              skill={skill}
-              reference={reference}
-              additionalInfo={additionalInfo}
-              templateId={templateSettings?.template}
-              themeId={templateSettings?.theme}
-              fontPairId={templateSettings?.fontPair}
-              photoUrl={photoUrl}
+    <AppShell active="edit" cvId={cvId} title={personal.fullName}>
+      <main className="flex min-h-0 flex-1 flex-col bg-desk">
+        <EditorialChrome
+          name={personal.fullName || "Untitled CV"}
+          onChangeName={(value) =>
+            setPersonal((p) => ({ ...p, fullName: value }))
+          }
+          saveStatus={status}
+          cvId={cvId}
+          onHistory={() => setHistoryOpen(true)}
+          onExportPdf={handleExportToPdf}
+          onExportDocx={handleExportToDocx}
+          onToggleReady={toggleReady}
+          isReadySet={readyOverride}
+        />
+        <div className="flex flex-1 justify-center gap-0 overflow-auto p-8 lg:justify-between">
+          <div className="w-full max-w-[794px]">
+            <div className="mx-auto rounded-md bg-white p-4 shadow-sm">
+              <CVPreview
+                personal={personal}
+                profile={profile}
+                competency={competency}
+                experiences={experiences}
+                education={education}
+                certificate={certificate}
+                skill={skill}
+                reference={reference}
+                additionalInfo={additionalInfo}
+                templateId={templateSettings?.template}
+                themeId={templateSettings?.theme}
+                fontPairId={templateSettings?.fontPair}
+                photoUrl={photoUrl}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
+                onTotalPagesChange={setTotalPages}
+                onSectionClick={(key) => openSectionEditor(key as SectionKey)}
+                highlightKey={highlightKey}
+              />
+            </div>
+            <PageNav
               currentPage={currentPage}
-              onPageChange={setCurrentPage}
-              onTotalPagesChange={setTotalPages}
-              onSectionClick={(key) => openSectionEditor(key as SectionKey)}
-              highlightKey={highlightKey}
+              totalPages={totalPages}
+              onPrev={() => setCurrentPage((p) => Math.max(0, p - 1))}
+              onNext={() =>
+                setCurrentPage((p) => Math.min(totalPages - 1, p + 1))
+              }
             />
           </div>
-          <PageNav
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPrev={() => setCurrentPage((p) => Math.max(0, p - 1))}
-            onNext={() =>
-              setCurrentPage((p) => Math.min(totalPages - 1, p + 1))
+          <InspectorRail
+            sections={inspectorSections}
+            templateId={(templateSettings?.template ?? "classic") as TemplateId}
+            themeId={templateSettings?.theme ?? "default-blue"}
+            fontPairId={templateSettings?.fontPair ?? "default"}
+            onTemplateChange={(t) => applyTemplateSettings({ template: t })}
+            onThemeChange={(t) => applyTemplateSettings({ theme: t })}
+            onFontPairChange={(t) => applyTemplateSettings({ fontPair: t })}
+            onEditSection={openSectionEditor}
+            tailorSlot={
+              <TailorPanel
+                cv={cvData as Record<string, unknown>}
+                onApply={handleTailorApply}
+              />
             }
           />
         </div>
-        <InspectorRail
-          sections={inspectorSections}
-          templateId={(templateSettings?.template ?? "classic") as TemplateId}
-          themeId={templateSettings?.theme ?? "default-blue"}
-          fontPairId={templateSettings?.fontPair ?? "default"}
-          onTemplateChange={(t) => applyTemplateSettings({ template: t })}
-          onThemeChange={(t) => applyTemplateSettings({ theme: t })}
-          onFontPairChange={(t) => applyTemplateSettings({ fontPair: t })}
-          onEditSection={openSectionEditor}
-          tailorSlot={
-            <TailorPanel
-              cv={cvData as Record<string, unknown>}
-              onApply={handleTailorApply}
-            />
-          }
+        <CommandMenu
+          open={commandOpen}
+          onClose={() => setCommandOpen(false)}
+          onJump={(key) => openSectionEditor(key as SectionKey)}
+          onExportPdf={handleExportToPdf}
+          onExportDocx={handleExportToDocx}
+          onBack={() => router.push("/cvs")}
         />
-      </div>
-      <CommandMenu
-        open={commandOpen}
-        onClose={() => setCommandOpen(false)}
-        onJump={(key) => openSectionEditor(key as SectionKey)}
-        onExportPdf={handleExportToPdf}
-        onExportDocx={handleExportToDocx}
-        onBack={() => router.push("/cvs")}
-      />
-      {historyOpen && (
-        <VersionHistory
-          cvId={cvId}
-          onRestore={handleRestore}
-          onClose={() => setHistoryOpen(false)}
-        />
-      )}
-      {editingSection && (
-        <div className="fixed inset-0 z-30 flex items-center justify-center bg-ink/40 p-6">
-          <div className="w-full max-w-2xl">
-            <SectionEditor
-              title={SECTION_LABELS[editingSection]}
-              onDone={commitSectionEditor}
-              onCancel={() => setEditingSection(null)}
-            >
-              {sectionEditorBody(editingSection)}
-            </SectionEditor>
+        {historyOpen && (
+          <VersionHistory
+            cvId={cvId}
+            onRestore={handleRestore}
+            onClose={() => setHistoryOpen(false)}
+          />
+        )}
+        {editingSection && (
+          <div className="fixed inset-0 z-30 flex items-center justify-center bg-ink/40 p-6">
+            <div className="w-full max-w-2xl">
+              <SectionEditor
+                title={SECTION_LABELS[editingSection]}
+                onDone={commitSectionEditor}
+                onCancel={() => setEditingSection(null)}
+              >
+                {sectionEditorBody(editingSection)}
+              </SectionEditor>
+            </div>
           </div>
-        </div>
-      )}
-    </main>
+        )}
+      </main>
+    </AppShell>
   );
 }

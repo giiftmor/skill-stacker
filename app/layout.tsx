@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Fraunces, Mulish } from "next/font/google";
+import ThemeProvider from "./components/providers/ThemeProvider";
 import "./globals.css";
 
 const mulish = Mulish({
@@ -31,9 +32,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html>
+    <html lang="en">
       <body className={`${mulish.variable} ${fraunces.variable} antialiased`}>
-        {children}
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

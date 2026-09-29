@@ -9,23 +9,44 @@ interface BreadcrumbItem {
 
 interface BreadcrumbProps {
   items: BreadcrumbItem[];
+  className?: string;
+  currentClassName?: string;
 }
 
-export default function Breadcrumb({ items }: BreadcrumbProps) {
+export default function Breadcrumb({
+  items,
+  className = "",
+  currentClassName = "",
+}: BreadcrumbProps) {
   return (
-    <nav className="flex items-center gap-2 text-sm text-muted mb-4">
-      {items.map((item, index) => (
-        <span key={index} className="flex items-center gap-2">
-          {item.href ? (
-            <Link href={item.href} className="text-muted hover:text-accent">
-              {item.label}
-            </Link>
-          ) : (
-            <span className="text-ink font-medium">{item.label}</span>
-          )}
-          {index < items.length - 1 && <span className="text-muted">/</span>}
-        </span>
-      ))}
+    <nav
+      aria-label="Breadcrumb"
+      className={`flex items-center gap-2 text-sm text-muted ${className}`}
+    >
+      {items.map((item, index) => {
+        const isCurrent = index === items.length - 1;
+        return (
+          <span key={index} className="flex min-w-0 items-center gap-2">
+            {item.href ? (
+              <Link
+                href={item.href}
+                className="text-muted hover:text-accent"
+                aria-current={isCurrent ? "page" : undefined}
+              >
+                {item.label}
+              </Link>
+            ) : (
+              <span
+                className={`font-medium text-ink ${currentClassName}`}
+                aria-current={isCurrent ? "page" : undefined}
+              >
+                {item.label}
+              </span>
+            )}
+            {!isCurrent && <span className="text-faint">/</span>}
+          </span>
+        );
+      })}
     </nav>
   );
 }
