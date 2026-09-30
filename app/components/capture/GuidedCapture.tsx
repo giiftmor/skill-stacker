@@ -166,7 +166,7 @@ export default function GuidedCapture() {
               Back
             </button>
             {step === "style" ? (
-              <button onClick={createAndOpen} className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-white">
+              <button onClick={createAndOpen} className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-surface">
                 Open in Editor <ArrowRight size={16} />
               </button>
             ) : (
@@ -175,7 +175,7 @@ export default function GuidedCapture() {
                   const idx = CAPTURE_STEPS.findIndex((s) => s.id === step);
                   setStep(CAPTURE_STEPS[idx + 1].id);
                 }}
-                className="rounded-md bg-accent px-4 py-2 text-white"
+                className="rounded-md bg-accent px-4 py-2 text-surface"
               >
                 Continue
               </button>

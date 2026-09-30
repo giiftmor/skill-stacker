@@ -29,7 +29,7 @@ export function CaptureStepper({
               aria-current={s.id === step ? "step" : undefined}
               className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm ${
                 i === idx
-                  ? "border-accent bg-accent text-white"
+                  ? "border-accent bg-accent text-surface"
                   : i < idx
                     ? "border-hairline bg-surface text-accent"
                     : "border-hairline bg-surface text-muted"

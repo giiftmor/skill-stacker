@@ -129,7 +129,7 @@ export default function VersionHistory({
                       type="button"
                       onClick={() => handleRestore(version.id)}
                       disabled={restoring === version.id}
-                      className="min-h-10 rounded-md bg-accent px-3 text-sm text-white hover:bg-desk hover:text-ink disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                      className="min-h-10 rounded-md bg-accent px-3 text-sm text-surface hover:bg-desk hover:text-ink disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                     >
                       {restoring === version.id ? "Restoring..." : "Restore"}
                     </button>

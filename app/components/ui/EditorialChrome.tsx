@@ -133,7 +133,7 @@ export function EditorialChrome({
           <button
             type="button"
             onClick={() => run(onExportPdf)}
-            className={`${ITEM_BASE} border-accent bg-accent font-semibold text-white hover:bg-desk hover:text-ink`}
+            className={`${ITEM_BASE} border-accent bg-accent font-semibold text-surface hover:bg-desk hover:text-ink`}
           >
             Quick PDF
           </button>

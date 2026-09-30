@@ -128,7 +128,7 @@ export function Roster({ cvs }: RosterProps) {
         <h1 data-testid="roster-title" className="font-[family-name:var(--font-heading)] text-3xl text-ink">Client CVs</h1>
         <p className="mt-3 text-muted">Two steps to a client-ready CV.</p>
         <p className="mt-1 text-sm text-muted">1. Answer a few guided questions · 2. Review and polish the result in the editor.</p>
-        <Link href="/cvs/new" className="mt-6 inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-white">
+        <Link href="/cvs/new" className="mt-6 inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-surface">
           <Plus size={16} /> Start your first client CV
         </Link>
       </div>
@@ -139,7 +139,7 @@ export function Roster({ cvs }: RosterProps) {
     <div className="mx-auto max-w-5xl px-6 py-10">
       <div className="flex items-center justify-between">
         <h1 data-testid="roster-title" className="font-[family-name:var(--font-heading)] text-3xl text-ink">Client CVs</h1>
-        <Link href="/cvs/new" className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-white">
+        <Link href="/cvs/new" className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-surface">
           <Plus size={16} /> New client CV
         </Link>
       </div>

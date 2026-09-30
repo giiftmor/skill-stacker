@@ -17,7 +17,7 @@ export function SectionEditor({
 }) {
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const titleId = `section-editor-${uid}-title`;
-  const { dialogRef } = useDialog(true, onCancel);
+  const { dialogRef } = useDialog(true, onCancel, { initialFocus: "surface" });
 
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions lint/a11y/useKeyWithClickEvents: the backdrop is a dismiss target, not content
@@ -67,7 +67,7 @@ export function SectionEditor({
             type="button"
             onClick={onDone}
             data-testid="section-save"
-            className="min-h-10 rounded-md bg-accent px-4 text-sm text-white hover:bg-desk hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="min-h-10 rounded-md bg-accent px-4 text-sm text-surface hover:bg-desk hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
             Done
           </button>
