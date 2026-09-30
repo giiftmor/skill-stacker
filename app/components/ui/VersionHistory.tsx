@@ -1,6 +1,7 @@
 // app/components/ui/VersionHistory.tsx
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
+import { useDialog } from "@/app/hooks/useDialog";
 
 interface CVVersionInfo {
   id: number;
@@ -26,6 +27,9 @@ export default function VersionHistory({
   const [versions, setVersions] = useState<CVVersionInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [restoring, setRestoring] = useState<number | null>(null);
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
+  const titleId = `version-history-${uid}-title`;
+  const { dialogRef } = useDialog(true, () => onClose?.());
 
   useEffect(() => {
     const controller = new AbortController();
@@ -70,41 +74,52 @@ export default function VersionHistory({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[80vh] flex flex-col">
-        <div className="p-4 border-b flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Version History</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-6">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className="flex max-h-[80vh] w-full max-w-md flex-col rounded-lg bg-surface shadow-xl"
+      >
+        <div className="flex items-center justify-between border-b border-hairline p-4">
+          <h2
+            id={titleId}
+            className="font-[family-name:var(--font-heading)] text-lg text-ink"
+          >
+            Version History
+          </h2>
           <button
             type="button"
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            aria-label="Close version history"
+            className="grid h-10 w-10 place-items-center rounded-md text-muted hover:bg-accent-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
             ✕
           </button>
         </div>
-        <div className="p-4 overflow-y-auto flex-1">
+        <div className="flex-1 overflow-y-auto p-4">
           {loading ? (
-            <div className="text-center py-8 text-gray-500">Loading...</div>
+            <div className="py-8 text-center text-muted">Loading...</div>
           ) : versions.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              No versions yet
-            </div>
+            <div className="py-8 text-center text-muted">No versions yet</div>
           ) : (
             <ul className="space-y-2">
               {versions.map((version) => (
                 <li
                   key={version.id}
-                  className="border rounded-lg p-3 hover:bg-gray-50"
+                  className="rounded-lg border border-hairline p-3 hover:bg-canvas"
                 >
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between gap-3">
                     <div>
-                      <div className="font-medium">
+                      <div className="font-medium text-ink">
                         {version.preview.fullName || "Unnamed"}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-muted">
                         {version.preview.title}
                       </div>
-                      <div className="text-xs text-gray-400 mt-1">
+                      <div className="mt-1 text-xs text-faint">
                         {formatDate(version.createdAt)}
                       </div>
                     </div>
@@ -112,7 +127,7 @@ export default function VersionHistory({
                       type="button"
                       onClick={() => handleRestore(version.id)}
                       disabled={restoring === version.id}
-                      className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+                      className="min-h-10 rounded-md bg-accent px-3 text-sm text-white hover:bg-desk hover:text-ink disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                     >
                       {restoring === version.id ? "Restoring..." : "Restore"}
                     </button>

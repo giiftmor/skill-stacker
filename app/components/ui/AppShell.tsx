@@ -59,12 +59,6 @@ export default function AppShell({
         <div className="flex-1" />
         <div className="flex shrink-0 items-center gap-2">
           <ThemeToggle />
-          <span
-            aria-hidden="true"
-            className="grid h-8 w-8 place-items-center rounded-full bg-accent-soft text-xs font-semibold text-accent"
-          >
-            LB
-          </span>
         </div>
       </header>
 

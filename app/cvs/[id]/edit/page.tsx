@@ -832,31 +832,34 @@ export default function EditCVPage({
     totalPages: number;
     onPrev: () => void;
     onNext: () => void;
-  }) => (
-    <div className="fixed bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3 rounded-full border border-hairline bg-surface px-4 py-2 shadow-sm">
-      <button
-        type="button"
-        onClick={onPrev}
-        disabled={currentPage === 0}
-        aria-label="Previous page"
-        className="h-8 w-8 rounded-full bg-surface text-ink hover:bg-desk disabled:cursor-not-allowed disabled:opacity-30"
-      >
-        &#8249;
-      </button>
-      <span className="min-w-[110px] text-center text-sm font-medium text-ink">
-        Page {currentPage + 1} of {totalPages}
-      </span>
-      <button
-        type="button"
-        onClick={onNext}
-        disabled={currentPage >= totalPages - 1}
-        aria-label="Next page"
-        className="h-8 w-8 rounded-full bg-surface text-ink hover:bg-desk disabled:cursor-not-allowed disabled:opacity-30"
-      >
-        &#8250;
-      </button>
-    </div>
-  );
+  }) => {
+    if (totalPages <= 1) return null;
+    return (
+      <div className="mt-4 flex items-center justify-center gap-3">
+        <button
+          type="button"
+          onClick={onPrev}
+          disabled={currentPage === 0}
+          aria-label="Previous page"
+          className="grid h-10 w-10 place-items-center rounded-full border border-hairline bg-surface text-lg text-muted hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        >
+          &#8249;
+        </button>
+        <span className="min-w-[110px] text-center text-sm font-medium tabular-nums text-ink">
+          Page {currentPage + 1} of {totalPages}
+        </span>
+        <button
+          type="button"
+          onClick={onNext}
+          disabled={currentPage >= totalPages - 1}
+          aria-label="Next page"
+          className="grid h-10 w-10 place-items-center rounded-full border border-hairline bg-surface text-lg text-muted hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        >
+          &#8250;
+        </button>
+      </div>
+    );
+  };
 
   if (loading) {
     return (
@@ -952,17 +955,13 @@ export default function EditCVPage({
           />
         )}
         {editingSection && (
-          <div className="fixed inset-0 z-30 flex items-center justify-center bg-ink/40 p-6">
-            <div className="w-full max-w-2xl">
-              <SectionEditor
-                title={SECTION_LABELS[editingSection]}
-                onDone={commitSectionEditor}
-                onCancel={() => setEditingSection(null)}
-              >
-                {sectionEditorBody(editingSection)}
-              </SectionEditor>
-            </div>
-          </div>
+          <SectionEditor
+            title={SECTION_LABELS[editingSection]}
+            onDone={commitSectionEditor}
+            onCancel={() => setEditingSection(null)}
+          >
+            {sectionEditorBody(editingSection)}
+          </SectionEditor>
         )}
       </main>
     </AppShell>
