@@ -1,4 +1,5 @@
 import { type APIRequestContext, expect, test } from "@playwright/test";
+import { openActions } from "./actions";
 
 async function createCV(request: APIRequestContext) {
   const res = await request.post("/api/cv", {
@@ -44,6 +45,7 @@ test("inline edit commits to the canvas and autosaves", async ({
     await route.continue();
   });
   await page.goto(`/cvs/${cvId}/edit`);
+  await openActions(page);
   await expect(page.getByRole("button", { name: /Preview/ })).toBeVisible({
     timeout: 15000,
   });
@@ -57,12 +59,13 @@ test("inline edit commits to the canvas and autosaves", async ({
   await expect(
     page.locator(".cv-page").getByText(/Now with more words added/),
   ).toBeVisible();
-  await expect(page.getByText("Saving...")).toBeVisible({ timeout: 45000 });
+  await expect(page.getByText("Saving…")).toBeVisible({ timeout: 45000 });
 });
 
 test("command menu jumps to a section", async ({ page, request }) => {
   const cvId = await createCV(request);
   await page.goto(`/cvs/${cvId}/edit`);
+  await openActions(page);
   await expect(page.getByRole("button", { name: /Preview/ })).toBeVisible({
     timeout: 15000,
   });
@@ -81,19 +84,17 @@ test("command menu jumps to a section", async ({ page, request }) => {
 test("template change persists after reload", async ({ page, request }) => {
   const cvId = await createCV(request);
   await page.goto(`/cvs/${cvId}/edit`);
+  await openActions(page);
   await expect(page.getByRole("button", { name: /Preview/ })).toBeVisible({
     timeout: 15000,
   });
-  await page.getByRole("heading", { name: "Style" }).click();
-  await page
-    .getByRole("button", { name: "Executive", exact: false })
-    .first()
-    .click();
+  await page.getByRole("button", { name: /^Style/ }).click();
+  await page.getByRole("button", { name: /^Executive/ }).click();
   await page.reload();
-  await page.getByRole("heading", { name: "Style" }).click();
-  await expect(
-    page.getByRole("button", { name: "Executive", exact: false }).first(),
-  ).toHaveClass(/border-\[#d4a853\]/);
+  await page.getByRole("button", { name: /^Style/ }).click();
+  await expect(page.getByRole("button", { name: /^Executive/ })).toHaveClass(
+    /border-accent/,
+  );
 });
 
 test("awaiting rewrite soft state when no safe change", async ({
@@ -109,9 +110,11 @@ test("awaiting rewrite soft state when no safe change", async ({
     }),
   );
   await page.goto(`/cvs/${cvId}/edit`);
+  await openActions(page);
   await expect(page.getByRole("button", { name: /Preview/ })).toBeVisible({
     timeout: 15000,
   });
+  await page.getByRole("button", { name: "Tailor" }).click();
   await page.getByRole("button", { name: /analyze/i }).click();
   await expect(page.getByText(/No safe changes/)).toBeVisible();
 });

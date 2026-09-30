@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext } from "@playwright/test";
+import { openActions } from "./actions";
 
 async function createCV(request: APIRequestContext, fullName: string, complete = false) {
   const res = await request.post("/api/cv", {
@@ -25,9 +26,10 @@ test.describe("roster", () => {
   test("shows a ready dot for a complete CV and opens the editor", async ({ page, request }) => {
     const cvId = await createCV(request, "Roster Ready", true);
     await page.goto("/cvs");
-    await expect(page.getByText("Roster Ready")).toBeVisible();
+    await expect(page.getByTestId(`row-${cvId}`).getByText("Roster Ready")).toBeVisible();
     await expect(page.getByTestId(`ready-dot-${cvId}`)).toHaveClass(/status-good/);
     await page.locator(`[data-testid="row-${cvId}"] a[href="/cvs/${cvId}/edit"]`).click();
+    await openActions(page);
     await expect(page.getByRole("button", { name: /Preview/ })).toBeVisible({ timeout: 15000 });
   });
 

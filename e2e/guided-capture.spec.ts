@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { openActions } from "./actions";
 
 test("guided capture completes to a drafting editor with a partial CV", async ({ page }) => {
   await page.goto("/cvs/new");
@@ -18,6 +19,7 @@ test("guided capture completes to a drafting editor with a partial CV", async ({
   // Style step
   await page.getByRole("button", { name: /Open in Editor/i }).click();
 
+  await openActions(page);
   await expect(page.getByRole("button", { name: /Preview/ })).toBeVisible({ timeout: 15000 });
   await expect(page.getByText("Guided Client").first()).toBeVisible();
 });

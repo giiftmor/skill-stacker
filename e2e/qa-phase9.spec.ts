@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, type Page, test } from "@playwright/test";
+import { openActions } from "./actions";
 
 const EVIDENCE_DIR = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -109,6 +110,7 @@ test("Phase 9: export multi-page PDF + Word with two-column and theme", async ({
 }) => {
   const cvId = await createRichCV(page.request);
   await page.goto(`/cvs/${cvId}/edit`);
+  await openActions(page);
   await expect(page.getByRole("button", { name: /Preview/ })).toBeVisible({
     timeout: 15000,
   });
@@ -127,6 +129,7 @@ test("Phase 9: export multi-page PDF + Word with two-column and theme", async ({
   expect(pageObjectCount).toBeGreaterThanOrEqual(2);
 
   const docxDownloadPromise = page.waitForEvent("download");
+  await openActions(page);
   await page.getByRole("button", { name: "Word", exact: true }).click();
   const docxDownload = await docxDownloadPromise;
   expect(docxDownload.suggestedFilename()).toBe("QA_Two_Column_CV.docx");
@@ -160,6 +163,7 @@ test("Phase 9: photo upload shows in editor, API serves it, generic preview omit
 }) => {
   const cvId = await createRichCV(page.request);
   await page.goto(`/cvs/${cvId}/edit`);
+  await openActions(page);
   await expect(page.getByRole("button", { name: /Preview/ })).toBeVisible({
     timeout: 15000,
   });
@@ -260,6 +264,7 @@ test("Phase 9: version restore round-trips data and creates save point", async (
   expect(listAgain.versions.length).toBeGreaterThanOrEqual(2);
 
   await page.goto(`/cvs/${cvId}/edit`);
+  await openActions(page);
   await expect(page.getByRole("button", { name: /Preview/ })).toBeVisible({
     timeout: 15000,
   });
@@ -274,6 +279,7 @@ test("Phase 9: version history modal opens and lists versions on edit page", asy
 }) => {
   const cvId = await createRichCV(page.request);
   await page.goto(`/cvs/${cvId}/edit`);
+  await openActions(page);
   await expect(page.getByRole("button", { name: /Preview/ })).toBeVisible({
     timeout: 15000,
   });
@@ -298,6 +304,7 @@ test("Phase 9: auto-save indicator transitions Saving -> Saved", async ({
     await route.continue();
   });
   await page.goto(`/cvs/${cvId}/edit`);
+  await openActions(page);
   await expect(page.getByRole("button", { name: /Preview/ })).toBeVisible({
     timeout: 15000,
   });
@@ -305,11 +312,11 @@ test("Phase 9: auto-save indicator transitions Saving -> Saved", async ({
   await page.locator('[aria-label^="Edit section personal"]').first().click();
   await page.getByPlaceholder("Enter your full name").fill("Auto Save QA");
   await page.getByTestId("section-save").click(); // Done commits -> triggers useAutoSave PUT
-  await expect(page.getByText("Saving...")).toBeVisible({ timeout: 45000 });
+  await expect(page.getByText("Saving…")).toBeVisible({ timeout: 45000 });
   await page.screenshot({
     path: path.join(EVIDENCE_DIR, "auto-save-saving.png"),
   });
-  await expect(page.getByText("Saved", { exact: true })).toBeVisible({
+  await expect(page.getByText("Saved ✓", { exact: true })).toBeVisible({
     timeout: 10000,
   });
   await page.screenshot({

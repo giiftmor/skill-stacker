@@ -1,12 +1,15 @@
 import { expect, test } from "@playwright/test";
+import { openActions } from "./actions";
 
 test("tailor for job via pasted URL shows diffs and apply works", async ({
   page,
 }) => {
   await page.goto("/cvs/6/edit");
+  await openActions(page);
   await expect(page.getByRole("button", { name: /Preview/ })).toBeVisible({
     timeout: 15000,
   });
+  await page.getByRole("button", { name: "Tailor" }).click();
 
   await expect(page.getByText("Tailor for job")).toBeVisible();
   await page
@@ -32,9 +35,11 @@ test("tailor for job via pasted text works without a browser scrape", async ({
   page,
 }) => {
   await page.goto("/cvs/6/edit");
+  await openActions(page);
   await expect(page.getByRole("button", { name: /Preview/ })).toBeVisible({
     timeout: 15000,
   });
+  await page.getByRole("button", { name: "Tailor" }).click();
 
   await page
     .getByPlaceholder("…or paste the job text directly")
