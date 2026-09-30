@@ -103,14 +103,14 @@ export function TailorPanel({
             value={jobUrl}
             onChange={(e) => setJobUrl(e.target.value)}
             placeholder="Paste a job-ad URL"
-            className="px-3 py-2 min-h-10 rounded bg-canvas text-ink placeholder:text-faint border border-hairline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="px-3 py-2 min-h-10 rounded bg-canvas text-ink placeholder:text-muted border border-hairline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           />
           <textarea
             value={jobText}
             onChange={(e) => setJobText(e.target.value)}
             placeholder="…or paste the job text directly"
             rows={3}
-            className="px-3 py-2 rounded bg-canvas text-ink placeholder:text-faint border border-hairline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="px-3 py-2 rounded bg-canvas text-ink placeholder:text-muted border border-hairline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           />
           <button
             onClick={analyze}
