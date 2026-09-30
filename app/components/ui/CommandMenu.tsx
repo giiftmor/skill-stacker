@@ -43,7 +43,9 @@ export function CommandMenu({
         className="fixed inset-0 z-40 bg-ink/40"
       />
       <div
-        ref={dialogRef}
+        ref={(node) => {
+          dialogRef.current = node;
+        }}
         role="dialog"
         aria-modal="true"
         aria-label="Command menu"

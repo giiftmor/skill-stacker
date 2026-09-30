@@ -28,7 +28,9 @@ export function SectionEditor({
       }}
     >
       <div
-        ref={dialogRef}
+        ref={(node) => {
+          dialogRef.current = node;
+        }}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}

@@ -76,7 +76,9 @@ export default function VersionHistory({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-6">
       <div
-        ref={dialogRef}
+        ref={(node) => {
+          dialogRef.current = node;
+        }}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
