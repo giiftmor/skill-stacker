@@ -3,11 +3,22 @@ import { createElement, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { useDialog } from "./useDialog";
 
-function Dialog({ onClose }: { onClose: () => void }) {
-  const { dialogRef } = useDialog(true, onClose);
+function Dialog({
+  onClose,
+  initialFocus,
+}: {
+  onClose: () => void;
+  initialFocus?: "surface";
+}) {
+  const { dialogRef } = useDialog(true, onClose, { initialFocus });
   return createElement(
     "div",
-    { ref: dialogRef, role: "dialog", "aria-modal": "true" },
+    {
+      ref: dialogRef,
+      role: "dialog",
+      "aria-modal": "true",
+      tabIndex: -1,
+    },
     createElement("button", { type: "button" }, "First"),
     createElement("button", { type: "button" }, "Second"),
   );
@@ -39,6 +50,26 @@ describe("useDialog", () => {
     render(createElement(Dialog, { onClose: () => {} }));
     expect(document.activeElement).toBe(
       screen.getByRole("button", { name: "First" }),
+    );
+  });
+
+  it("moves focus to the dialog surface when initialFocus is surface", () => {
+    render(
+      createElement(Dialog, { onClose: () => {}, initialFocus: "surface" }),
+    );
+
+    expect(document.activeElement).toBe(screen.getByRole("dialog"));
+  });
+
+  it("wraps backwards from the surface to the last focusable", () => {
+    render(
+      createElement(Dialog, { onClose: () => {}, initialFocus: "surface" }),
+    );
+    expect(document.activeElement).toBe(screen.getByRole("dialog"));
+
+    fireEvent.keyDown(document, { key: "Tab", shiftKey: true });
+    expect(document.activeElement).toBe(
+      screen.getByRole("button", { name: "Second" }),
     );
   });
 

@@ -19,13 +19,19 @@ function focusableWithin(container: HTMLElement): HTMLElement[] {
   );
 }
 
+export interface DialogOptions {
+  initialFocus?: "surface";
+}
+
 export function useDialog(
   open: boolean,
   onClose: () => void,
+  options: DialogOptions = {},
 ): { dialogRef: RefObject<HTMLElement | null> } {
   const dialogRef = useRef<HTMLElement | null>(null);
   const openerRef = useRef<HTMLElement | null>(null);
   const onCloseRef = useRef(onClose);
+  const initialFocus = options.initialFocus;
 
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -39,7 +45,11 @@ export function useDialog(
       active instanceof HTMLElement && active !== document.body ? active : null;
 
     const items = dialogRef.current ? focusableWithin(dialogRef.current) : [];
-    (items[0] ?? dialogRef.current)?.focus();
+    if (initialFocus === "surface") {
+      (dialogRef.current ?? items[0])?.focus();
+    } else {
+      (items[0] ?? dialogRef.current)?.focus();
+    }
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -60,8 +70,9 @@ export function useDialog(
       const last = focusable[focusable.length - 1];
       const current = document.activeElement;
       const outside = !dialogRef.current.contains(current);
+      const onSurface = current === dialogRef.current;
       if (event.shiftKey) {
-        if (current === first || outside) {
+        if (current === first || outside || onSurface) {
           event.preventDefault();
           last.focus();
         }
@@ -77,7 +88,7 @@ export function useDialog(
       openerRef.current?.focus();
       openerRef.current = null;
     };
-  }, [open]);
+  }, [open, initialFocus]);
 
   return { dialogRef };
 }
