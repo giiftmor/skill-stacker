@@ -3,7 +3,7 @@
 import { ArrowLeft, Check, Eye, History } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import SaveIndicator from "@/app/components/ui/SaveIndicator";
 
 export type SaveStatus = "idle" | "saving" | "success" | "error";
@@ -43,11 +43,15 @@ export function EditorialChrome({
 }) {
   const router = useRouter();
   const [railOpen, setRailOpen] = useState(false);
+  const toggleRef = useRef<HTMLButtonElement>(null);
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const toggleId = `editorial-actions-${uid}`;
   const railId = `${toggleId}-rail`;
   const run = (action: () => void) => {
+    // Activating a rail item unmounts it, so hand focus back to the toggle
+    // before the action runs; an ensuing dialog or route change takes over.
     setRailOpen(false);
+    toggleRef.current?.focus({ preventScroll: true });
     action();
   };
 
@@ -71,8 +75,9 @@ export function EditorialChrome({
           <button
             type="button"
             id={toggleId}
+            ref={toggleRef}
             aria-expanded={railOpen}
-            aria-controls={railId}
+            aria-controls={railOpen ? railId : undefined}
             onClick={() => setRailOpen((v) => !v)}
             className="flex min-h-10 items-center gap-2 rounded-full border border-hairline bg-surface px-3.5 text-xs font-semibold text-muted hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
@@ -112,7 +117,6 @@ export function EditorialChrome({
           </button>
           <button
             type="button"
-            aria-pressed={isReadySet}
             onClick={() => run(onToggleReady)}
             className={`${ITEM_BASE} border-accent/40 bg-accent-soft font-semibold text-accent`}
           >
