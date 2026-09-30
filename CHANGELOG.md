@@ -15,6 +15,38 @@
 ### Security
 
 
+## [0.3.0] - 2026-09-30
+
+Portal AppShell + dark theme + editorial edit workbench redesign: full-bleed shell header, labeled sidebar, exclusive accordion inspector (Checklist/Style/Tailor), header Actions drawer with focus-safe dialogs, docked page pager, and AA-compliant dark-mode accent fills; whole-branch review passed with e2e gates restored via a shared Actions helper.
+
+
+### Added
+- 2026-09-29: Dark theme foundation — `[data-theme="dark"]` token overrides, `color-scheme`, and a `prefers-reduced-motion` reset in `app/globals.css`; client `ThemeProvider` (mount-time restore of `localStorage["spectres:theme"]`) and an accessible 40px `ThemeToggle` (sun/moon, `aria-pressed`). Task 1 of the portal edit workbench plan
+- 2026-09-29: Portal `AppShell` — 56px global header (wordmark link, `CVs / {title}` breadcrumb, `ThemeToggle`) plus a 176px labeled slim sidebar with active-aware `My CVs` / `New CV` / `Edit CV` / `Preview` links and `aria-disabled` "Coming soon" rows; adopted on `/cvs`, `/cvs/{id}/edit` and `/cvs/{id}/preview`, and `ThemeProvider` now wraps the root layout. Task 2 of the portal edit workbench plan
+- 2026-09-30: Portal edit workbench — 4:8 editor grid (canvas 4 / inspector 8), a single-open exclusive accordion inspector (Checklist, Style, Tailor-for-job; backed by the pure `exclusivePanel` in `app/lib/accordion.ts`), tokenized Style controls, Tailor panel (light `bg-accent` Analyze in dark mode), and a live `role="status"` SaveIndicator. Task 3 of the portal edit workbench plan (`b964d61`)
+- 2026-09-30: Header actions rail — `Actions` drawer (Tailor / Style / Checklist / Quick PDF / Word format / History) with keyboard-focus restore after each action, a page pager docked under the editor canvas that hides at ≤1 page, and a single shared `useDialog` focus-trap / Escape-close / focus-restore contract across `SectionEditor`, `VersionHistory` and `CommandMenu`, with dialog-ref callback typing and a rail-close focus handoff. Task 4 of the portal edit workbench plan (`546b705`, `4572e2d`, `76d903a`)
+- 2026-09-30: Shared e2e helper `e2e/actions.ts` (`openActions`) — opens the collapsed Actions drawer before editor readiness gates, restoring the 14 Preview / History / Quick PDF / Word gates across `inline-editing`, `roster`, `guided-capture`, `preview-page`, `tailor` and `qa-phase9` specs (`3a3531b`)
+
+### Changed
+- 2026-09-29: `Breadcrumb` accepts `className` / `currentClassName`, marks the trailing crumb with `aria-current="page"`, and labels its `nav`; edit-page loading screen retokenized from hard-dark `bg-[#0d0d0d]` to `bg-canvas text-muted`; `app/layout.tsx` root `<html>` gained `lang="en"`
+- 2026-09-28: Dev-database sample data refreshed — purged the ~404 e2e-fixture CVs (QA Two Column / Guided Client / Roster / Pagination Fixture etc.) and 19 orphaned uploaded photos; kept the five original samples and seeded four realistic CVs (product manager, data engineer, product designer, frontend engineer), including a 3-page data-engineer showcase and one intentionally in-progress CV
+- 2026-09-30: Accent-filled controls switched from `text-white` to `text-surface` so dark-mode accent (`#4ec4b6`, white text 2.12:1) clears AA (~7.7:1) — 10 controls incl. `ExportButtons`, `CaptureStepper`, `GuidedCapture`, `EditorialChrome`, `SectionEditor`, `VersionHistory`, `Roster`, preview page (`1358677`); `TailorPanel` placeholders re-tokenized `text-faint` → `text-muted` (`e9bd160`)
+- 2026-09-30: e2e assertions resynced to the redesigned chrome — copy checks now expect `Saving…` (U+2026) and exact `Saved ✓`, Style / Template locators are re-anchored to the accordion-button context (`/^Style/`, `/^Executive/`) now the inspector titles are buttons (`3a3531b`)
+
+### Fixed
+- 2026-09-30: Guarded every `localStorage` access in `ThemeProvider` — a `SecurityError` (e.g. browser storage blocked) can no longer whitescreen the app under the root layout (`056bdb5`)
+- 2026-09-30: Restored visible focus indicators under Windows forced-colors via one global `@media (forced-colors: active)` rule, since the ring/box-shadow indicators are not painted in that mode (`f919544`)
+- 2026-09-30: Section editors now open with initial focus on the dialog surface, not the destructive close button — new optional `useDialog` `initialFocus: "surface"` mode (default behaviour unchanged) plus 2 unit tests (`465871f`)
+- 2026-09-30: `e2e/roster.spec.ts` strict-mode flake under accumulated fixtures — the "Roster Ready" assertion is scoped to the row the test just created (`3a3531b`)
+
+### Removed
+- 2026-09-29: Dead `app/components/ui/Header.tsx` — the preview page was its only importer and now uses `AppShell`
+
+### Deprecated
+
+### Security
+
+
 ## [0.2.2] - 2026-09-28
 
 Measured A4 pagination: pack engine + usePagination hook, generic block-based CVPreview, real single-page /preview slide with live window.print, and a print tree that is always laid out so PDF snapshots carry every page (fixes truncate-to-page-1). Template/theme/font/photo are preview-neutral in the live preview while still driving DOCX/PDF exports. Unit 104/104, lint 208w errors net -2 vs base, pagination e2e 6/6.
