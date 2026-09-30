@@ -882,9 +882,29 @@ export default function EditCVPage({
           onToggleReady={toggleReady}
           isReadySet={readyOverride}
         />
-        <div className="flex flex-1 justify-center gap-0 overflow-auto p-8 lg:justify-between">
-          <div className="w-full max-w-[794px]">
-            <div className="mx-auto rounded-md bg-white p-4 shadow-sm">
+        <div className="grid grid-cols-12 gap-6 px-8 py-6">
+          <div className="col-span-4">
+            <InspectorRail
+              sections={inspectorSections}
+              templateId={
+                (templateSettings?.template ?? "classic") as TemplateId
+              }
+              themeId={templateSettings?.theme ?? "default-blue"}
+              fontPairId={templateSettings?.fontPair ?? "default"}
+              onTemplateChange={(t) => applyTemplateSettings({ template: t })}
+              onThemeChange={(t) => applyTemplateSettings({ theme: t })}
+              onFontPairChange={(t) => applyTemplateSettings({ fontPair: t })}
+              onEditSection={openSectionEditor}
+              tailorSlot={
+                <TailorPanel
+                  cv={cvData as Record<string, unknown>}
+                  onApply={handleTailorApply}
+                />
+              }
+            />
+          </div>
+          <div className="col-span-8">
+            <div className="mx-auto w-full max-w-[794px] rounded-md bg-white p-4 shadow-sm">
               <CVPreview
                 personal={personal}
                 profile={profile}
@@ -915,22 +935,6 @@ export default function EditCVPage({
               }
             />
           </div>
-          <InspectorRail
-            sections={inspectorSections}
-            templateId={(templateSettings?.template ?? "classic") as TemplateId}
-            themeId={templateSettings?.theme ?? "default-blue"}
-            fontPairId={templateSettings?.fontPair ?? "default"}
-            onTemplateChange={(t) => applyTemplateSettings({ template: t })}
-            onThemeChange={(t) => applyTemplateSettings({ theme: t })}
-            onFontPairChange={(t) => applyTemplateSettings({ fontPair: t })}
-            onEditSection={openSectionEditor}
-            tailorSlot={
-              <TailorPanel
-                cv={cvData as Record<string, unknown>}
-                onApply={handleTailorApply}
-              />
-            }
-          />
         </div>
         <CommandMenu
           open={commandOpen}

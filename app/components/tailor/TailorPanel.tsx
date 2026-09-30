@@ -94,8 +94,8 @@ export function TailorPanel({
   };
 
   return (
-    <div className="rounded-lg border border-[#333] bg-[#151515] p-4 mb-6">
-      <h3 className="font-semibold text-[#e8e6e3] mb-3">Tailor for job</h3>
+    <div className="rounded-lg border border-hairline bg-surface p-4 mb-6">
+      <h3 className="font-semibold text-ink mb-3">Tailor for job</h3>
 
       {step === "idle" && (
         <div className="flex flex-col gap-2">
@@ -103,19 +103,19 @@ export function TailorPanel({
             value={jobUrl}
             onChange={(e) => setJobUrl(e.target.value)}
             placeholder="Paste a job-ad URL"
-            className="px-3 py-2 rounded bg-[#242424] text-[#e8e6e3] border border-[#333]"
+            className="px-3 py-2 min-h-10 rounded bg-canvas text-ink placeholder:text-faint border border-hairline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           />
           <textarea
             value={jobText}
             onChange={(e) => setJobText(e.target.value)}
             placeholder="…or paste the job text directly"
             rows={3}
-            className="px-3 py-2 rounded bg-[#242424] text-[#e8e6e3] border border-[#333]"
+            className="px-3 py-2 rounded bg-canvas text-ink placeholder:text-faint border border-hairline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           />
           <button
             onClick={analyze}
             type="button"
-            className="px-4 py-2 rounded bg-[#d4a853] text-[#0d0d0d] font-medium self-start"
+            className="px-4 py-2 min-h-10 rounded bg-accent text-surface font-medium self-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
           >
             Analyze
           </button>
@@ -123,10 +123,10 @@ export function TailorPanel({
       )}
 
       {step !== "idle" && (
-        <p className="text-sm text-[#d4a853] mb-3">{stepLabel[step]}</p>
+        <p className="text-sm text-accent mb-3">{stepLabel[step]}</p>
       )}
 
-      {error && <p className="text-sm text-red-400 mb-3">⚠ {error}</p>}
+      {error && <p className="text-sm text-status-warn mb-3">⚠ {error}</p>}
 
       {diffs.length > 0 && (
         <div className="flex flex-col gap-3">
@@ -145,7 +145,7 @@ export function TailorPanel({
       )}
 
       {step === "done" && diffs.length === 0 && (
-        <p className="text-sm text-[#8a8a8a]">No safe changes suggested.</p>
+        <p className="text-sm text-muted">No safe changes suggested.</p>
       )}
     </div>
   );
