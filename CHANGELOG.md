@@ -6,6 +6,7 @@
 
 - 2026-10-02: resume slug identifier helpers (slugify/slugFromId)
 - 2026-10-02: Added: sidebar footer with account placeholder and bottom collapse toggle (full-height, non-scrollable aside)
+- 2026-10-02: Live gate evidence (Task 5, no code change): full-height non-scrollable `aside` verified at 1440×900 (scrollHeight 844 = clientHeight 844) and 900×700 (644 = 644) with `overflowBy=0` in expanded, collapsed and edit-page states; `sidebar-footer` pinned 8px above the viewport bottom in every state and `sidebar-toggle` flips `aria-pressed` true→false→true. Migration idempotence confirmed: `SELECT count(*), count(slug) FROM resumes` = 153/153 before and after `docker compose restart db app` (0 null/empty, 153 distinct slugs). Measured overflow floor: ~541px viewport on `/resumes`, ~652px on the edit page (extra "This Resume" nav block) — below that the nav's flex `min-height:auto` stops shrinking and pushes the footer off-screen with no scrollbar
 
 ### Changed
 
