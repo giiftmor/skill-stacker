@@ -9,6 +9,7 @@
 
 ### Changed
 
+- 2026-10-02: DB migrated to resumes/resume_photos/resume_versions with resume_id keys and a unique slug column (in-place, data preserved)
 - 2026-10-01: Grouped sidebar into task sections (Workspace / This CV / Coming soon, long tail demoted), added a header collapse toggle with localStorage-persisted icon-rail mode that auto-collapses below 1280px on first visit, and added a discoverable Ctrl-K search button that opens the edit-page CommandMenu.
 
 ### Fixed

@@ -17,7 +17,7 @@ export async function listVersions(cvId: number): Promise<CVVersionInfo[]> {
     const data = typeof v.data === "string" ? JSON.parse(v.data) : v.data;
     return {
       id: v.id,
-      cvId: v.cv_id,
+      cvId: v.resume_id,
       createdAt: v.created_at,
       preview: {
         fullName: data.personal?.fullName || "",
@@ -33,7 +33,7 @@ export async function getVersion(versionId: number) {
 
   return {
     id: version.id,
-    cvId: version.cv_id,
+    cvId: version.resume_id,
     createdAt: version.created_at,
     data: typeof version.data === "string" ? JSON.parse(version.data) : version.data,
   };

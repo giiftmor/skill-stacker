@@ -5,12 +5,13 @@ import {
   hasFlagsToSections, readinessFromSections,
   type SectionKey,
 } from "./readiness";
+import { slugFromId } from "./slug";
 
 let pool: Pool | null = null;
 
 interface CVPhoto {
   id: number;
-  cv_id: number;
+  resume_id: number;
   filename: string;
   original_name: string;
   mime_type: string;
@@ -21,7 +22,7 @@ interface CVPhoto {
 
 interface CVVersion {
   id: number;
-  cv_id: number;
+  resume_id: number;
   data: string;
   created_at: Date;
 }
@@ -59,9 +60,90 @@ export async function initDb() {
   const client = await getPool().connect();
 
   try {
-    // Create CVs table with template_settings
+    // 1. Table renames (only from legacy names when the new name is absent)
     await client.query(`
-      CREATE TABLE IF NOT EXISTS cvs (
+      DO $$ BEGIN
+        IF to_regclass('public.cvs') IS NOT NULL AND to_regclass('public.resumes') IS NULL THEN
+          ALTER TABLE cvs RENAME TO resumes;
+        END IF;
+        IF to_regclass('public.cv_photos') IS NOT NULL AND to_regclass('public.resume_photos') IS NULL THEN
+          ALTER TABLE cv_photos RENAME TO resume_photos;
+        END IF;
+        IF to_regclass('public.cv_versions') IS NOT NULL AND to_regclass('public.resume_versions') IS NULL THEN
+          ALTER TABLE cv_versions RENAME TO resume_versions;
+        END IF;
+        IF to_regclass('public.resumes') IS NOT NULL THEN
+          ALTER TABLE resumes ADD COLUMN IF NOT EXISTS slug TEXT;
+        END IF;
+      END $$;
+    `);
+
+    // 2. Key column renames cv_id -> resume_id in every child table
+    await client.query(`
+      DO $$ BEGIN
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='competencies' AND column_name='cv_id') THEN
+          ALTER TABLE competencies RENAME COLUMN cv_id TO resume_id;
+        END IF;
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='experiences' AND column_name='cv_id') THEN
+          ALTER TABLE experiences RENAME COLUMN cv_id TO resume_id;
+        END IF;
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='education' AND column_name='cv_id') THEN
+          ALTER TABLE education RENAME COLUMN cv_id TO resume_id;
+        END IF;
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='certificates' AND column_name='cv_id') THEN
+          ALTER TABLE certificates RENAME COLUMN cv_id TO resume_id;
+        END IF;
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='skills' AND column_name='cv_id') THEN
+          ALTER TABLE skills RENAME COLUMN cv_id TO resume_id;
+        END IF;
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='reference_list' AND column_name='cv_id') THEN
+          ALTER TABLE reference_list RENAME COLUMN cv_id TO resume_id;
+        END IF;
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='additional_info' AND column_name='cv_id') THEN
+          ALTER TABLE additional_info RENAME COLUMN cv_id TO resume_id;
+        END IF;
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='resume_photos' AND column_name='cv_id') THEN
+          ALTER TABLE resume_photos RENAME COLUMN cv_id TO resume_id;
+        END IF;
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='resume_versions' AND column_name='cv_id') THEN
+          ALTER TABLE resume_versions RENAME COLUMN cv_id TO resume_id;
+        END IF;
+      END $$;
+    `);
+
+    // 3. Backfill slug on rows migrated from the legacy schema
+    const tableCheck = await client.query(
+      "SELECT to_regclass('public.resumes') AS t",
+    );
+    if (tableCheck.rows[0]?.t) {
+      const pending = await client.query(
+        "SELECT id, full_name FROM resumes WHERE slug IS NULL OR slug = ''",
+      );
+      for (const row of pending.rows as Array<{
+        id: number;
+        full_name: string;
+      }>) {
+        await client.query("UPDATE resumes SET slug = $1 WHERE id = $2", [
+          slugFromId(row.full_name, row.id),
+          row.id,
+        ]);
+      }
+
+      await client.query(`
+        DO $$ BEGIN
+          IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'resumes_slug_key') THEN
+            ALTER TABLE resumes ADD CONSTRAINT resumes_slug_key UNIQUE (slug);
+          END IF;
+        END $$;
+      `);
+      await client.query(
+        "ALTER TABLE resumes ALTER COLUMN slug SET NOT NULL",
+      );
+    }
+
+    // Create resumes table with template_settings
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS resumes (
         id SERIAL PRIMARY KEY,
         full_name VARCHAR(255) NOT NULL,
         title VARCHAR(255),
@@ -72,6 +154,7 @@ export async function initDb() {
         profile TEXT,
         template_settings JSONB DEFAULT '{}',
         ready_override BOOLEAN DEFAULT false,
+        slug TEXT UNIQUE NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
@@ -79,32 +162,32 @@ export async function initDb() {
 
     // Add template_settings column if it doesn't exist
     await client.query(`
-      ALTER TABLE cvs ADD COLUMN IF NOT EXISTS template_settings JSONB DEFAULT '{}'
+      ALTER TABLE resumes ADD COLUMN IF NOT EXISTS template_settings JSONB DEFAULT '{}'
     `);
 
     // Add ready_override column if it doesn't exist
     await client.query(`
-      ALTER TABLE cvs ADD COLUMN IF NOT EXISTS ready_override BOOLEAN DEFAULT false
+      ALTER TABLE resumes ADD COLUMN IF NOT EXISTS ready_override BOOLEAN DEFAULT false
     `);
 
     // Create index if not exists
     await client.query(`
-      DO $$ 
-      BEGIN 
-        IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_cvs_full_name') THEN
-          CREATE INDEX idx_cvs_full_name ON cvs(full_name);
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_resumes_full_name') THEN
+          CREATE INDEX idx_resumes_full_name ON resumes(full_name);
         END IF;
-        IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_cvs_email') THEN
-          CREATE INDEX idx_cvs_email ON cvs(email);
+        IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_resumes_email') THEN
+          CREATE INDEX idx_resumes_email ON resumes(email);
         END IF;
       END $$
     `);
 
     // Create CV Photos table
     await client.query(`
-      CREATE TABLE IF NOT EXISTS cv_photos (
+      CREATE TABLE IF NOT EXISTS resume_photos (
         id SERIAL PRIMARY KEY,
-        cv_id INTEGER NOT NULL REFERENCES cvs(id) ON DELETE CASCADE,
+        resume_id INTEGER NOT NULL REFERENCES resumes(id) ON DELETE CASCADE,
         filename VARCHAR(255) NOT NULL,
         original_name VARCHAR(255),
         mime_type VARCHAR(100),
@@ -116,9 +199,9 @@ export async function initDb() {
 
     // Create CV Versions table
     await client.query(`
-      CREATE TABLE IF NOT EXISTS cv_versions (
+      CREATE TABLE IF NOT EXISTS resume_versions (
         id SERIAL PRIMARY KEY,
-        cv_id INTEGER NOT NULL REFERENCES cvs(id) ON DELETE CASCADE,
+        resume_id INTEGER NOT NULL REFERENCES resumes(id) ON DELETE CASCADE,
         data JSONB NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
@@ -127,9 +210,9 @@ export async function initDb() {
     // Create CV versions index
     await client.query(`
       DO $$
-      BEGIN 
-        IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_cv_versions_cv_id') THEN
-          CREATE INDEX idx_cv_versions_cv_id ON cv_versions(cv_id);
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_resume_versions_resume_id') THEN
+          CREATE INDEX idx_resume_versions_resume_id ON resume_versions(resume_id);
         END IF;
       END $$
     `);
@@ -138,7 +221,7 @@ export async function initDb() {
     await client.query(`
       CREATE TABLE IF NOT EXISTS competencies (
         id SERIAL PRIMARY KEY,
-        cv_id INTEGER NOT NULL REFERENCES cvs(id) ON DELETE CASCADE,
+        resume_id INTEGER NOT NULL REFERENCES resumes(id) ON DELETE CASCADE,
         competency VARCHAR(255) NOT NULL
       )
     `);
@@ -147,7 +230,7 @@ export async function initDb() {
     await client.query(`
       CREATE TABLE IF NOT EXISTS experiences (
         id SERIAL PRIMARY KEY,
-        cv_id INTEGER NOT NULL REFERENCES cvs(id) ON DELETE CASCADE,
+        resume_id INTEGER NOT NULL REFERENCES resumes(id) ON DELETE CASCADE,
         company VARCHAR(255),
         role VARCHAR(255),
         period VARCHAR(255),
@@ -159,7 +242,7 @@ export async function initDb() {
     await client.query(`
       CREATE TABLE IF NOT EXISTS education (
         id SERIAL PRIMARY KEY,
-        cv_id INTEGER NOT NULL REFERENCES cvs(id) ON DELETE CASCADE,
+        resume_id INTEGER NOT NULL REFERENCES resumes(id) ON DELETE CASCADE,
         institution VARCHAR(255),
         qualification VARCHAR(255),
         period VARCHAR(255)
@@ -170,7 +253,7 @@ export async function initDb() {
     await client.query(`
       CREATE TABLE IF NOT EXISTS certificates (
         id SERIAL PRIMARY KEY,
-        cv_id INTEGER NOT NULL REFERENCES cvs(id) ON DELETE CASCADE,
+        resume_id INTEGER NOT NULL REFERENCES resumes(id) ON DELETE CASCADE,
         name VARCHAR(255),
         date VARCHAR(255)
       )
@@ -180,7 +263,7 @@ export async function initDb() {
     await client.query(`
       CREATE TABLE IF NOT EXISTS skills (
         id SERIAL PRIMARY KEY,
-        cv_id INTEGER NOT NULL REFERENCES cvs(id) ON DELETE CASCADE,
+        resume_id INTEGER NOT NULL REFERENCES resumes(id) ON DELETE CASCADE,
         skill VARCHAR(255) NOT NULL
       )
     `);
@@ -189,7 +272,7 @@ export async function initDb() {
     await client.query(`
       CREATE TABLE IF NOT EXISTS reference_list (
         id SERIAL PRIMARY KEY,
-        cv_id INTEGER NOT NULL REFERENCES cvs(id) ON DELETE CASCADE,
+        resume_id INTEGER NOT NULL REFERENCES resumes(id) ON DELETE CASCADE,
         name VARCHAR(255),
         company VARCHAR(255),
         role VARCHAR(255),
@@ -202,7 +285,7 @@ export async function initDb() {
     await client.query(`
       CREATE TABLE IF NOT EXISTS additional_info (
         id SERIAL PRIMARY KEY,
-        cv_id INTEGER NOT NULL REFERENCES cvs(id) ON DELETE CASCADE,
+        resume_id INTEGER NOT NULL REFERENCES resumes(id) ON DELETE CASCADE,
         info TEXT NOT NULL
       )
     `);
@@ -261,11 +344,18 @@ export async function saveCV(data: {
     await client.query("BEGIN");
 
     // Insert CV personal information
+    const idSeq = await client.query(
+      "SELECT nextval(pg_get_serial_sequence('resumes', 'id'))::int AS id",
+    );
+    const cvId = idSeq.rows[0].id as number;
+    const slug = slugFromId(data.personal.fullName, cvId);
+
     const cvResult = await client.query(
-      `INSERT INTO cvs (full_name, title, phone, email, location, linkedin, profile, template_settings)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `INSERT INTO resumes (id, full_name, title, phone, email, location, linkedin, profile, template_settings, slug)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING id`,
       [
+        cvId,
         data.personal.fullName,
         data.personal.title,
         data.personal.phone,
@@ -274,14 +364,17 @@ export async function saveCV(data: {
         data.personal.linkedin,
         data.profile,
         data.templateSettings ? JSON.stringify(data.templateSettings) : "{}",
+        slug,
       ],
     );
-    const cvId = cvResult.rows[0].id;
+    if (cvResult.rowCount !== 1) {
+      throw new Error("Resume insert failed");
+    }
 
     // Insert competencies
     for (const comp of data.competency.filter(Boolean)) {
       await client.query(
-        "INSERT INTO competencies (cv_id, competency) VALUES ($1, $2)",
+        "INSERT INTO competencies (resume_id, competency) VALUES ($1, $2)",
         [cvId, comp],
       );
     }
@@ -289,7 +382,7 @@ export async function saveCV(data: {
     // Insert experiences
     for (const exp of data.experiences.filter((e) => e.company || e.role)) {
       await client.query(
-        "INSERT INTO experiences (cv_id, company, role, period, details) VALUES ($1, $2, $3, $4, $5)",
+        "INSERT INTO experiences (resume_id, company, role, period, details) VALUES ($1, $2, $3, $4, $5)",
         [cvId, exp.company, exp.role, exp.period, exp.details],
       );
     }
@@ -299,7 +392,7 @@ export async function saveCV(data: {
       (e) => e.institution || e.qualification,
     )) {
       await client.query(
-        "INSERT INTO education (cv_id, institution, qualification, period) VALUES ($1, $2, $3, $4)",
+        "INSERT INTO education (resume_id, institution, qualification, period) VALUES ($1, $2, $3, $4)",
         [cvId, edu.institution, edu.qualification, edu.period],
       );
     }
@@ -307,14 +400,14 @@ export async function saveCV(data: {
     // Insert certificates
     for (const cert of data.certificate.filter((c) => c.name || c.date)) {
       await client.query(
-        "INSERT INTO certificates (cv_id, name, date) VALUES ($1, $2, $3)",
+        "INSERT INTO certificates (resume_id, name, date) VALUES ($1, $2, $3)",
         [cvId, cert.name, cert.date],
       );
     }
 
     // Insert skills
     for (const skill of data.skill.filter(Boolean)) {
-      await client.query("INSERT INTO skills (cv_id, skill) VALUES ($1, $2)", [
+      await client.query("INSERT INTO skills (resume_id, skill) VALUES ($1, $2)", [
         cvId,
         skill,
       ]);
@@ -323,7 +416,7 @@ export async function saveCV(data: {
     // Insert references
     for (const ref of data.reference.filter((r) => r.name || r.company)) {
       await client.query(
-        "INSERT INTO reference_list (cv_id, name, company, role, email, phone) VALUES ($1, $2, $3, $4, $5, $6)",
+        "INSERT INTO reference_list (resume_id, name, company, role, email, phone) VALUES ($1, $2, $3, $4, $5, $6)",
         [cvId, ref.name, ref.company, ref.role, ref.email, ref.phone],
       );
     }
@@ -331,7 +424,7 @@ export async function saveCV(data: {
     // Insert additional info
     for (const info of data.additionalInfo.filter(Boolean)) {
       await client.query(
-        "INSERT INTO additional_info (cv_id, info) VALUES ($1, $2)",
+        "INSERT INTO additional_info (resume_id, info) VALUES ($1, $2)",
         [cvId, info],
       );
     }
@@ -342,7 +435,7 @@ export async function saveCV(data: {
       cvId,
       ms: Date.now() - t0,
     });
-    return { success: true, cvId };
+    return { success: true, cvId, slug };
   } catch (error) {
     await client.query("ROLLBACK");
     logger.error(
@@ -361,28 +454,29 @@ export async function saveCV(data: {
 export async function getAllCVs() {
   const result = await getPool().query(`
     SELECT
-      cvs.id,
-      cvs.full_name as "fullName",
-      cvs.title,
-      cvs.phone,
-      cvs.email,
-      cvs.location,
-      cvs.linkedin,
-      cvs.profile,
-      cvs.created_at as "createdAt",
-      cvs.updated_at as "updatedAt",
-      cvs.ready_override as "readyOverride",
-      (cvs.full_name IS NOT NULL AND cvs.full_name <> '') AS "hasPersonal",
-      (cvs.profile IS NOT NULL AND cvs.profile <> '') AS "hasProfile",
-      EXISTS (SELECT 1 FROM competencies c WHERE c.cv_id = cvs.id AND c.competency <> '') AS "hasCompetency",
-      EXISTS (SELECT 1 FROM experiences e WHERE e.cv_id = cvs.id AND (e.company <> '' OR e.details <> '')) AS "hasExperiences",
-      EXISTS (SELECT 1 FROM education ed WHERE ed.cv_id = cvs.id AND ed.institution <> '') AS "hasEducation",
-      EXISTS (SELECT 1 FROM certificates ce WHERE ce.cv_id = cvs.id AND ce.name <> '') AS "hasCertificate",
-      EXISTS (SELECT 1 FROM skills s WHERE s.cv_id = cvs.id AND s.skill <> '') AS "hasSkill",
-      EXISTS (SELECT 1 FROM reference_list r WHERE r.cv_id = cvs.id AND r.name <> '') AS "hasReference",
-      EXISTS (SELECT 1 FROM additional_info a WHERE a.cv_id = cvs.id AND a.info <> '') AS "hasAdditionalInfo"
-    FROM cvs
-    ORDER BY cvs.updated_at DESC
+      resumes.id,
+      resumes.slug,
+      resumes.full_name as "fullName",
+      resumes.title,
+      resumes.phone,
+      resumes.email,
+      resumes.location,
+      resumes.linkedin,
+      resumes.profile,
+      resumes.created_at as "createdAt",
+      resumes.updated_at as "updatedAt",
+      resumes.ready_override as "readyOverride",
+      (resumes.full_name IS NOT NULL AND resumes.full_name <> '') AS "hasPersonal",
+      (resumes.profile IS NOT NULL AND resumes.profile <> '') AS "hasProfile",
+      EXISTS (SELECT 1 FROM competencies c WHERE c.resume_id = resumes.id AND c.competency <> '') AS "hasCompetency",
+      EXISTS (SELECT 1 FROM experiences e WHERE e.resume_id = resumes.id AND (e.company <> '' OR e.details <> '')) AS "hasExperiences",
+      EXISTS (SELECT 1 FROM education ed WHERE ed.resume_id = resumes.id AND ed.institution <> '') AS "hasEducation",
+      EXISTS (SELECT 1 FROM certificates ce WHERE ce.resume_id = resumes.id AND ce.name <> '') AS "hasCertificate",
+      EXISTS (SELECT 1 FROM skills s WHERE s.resume_id = resumes.id AND s.skill <> '') AS "hasSkill",
+      EXISTS (SELECT 1 FROM reference_list r WHERE r.resume_id = resumes.id AND r.name <> '') AS "hasReference",
+      EXISTS (SELECT 1 FROM additional_info a WHERE a.resume_id = resumes.id AND a.info <> '') AS "hasAdditionalInfo"
+    FROM resumes
+    ORDER BY resumes.updated_at DESC
   `);
 
   return result.rows.map((row) => {
@@ -400,6 +494,7 @@ export async function getAllCVs() {
     const sections = hasFlagsToSections(flags);
     return {
       id: row.id,
+      slug: row.slug,
       fullName: row.fullName,
       title: row.title,
       phone: row.phone,
@@ -422,7 +517,7 @@ export async function getCV(id: number) {
 
   try {
     // Get CV basic info
-    const cvResult = await client.query("SELECT * FROM cvs WHERE id = $1", [
+    const cvResult = await client.query("SELECT * FROM resumes WHERE id = $1", [
       id,
     ]);
     if (cvResult.rows.length === 0) {
@@ -432,49 +527,49 @@ export async function getCV(id: number) {
 
     // Get experiences
     const expResult = await client.query(
-      "SELECT * FROM experiences WHERE cv_id = $1 ORDER BY id",
+      "SELECT * FROM experiences WHERE resume_id = $1 ORDER BY id",
       [id],
     );
     cv.experiences = expResult.rows;
 
     // Get education
     const eduResult = await client.query(
-      "SELECT * FROM education WHERE cv_id = $1 ORDER BY id",
+      "SELECT * FROM education WHERE resume_id = $1 ORDER BY id",
       [id],
     );
     cv.education = eduResult.rows;
 
     // Get competencies
     const compResult = await client.query(
-      "SELECT competency FROM competencies WHERE cv_id = $1",
+      "SELECT competency FROM competencies WHERE resume_id = $1",
       [id],
     );
     cv.competency = compResult.rows.map((r) => r.competency);
 
     // Get certificates
     const certResult = await client.query(
-      "SELECT name, date FROM certificates WHERE cv_id = $1",
+      "SELECT name, date FROM certificates WHERE resume_id = $1",
       [id],
     );
     cv.certificate = certResult.rows;
 
     // Get skills
     const skillResult = await client.query(
-      "SELECT skill FROM skills WHERE cv_id = $1",
+      "SELECT skill FROM skills WHERE resume_id = $1",
       [id],
     );
     cv.skill = skillResult.rows.map((r) => r.skill);
 
     // Get references
     const refResult = await client.query(
-      "SELECT * FROM reference_list WHERE cv_id = $1",
+      "SELECT * FROM reference_list WHERE resume_id = $1",
       [id],
     );
     cv.reference = refResult.rows;
 
     // Get additional info
     const infoResult = await client.query(
-      "SELECT info FROM additional_info WHERE cv_id = $1",
+      "SELECT info FROM additional_info WHERE resume_id = $1",
       [id],
     );
     cv.additionalInfo = infoResult.rows.map((r) => r.info);
@@ -489,7 +584,7 @@ export async function getCV(id: number) {
 export async function deleteCV(id: number) {
   const t0 = Date.now();
   try {
-    const result = await getPool().query("DELETE FROM cvs WHERE id = $1", [id]);
+    const result = await getPool().query("DELETE FROM resumes WHERE id = $1", [id]);
     logger.info("db.write", "done", {
       fn: "deleteCV",
       cvId: id,
@@ -568,7 +663,7 @@ export async function updateCV(
 
     // Update CV personal information
     await client.query(
-      `UPDATE cvs 
+      `UPDATE resumes
        SET full_name = $1, title = $2, phone = $3, email = $4, 
            location = $5, linkedin = $6, profile = $7, updated_at = CURRENT_TIMESTAMP
        WHERE id = $8`,
@@ -585,18 +680,18 @@ export async function updateCV(
     );
 
     // Delete and re-insert related records
-    await client.query("DELETE FROM competencies WHERE cv_id = $1", [cvId]);
-    await client.query("DELETE FROM experiences WHERE cv_id = $1", [cvId]);
-    await client.query("DELETE FROM education WHERE cv_id = $1", [cvId]);
-    await client.query("DELETE FROM certificates WHERE cv_id = $1", [cvId]);
-    await client.query("DELETE FROM skills WHERE cv_id = $1", [cvId]);
-    await client.query("DELETE FROM reference_list WHERE cv_id = $1", [cvId]);
-    await client.query("DELETE FROM additional_info WHERE cv_id = $1", [cvId]);
+    await client.query("DELETE FROM competencies WHERE resume_id = $1", [cvId]);
+    await client.query("DELETE FROM experiences WHERE resume_id = $1", [cvId]);
+    await client.query("DELETE FROM education WHERE resume_id = $1", [cvId]);
+    await client.query("DELETE FROM certificates WHERE resume_id = $1", [cvId]);
+    await client.query("DELETE FROM skills WHERE resume_id = $1", [cvId]);
+    await client.query("DELETE FROM reference_list WHERE resume_id = $1", [cvId]);
+    await client.query("DELETE FROM additional_info WHERE resume_id = $1", [cvId]);
 
     // Insert competencies
     for (const comp of data.competency.filter(Boolean)) {
       await client.query(
-        "INSERT INTO competencies (cv_id, competency) VALUES ($1, $2)",
+        "INSERT INTO competencies (resume_id, competency) VALUES ($1, $2)",
         [cvId, comp],
       );
     }
@@ -604,7 +699,7 @@ export async function updateCV(
     // Insert experiences
     for (const exp of data.experiences.filter((e) => e.company || e.role)) {
       await client.query(
-        "INSERT INTO experiences (cv_id, company, role, period, details) VALUES ($1, $2, $3, $4, $5)",
+        "INSERT INTO experiences (resume_id, company, role, period, details) VALUES ($1, $2, $3, $4, $5)",
         [cvId, exp.company, exp.role, exp.period, exp.details],
       );
     }
@@ -614,7 +709,7 @@ export async function updateCV(
       (e) => e.institution || e.qualification,
     )) {
       await client.query(
-        "INSERT INTO education (cv_id, institution, qualification, period) VALUES ($1, $2, $3, $4)",
+        "INSERT INTO education (resume_id, institution, qualification, period) VALUES ($1, $2, $3, $4)",
         [cvId, edu.institution, edu.qualification, edu.period],
       );
     }
@@ -622,14 +717,14 @@ export async function updateCV(
     // Insert certificates
     for (const cert of data.certificate.filter((c) => c.name || c.date)) {
       await client.query(
-        "INSERT INTO certificates (cv_id, name, date) VALUES ($1, $2, $3)",
+        "INSERT INTO certificates (resume_id, name, date) VALUES ($1, $2, $3)",
         [cvId, cert.name, cert.date],
       );
     }
 
     // Insert skills
     for (const skill of data.skill.filter(Boolean)) {
-      await client.query("INSERT INTO skills (cv_id, skill) VALUES ($1, $2)", [
+      await client.query("INSERT INTO skills (resume_id, skill) VALUES ($1, $2)", [
         cvId,
         skill,
       ]);
@@ -638,7 +733,7 @@ export async function updateCV(
     // Insert references
     for (const ref of data.reference.filter((r) => r.name || r.company)) {
       await client.query(
-        "INSERT INTO reference_list (cv_id, name, company, role, email, phone) VALUES ($1, $2, $3, $4, $5, $6)",
+        "INSERT INTO reference_list (resume_id, name, company, role, email, phone) VALUES ($1, $2, $3, $4, $5, $6)",
         [cvId, ref.name, ref.company, ref.role, ref.email, ref.phone],
       );
     }
@@ -646,7 +741,7 @@ export async function updateCV(
     // Insert additional info
     for (const info of data.additionalInfo.filter(Boolean)) {
       await client.query(
-        "INSERT INTO additional_info (cv_id, info) VALUES ($1, $2)",
+        "INSERT INTO additional_info (resume_id, info) VALUES ($1, $2)",
         [cvId, info],
       );
     }
@@ -687,11 +782,11 @@ export async function saveCVPhoto(
 
   try {
     // Delete existing photo for this CV
-    await client.query("DELETE FROM cv_photos WHERE cv_id = $1", [cvId]);
+    await client.query("DELETE FROM resume_photos WHERE resume_id = $1", [cvId]);
 
     // Insert new photo
     const result = await client.query(
-      `INSERT INTO cv_photos (cv_id, filename, original_name, mime_type, size, url)
+      `INSERT INTO resume_photos (resume_id, filename, original_name, mime_type, size, url)
        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
       [
@@ -712,14 +807,14 @@ export async function saveCVPhoto(
 
 export async function getCVPhoto(cvId: number): Promise<CVPhoto | null> {
   const result = await getPool().query(
-    "SELECT * FROM cv_photos WHERE cv_id = $1 LIMIT 1",
+    "SELECT * FROM resume_photos WHERE resume_id = $1 LIMIT 1",
     [cvId],
   );
   return result.rows[0] || null;
 }
 
 export async function deleteCVPhoto(cvId: number) {
-  await getPool().query("DELETE FROM cv_photos WHERE cv_id = $1", [cvId]);
+  await getPool().query("DELETE FROM resume_photos WHERE resume_id = $1", [cvId]);
   return { success: true };
 }
 
@@ -735,10 +830,10 @@ export async function saveCVVersion(
     // Auto-prune: keep only 20 most recent versions
     await client.query(
       `
-      DELETE FROM cv_versions
-      WHERE cv_id = $1 AND id NOT IN (
-        SELECT id FROM cv_versions
-        WHERE cv_id = $1
+      DELETE FROM resume_versions
+      WHERE resume_id = $1 AND id NOT IN (
+        SELECT id FROM resume_versions
+        WHERE resume_id = $1
         ORDER BY created_at DESC
         LIMIT 19
       )
@@ -748,7 +843,7 @@ export async function saveCVVersion(
 
     // Insert new version
     const result = await client.query(
-      `INSERT INTO cv_versions (cv_id, data)
+      `INSERT INTO resume_versions (resume_id, data)
        VALUES ($1, $2)
        RETURNING *`,
       [cvId, JSON.stringify(data)],
@@ -769,7 +864,7 @@ export async function saveCVVersion(
 
 export async function getCVVersions(cvId: number): Promise<CVVersion[]> {
   const result = await getPool().query(
-    "SELECT * FROM cv_versions WHERE cv_id = $1 ORDER BY created_at DESC",
+    "SELECT * FROM resume_versions WHERE resume_id = $1 ORDER BY created_at DESC",
     [cvId],
   );
   return result.rows;
@@ -779,7 +874,7 @@ export async function getCVVersion(
   versionId: number,
 ): Promise<CVVersion | null> {
   const result = await getPool().query(
-    "SELECT * FROM cv_versions WHERE id = $1",
+    "SELECT * FROM resume_versions WHERE id = $1",
     [versionId],
   );
   return result.rows[0] || null;
@@ -788,7 +883,7 @@ export async function getCVVersion(
 // Get CV with template settings
 export async function getCVWithSettings(id: number) {
   const result = await getPool().query(
-    "SELECT *, template_settings FROM cvs WHERE id = $1",
+    "SELECT *, template_settings FROM resumes WHERE id = $1",
     [id],
   );
   return result.rows[0] || null;
@@ -799,7 +894,7 @@ export async function updateCVTemplateSettings(
   cvId: number,
   settings: TemplateSettings,
 ) {
-  await getPool().query("UPDATE cvs SET template_settings = $1 WHERE id = $2", [
+  await getPool().query("UPDATE resumes SET template_settings = $1 WHERE id = $2", [
     JSON.stringify(settings),
     cvId,
   ]);
@@ -811,8 +906,20 @@ export async function setCVReady(
   ready: boolean,
 ): Promise<{ success: true; cvId: number }> {
   await getPool().query(
-    "UPDATE cvs SET ready_override = $1 WHERE id = $2",
+    "UPDATE resumes SET ready_override = $1 WHERE id = $2",
     [ready, cvId],
   );
   return { success: true, cvId };
+}
+
+// Resolve a public slug back to its numeric id
+export async function resolveSlug(slug: string): Promise<number | null> {
+  const result = await getPool().query(
+    "SELECT id FROM resumes WHERE slug = $1",
+    [slug],
+  );
+  if (result.rows.length === 0) {
+    return null;
+  }
+  return result.rows[0].id as number;
 }
