@@ -2,16 +2,20 @@
 "use client";
 
 import {
+  ChevronsUpDown,
   CircleHelp,
   Eye,
   FileText,
   Inbox,
   LayoutDashboard,
   LayoutTemplate,
+  PanelLeftClose,
+  PanelLeftOpen,
   Pencil,
   Plus,
   Settings,
   Share2,
+  User,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -21,6 +25,7 @@ interface SidebarProps {
   active?: ShellSection;
   cvId?: number;
   collapsed?: boolean;
+  onToggleCollapsed?: () => void;
 }
 
 const SOON_ITEMS = [
@@ -52,6 +57,7 @@ export default function AppSidebar({
   active,
   cvId,
   collapsed = false,
+  onToggleCollapsed,
 }: SidebarProps) {
   const pathname = usePathname();
 
@@ -74,9 +80,9 @@ export default function AppSidebar({
   return (
     <aside
       data-testid="app-sidebar"
-      className={`no-print sticky top-14 max-h-[calc(100vh-3.5rem)] ${collapsed ? "w-14" : "w-44"} shrink-0 self-start overflow-y-auto border-r border-hairline bg-surface p-2 transition-[width] duration-200`}
+      className={`no-print sticky top-14 h-[calc(100vh-3.5rem)] ${collapsed ? "w-14" : "w-44"} shrink-0 self-start border-r border-hairline bg-surface p-2 transition-[width] duration-200 flex flex-col`}
     >
-      <nav aria-label="Sidebar" className="flex flex-col gap-2">
+      <nav aria-label="Sidebar" className="flex flex-1 flex-col gap-2">
         <div>
           {!collapsed && <p className={SECTION_HEADING}>Workspace</p>}
           <ul className="flex flex-col gap-0.5">
@@ -160,6 +166,57 @@ export default function AppSidebar({
           </ul>
         </div>
       </nav>
+      <div
+        data-testid="sidebar-footer"
+        className="mt-auto border-t border-hairline pt-2"
+      >
+        <div
+          data-testid="account-container"
+          title={collapsed ? "Sign in" : undefined}
+          className={`flex min-h-10 items-center gap-2 rounded-md ${collapsed ? "justify-center" : "px-2"}`}
+        >
+          <span
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-desk text-muted"
+            aria-hidden="true"
+          >
+            <User size={15} />
+          </span>
+          {!collapsed && (
+            <>
+              <span className="min-w-0 flex-1 truncate text-sm text-muted">
+                Sign in
+              </span>
+              <ChevronsUpDown
+                size={14}
+                className="text-faint"
+                aria-hidden="true"
+              />
+            </>
+          )}
+        </div>
+        <button
+          type="button"
+          data-testid="sidebar-toggle"
+          onClick={onToggleCollapsed}
+          aria-pressed={!collapsed}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className={
+            collapsed
+              ? "grid h-10 w-10 place-items-center rounded-md text-muted hover:bg-desk hover:text-ink"
+              : "flex h-10 w-full items-center gap-2 rounded-md px-2 text-left text-sm text-muted hover:bg-desk hover:text-ink"
+          }
+        >
+          {collapsed ? (
+            <PanelLeftOpen size={15} aria-hidden="true" />
+          ) : (
+            <PanelLeftClose size={15} aria-hidden="true" />
+          )}
+          {!collapsed && (
+            <span className="flex-1">{collapsed ? "Expand" : "Collapse"}</span>
+          )}
+        </button>
+      </div>
     </aside>
   );
 }

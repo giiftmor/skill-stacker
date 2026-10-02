@@ -87,6 +87,26 @@ describe("AppSidebar", () => {
     expect(within(myCvs).getByText("My CVs")).toHaveClass("sr-only");
     expect(screen.queryByText("Workspace")).not.toBeInTheDocument();
   });
+
+  it("renders a full-height non-scrollable sidebar with a footer", () => {
+    render(<AppSidebar active="cvs" />);
+
+    const aside = screen.getByTestId("app-sidebar");
+    expect(aside).toHaveClass("h-[calc(100vh-3.5rem)]");
+    expect(aside).not.toHaveClass("overflow-y-auto");
+    expect(screen.getByTestId("sidebar-footer")).toBeInTheDocument();
+    expect(screen.getByTestId("account-container")).toBeInTheDocument();
+  });
+
+  it("keeps the collapse toggle inside the footer", () => {
+    render(<AppSidebar active="cvs" />);
+
+    const footer = screen.getByTestId("sidebar-footer");
+    expect(within(footer).getByTestId("sidebar-toggle")).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
 });
 
 describe("AppShell", () => {
@@ -155,6 +175,8 @@ describe("AppShell", () => {
   });
 
   it("keeps a 40px hit target for the collapse toggle", () => {
+    window.localStorage.setItem(SIDEBAR_STORAGE_KEY, "1");
+
     render(
       <AppShell active="cvs">
         <div>content</div>
@@ -162,9 +184,5 @@ describe("AppShell", () => {
     );
 
     expect(screen.getByTestId("sidebar-toggle")).toHaveClass("h-10", "w-10");
-    expect(screen.getByTestId("sidebar-toggle")).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
   });
 });

@@ -5,6 +5,7 @@
 ### Added
 
 - 2026-10-02: resume slug identifier helpers (slugify/slugFromId)
+- 2026-10-02: Added: sidebar footer with account placeholder and bottom collapse toggle (full-height, non-scrollable aside)
 
 ### Changed
 
