@@ -1,10 +1,45 @@
-import { expect, test } from "@playwright/test";
+import { type APIRequestContext, expect, test } from "@playwright/test";
 import { openActions } from "./actions";
+
+async function createCV(request: APIRequestContext) {
+  const res = await request.post("/api/resume", {
+    data: {
+      personal: {
+        fullName: "Tailor Fixture",
+        title: "Engineer",
+        phone: "",
+        email: "t@e.co",
+        location: "",
+        linkedin: "",
+      },
+      profile: "Experienced engineer with a focus on delivery.",
+      competency: ["Analysis", "SQL"],
+      experiences: [
+        {
+          company: "Co",
+          role: "Engineer",
+          period: "",
+          details: "Built the things.",
+        },
+      ],
+      education: [],
+      certificate: [],
+      skill: ["SQL"],
+      reference: [],
+      additionalInfo: [],
+    },
+  });
+  expect(res.ok()).toBeTruthy();
+  const body = await res.json();
+  return { slug: body.slug as string, cvId: body.cvId as number };
+}
 
 test("tailor for job via pasted URL shows diffs and apply works", async ({
   page,
+  request,
 }) => {
-  await page.goto("/resumes/does-not-exist/edit");
+  const { slug } = await createCV(request);
+  await page.goto(`/resumes/${slug}/edit`);
   await openActions(page);
   await expect(page.getByRole("button", { name: /Preview/ })).toBeVisible({
     timeout: 15000,
@@ -33,8 +68,10 @@ test("tailor for job via pasted URL shows diffs and apply works", async ({
 
 test("tailor for job via pasted text works without a browser scrape", async ({
   page,
+  request,
 }) => {
-  await page.goto("/resumes/does-not-exist/edit");
+  const { slug } = await createCV(request);
+  await page.goto(`/resumes/${slug}/edit`);
   await openActions(page);
   await expect(page.getByRole("button", { name: /Preview/ })).toBeVisible({
     timeout: 15000,
