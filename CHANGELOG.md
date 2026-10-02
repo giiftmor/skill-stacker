@@ -4,6 +4,8 @@
 
 ### Added
 
+- 2026-10-02: resume slug identifier helpers (slugify/slugFromId)
+
 ### Changed
 
 - 2026-10-01: Grouped sidebar into task sections (Workspace / This CV / Coming soon, long tail demoted), added a header collapse toggle with localStorage-persisted icon-rail mode that auto-collapses below 1280px on first visit, and added a discoverable Ctrl-K search button that opens the edit-page CommandMenu.
