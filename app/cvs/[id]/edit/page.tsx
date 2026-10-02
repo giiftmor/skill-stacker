@@ -870,7 +870,12 @@ export default function EditCVPage({
   }
 
   return (
-    <AppShell active="edit" cvId={cvId} title={personal.fullName}>
+    <AppShell
+      active="edit"
+      cvId={cvId}
+      title={personal.fullName}
+      onOpenCommand={() => setCommandOpen(true)}
+    >
       <main className="flex min-h-0 flex-1 flex-col bg-desk">
         <EditorialChrome
           name={personal.fullName || "Untitled CV"}

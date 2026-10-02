@@ -44,6 +44,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# runtime file uploads (docker bind-mount, not source)
+/uploads/
+
 # git worktrees
 .worktrees/
 

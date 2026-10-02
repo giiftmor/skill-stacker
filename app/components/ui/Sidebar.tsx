@@ -20,6 +20,7 @@ import type { ShellSection } from "@/app/components/ui/AppShell";
 interface SidebarProps {
   active?: ShellSection;
   cvId?: number;
+  collapsed?: boolean;
 }
 
 const SOON_ITEMS = [
@@ -34,18 +35,37 @@ const SOON_ITEMS = [
 const ITEM_BASE =
   "flex min-h-10 w-full items-center gap-2 rounded-md border-l-2 px-2 text-left text-sm transition-colors focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none";
 
+const COLLAPSED_ITEM = "justify-center gap-0 px-0";
+
 const ACTIVE_ITEM = "border-accent bg-accent-soft font-semibold text-accent";
 
 const INACTIVE_ITEM =
   "border-transparent text-muted hover:bg-desk hover:text-ink";
 
-const DISABLED_ITEM = "cursor-default border-transparent text-muted";
+const DISABLED_ITEM =
+  "cursor-default border-transparent text-xs text-faint hover:bg-transparent";
 
-export default function AppSidebar({ active, cvId }: SidebarProps) {
+const SECTION_HEADING =
+  "px-2 pb-0.5 pt-1 text-[10px] font-semibold tracking-wider text-faint uppercase";
+
+export default function AppSidebar({
+  active,
+  cvId,
+  collapsed = false,
+}: SidebarProps) {
   const pathname = usePathname();
 
   const isActive = (section: ShellSection, href: string) =>
     active ? active === section : pathname.startsWith(href);
+
+  const navLinkClass = (section: ShellSection, href: string) =>
+    `${ITEM_BASE} ${collapsed ? COLLAPSED_ITEM : ""} ${
+      isActive(section, href) ? ACTIVE_ITEM : INACTIVE_ITEM
+    }`;
+
+  const label = (text: string) => (
+    <span className={collapsed ? "sr-only" : ""}>{text}</span>
+  );
 
   const hasCv = Number.isFinite(cvId);
   const editHref = `/cvs/${cvId}/edit`;
@@ -54,80 +74,91 @@ export default function AppSidebar({ active, cvId }: SidebarProps) {
   return (
     <aside
       data-testid="app-sidebar"
-      className="no-print sticky top-14 max-h-[calc(100vh-3.5rem)] w-44 shrink-0 self-start overflow-y-auto border-r border-hairline bg-surface p-2"
+      className={`no-print sticky top-14 max-h-[calc(100vh-3.5rem)] ${collapsed ? "w-14" : "w-44"} shrink-0 self-start overflow-y-auto border-r border-hairline bg-surface p-2 transition-[width] duration-200`}
     >
-      <nav aria-label="CVs">
-        <ul className="flex flex-col gap-0.5">
-          <li>
-            <Link
-              href="/cvs"
-              data-testid="nav-my-cvs"
-              aria-current={isActive("cvs", "/cvs") ? "page" : undefined}
-              className={`${ITEM_BASE} ${isActive("cvs", "/cvs") ? ACTIVE_ITEM : INACTIVE_ITEM}`}
-            >
-              <FileText size={15} aria-hidden="true" className="shrink-0" />
-              My CVs
-            </Link>
-          </li>
+      <nav aria-label="Sidebar" className="flex flex-col gap-2">
+        <div>
+          {!collapsed && <p className={SECTION_HEADING}>Workspace</p>}
+          <ul className="flex flex-col gap-0.5">
+            <li>
+              <Link
+                href="/cvs"
+                data-testid="nav-my-cvs"
+                title={collapsed ? "My CVs" : undefined}
+                aria-current={isActive("cvs", "/cvs") ? "page" : undefined}
+                className={navLinkClass("cvs", "/cvs")}
+              >
+                <FileText size={15} aria-hidden="true" className="shrink-0" />
+                {label("My CVs")}
+              </Link>
+            </li>
 
-          <li>
-            <Link
-              href="/cvs/new"
-              data-testid="nav-new-cv"
-              className="mt-1.5 flex min-h-10 items-center justify-center gap-1.5 rounded-md border border-dashed border-hairline px-2 text-sm font-semibold text-accent transition-colors hover:bg-accent-soft focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
-            >
-              <Plus size={14} aria-hidden="true" />
-              New CV
-            </Link>
-          </li>
+            <li>
+              <Link
+                href="/cvs/new"
+                data-testid="nav-new-cv"
+                title={collapsed ? "New CV" : undefined}
+                className={`mt-1.5 flex min-h-10 items-center justify-center gap-1.5 rounded-md border border-dashed border-hairline px-2 text-sm font-semibold text-accent transition-colors hover:bg-accent-soft focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none ${collapsed ? "mt-0" : ""}`}
+              >
+                <Plus size={14} aria-hidden="true" />
+                {label("New CV")}
+              </Link>
+            </li>
+          </ul>
+        </div>
 
-          {hasCv && (
-            <>
+        {hasCv && (
+          <div>
+            {!collapsed && <p className={SECTION_HEADING}>This CV</p>}
+            <ul className="flex flex-col gap-0.5">
               <li>
                 <Link
                   href={editHref}
                   data-testid="nav-edit-cv"
+                  title={collapsed ? "Edit CV" : undefined}
                   aria-current={isActive("edit", editHref) ? "page" : undefined}
-                  className={`${ITEM_BASE} ${isActive("edit", editHref) ? ACTIVE_ITEM : INACTIVE_ITEM}`}
+                  className={navLinkClass("edit", editHref)}
                 >
                   <Pencil size={15} aria-hidden="true" className="shrink-0" />
-                  Edit CV
+                  {label("Edit CV")}
                 </Link>
               </li>
               <li>
                 <Link
                   href={previewHref}
                   data-testid="nav-preview"
+                  title={collapsed ? "Preview" : undefined}
                   aria-current={
                     isActive("preview", previewHref) ? "page" : undefined
                   }
-                  className={`${ITEM_BASE} ${isActive("preview", previewHref) ? ACTIVE_ITEM : INACTIVE_ITEM}`}
+                  className={navLinkClass("preview", previewHref)}
                 >
                   <Eye size={15} aria-hidden="true" className="shrink-0" />
-                  Preview
+                  {label("Preview")}
                 </Link>
               </li>
-            </>
-          )}
+            </ul>
+          </div>
+        )}
 
-          <li className="my-2 border-t border-hairline" aria-hidden="true" />
-
-          {SOON_ITEMS.map(({ label, icon: Icon }) => (
-            <li key={label}>
-              <span
-                aria-disabled="true"
-                data-testid={`nav-soon-${label.toLowerCase().replace(/\s+/g, "-")}`}
-                className={`${ITEM_BASE} ${DISABLED_ITEM}`}
-              >
-                <Icon size={15} aria-hidden="true" className="shrink-0" />
-                <span className="flex-1 truncate">{label}</span>
-                <span className="text-[10px] tracking-wide text-faint">
-                  Coming soon
+        <div>
+          {!collapsed && <p className={SECTION_HEADING}>Coming soon</p>}
+          <ul className="flex flex-col gap-0.5">
+            {SOON_ITEMS.map(({ label: itemLabel, icon: Icon }) => (
+              <li key={itemLabel}>
+                <span
+                  aria-disabled="true"
+                  data-testid={`nav-soon-${itemLabel.toLowerCase().replace(/\s+/g, "-")}`}
+                  title={collapsed ? itemLabel : undefined}
+                  className={`${ITEM_BASE} ${collapsed ? COLLAPSED_ITEM : ""} ${DISABLED_ITEM}`}
+                >
+                  <Icon size={15} aria-hidden="true" className="shrink-0" />
+                  {label(itemLabel)}
                 </span>
-              </span>
-            </li>
-          ))}
-        </ul>
+              </li>
+            ))}
+          </ul>
+        </div>
       </nav>
     </aside>
   );
