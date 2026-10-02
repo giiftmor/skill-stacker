@@ -4,7 +4,7 @@ import AppShell, { SIDEBAR_STORAGE_KEY } from "../AppShell";
 import AppSidebar from "../Sidebar";
 
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/cvs",
+  usePathname: () => "/resumes",
 }));
 
 vi.mock("next/link", () => ({
@@ -45,23 +45,23 @@ beforeEach(() => {
 
 describe("AppSidebar", () => {
   it("groups navigation by task with section headings in expanded mode", () => {
-    render(<AppSidebar active="cvs" cvId={1} />);
+    render(<AppSidebar active="resumes" slug="jane-doe-1" />);
 
     expect(screen.getByText("Workspace")).toBeInTheDocument();
-    expect(screen.getByText("This CV")).toBeInTheDocument();
+    expect(screen.getByText("This Resume")).toBeInTheDocument();
     expect(screen.getByText("Coming soon")).toBeInTheDocument();
   });
 
-  it("omits the This CV group when no cv is open", () => {
-    render(<AppSidebar active="cvs" />);
+  it("omits the This Resume group when no resume is open", () => {
+    render(<AppSidebar active="resumes" />);
 
-    expect(screen.queryByText("This CV")).not.toBeInTheDocument();
+    expect(screen.queryByText("This Resume")).not.toBeInTheDocument();
     expect(screen.queryByTestId("nav-edit-cv")).not.toBeInTheDocument();
     expect(screen.queryByTestId("nav-preview")).not.toBeInTheDocument();
   });
 
   it("keeps coming-soon rows aria-disabled with stable testids", () => {
-    render(<AppSidebar active="cvs" />);
+    render(<AppSidebar active="resumes" />);
 
     for (const label of [
       "Dashboard",
@@ -80,16 +80,16 @@ describe("AppSidebar", () => {
   });
 
   it("collapsed mode keeps 40px hit targets and sr-only labels", () => {
-    render(<AppSidebar active="cvs" collapsed />);
+    render(<AppSidebar active="resumes" collapsed />);
 
     const myCvs = screen.getByTestId("nav-my-cvs");
     expect(myCvs).toHaveClass("min-h-10");
-    expect(within(myCvs).getByText("My CVs")).toHaveClass("sr-only");
+    expect(within(myCvs).getByText("My Resumes")).toHaveClass("sr-only");
     expect(screen.queryByText("Workspace")).not.toBeInTheDocument();
   });
 
   it("renders a full-height non-scrollable sidebar with a footer", () => {
-    render(<AppSidebar active="cvs" />);
+    render(<AppSidebar active="resumes" />);
 
     const aside = screen.getByTestId("app-sidebar");
     expect(aside).toHaveClass("h-[calc(100vh-3.5rem)]");
@@ -99,7 +99,7 @@ describe("AppSidebar", () => {
   });
 
   it("keeps the collapse toggle inside the footer", () => {
-    render(<AppSidebar active="cvs" />);
+    render(<AppSidebar active="resumes" />);
 
     const footer = screen.getByTestId("sidebar-footer");
     expect(within(footer).getByTestId("sidebar-toggle")).toHaveAttribute(
@@ -112,7 +112,7 @@ describe("AppSidebar", () => {
 describe("AppShell", () => {
   it("persists the collapsed choice and toggles the sidebar", () => {
     render(
-      <AppShell active="cvs">
+      <AppShell active="resumes">
         <div>content</div>
       </AppShell>,
     );
@@ -132,7 +132,7 @@ describe("AppShell", () => {
     window.localStorage.setItem(SIDEBAR_STORAGE_KEY, "1");
 
     render(
-      <AppShell active="cvs">
+      <AppShell active="resumes">
         <div>content</div>
       </AppShell>,
     );
@@ -144,7 +144,7 @@ describe("AppShell", () => {
     narrow = true;
 
     render(
-      <AppShell active="cvs">
+      <AppShell active="resumes">
         <div>content</div>
       </AppShell>,
     );
@@ -155,7 +155,7 @@ describe("AppShell", () => {
   it("renders the command-menu button only when onOpenCommand is passed", () => {
     const onOpenCommand = () => {};
     render(
-      <AppShell active="edit" cvId={1} onOpenCommand={onOpenCommand}>
+      <AppShell active="edit" slug="jane-doe-1" onOpenCommand={onOpenCommand}>
         <div>content</div>
       </AppShell>,
     );
@@ -166,7 +166,7 @@ describe("AppShell", () => {
 
   it("hides the command-menu button when onOpenCommand is omitted", () => {
     render(
-      <AppShell active="cvs">
+      <AppShell active="resumes">
         <div>content</div>
       </AppShell>,
     );
@@ -178,7 +178,7 @@ describe("AppShell", () => {
     window.localStorage.setItem(SIDEBAR_STORAGE_KEY, "1");
 
     render(
-      <AppShell active="cvs">
+      <AppShell active="resumes">
         <div>content</div>
       </AppShell>,
     );

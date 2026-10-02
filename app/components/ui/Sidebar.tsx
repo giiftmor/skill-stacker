@@ -23,7 +23,7 @@ import type { ShellSection } from "@/app/components/ui/AppShell";
 
 interface SidebarProps {
   active?: ShellSection;
-  cvId?: number;
+  slug?: string;
   collapsed?: boolean;
   onToggleCollapsed?: () => void;
 }
@@ -55,7 +55,7 @@ const SECTION_HEADING =
 
 export default function AppSidebar({
   active,
-  cvId,
+  slug,
   collapsed = false,
   onToggleCollapsed,
 }: SidebarProps) {
@@ -73,9 +73,9 @@ export default function AppSidebar({
     <span className={collapsed ? "sr-only" : ""}>{text}</span>
   );
 
-  const hasCv = Number.isFinite(cvId);
-  const editHref = `/cvs/${cvId}/edit`;
-  const previewHref = `/cvs/${cvId}/preview`;
+  const hasCv = Boolean(slug);
+  const editHref = `/resumes/${slug}/edit`;
+  const previewHref = `/resumes/${slug}/preview`;
 
   return (
     <aside
@@ -88,26 +88,28 @@ export default function AppSidebar({
           <ul className="flex flex-col gap-0.5">
             <li>
               <Link
-                href="/cvs"
+                href="/resumes"
                 data-testid="nav-my-cvs"
-                title={collapsed ? "My CVs" : undefined}
-                aria-current={isActive("cvs", "/cvs") ? "page" : undefined}
-                className={navLinkClass("cvs", "/cvs")}
+                title={collapsed ? "My Resumes" : undefined}
+                aria-current={
+                  isActive("resumes", "/resumes") ? "page" : undefined
+                }
+                className={navLinkClass("resumes", "/resumes")}
               >
                 <FileText size={15} aria-hidden="true" className="shrink-0" />
-                {label("My CVs")}
+                {label("My Resumes")}
               </Link>
             </li>
 
             <li>
               <Link
-                href="/cvs/new"
+                href="/resumes/new"
                 data-testid="nav-new-cv"
-                title={collapsed ? "New CV" : undefined}
+                title={collapsed ? "New Resume" : undefined}
                 className={`mt-1.5 flex min-h-10 items-center justify-center gap-1.5 rounded-md border border-dashed border-hairline px-2 text-sm font-semibold text-accent transition-colors hover:bg-accent-soft focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none ${collapsed ? "mt-0" : ""}`}
               >
                 <Plus size={14} aria-hidden="true" />
-                {label("New CV")}
+                {label("New Resume")}
               </Link>
             </li>
           </ul>
@@ -115,18 +117,18 @@ export default function AppSidebar({
 
         {hasCv && (
           <div>
-            {!collapsed && <p className={SECTION_HEADING}>This CV</p>}
+            {!collapsed && <p className={SECTION_HEADING}>This Resume</p>}
             <ul className="flex flex-col gap-0.5">
               <li>
                 <Link
                   href={editHref}
                   data-testid="nav-edit-cv"
-                  title={collapsed ? "Edit CV" : undefined}
+                  title={collapsed ? "Edit Resume" : undefined}
                   aria-current={isActive("edit", editHref) ? "page" : undefined}
                   className={navLinkClass("edit", editHref)}
                 >
                   <Pencil size={15} aria-hidden="true" className="shrink-0" />
-                  {label("Edit CV")}
+                  {label("Edit Resume")}
                 </Link>
               </li>
               <li>

@@ -14,13 +14,13 @@ interface CVVersionInfo {
 }
 
 interface VersionHistoryProps {
-  cvId: number;
+  slug: string;
   onRestore?: (data: unknown) => void;
   onClose?: () => void;
 }
 
 export default function VersionHistory({
-  cvId,
+  slug,
   onRestore,
   onClose,
 }: VersionHistoryProps) {
@@ -35,7 +35,7 @@ export default function VersionHistory({
     const controller = new AbortController();
     const loadVersions = async () => {
       try {
-        const res = await fetch(`/api/cv/${cvId}/versions`, {
+        const res = await fetch(`/api/resume/${slug}/versions`, {
           signal: controller.signal,
         });
         const body = await res.json();
@@ -50,14 +50,17 @@ export default function VersionHistory({
     };
     loadVersions();
     return () => controller.abort();
-  }, [cvId]);
+  }, [slug]);
 
   const handleRestore = async (versionId: number) => {
     setRestoring(versionId);
     try {
-      const res = await fetch(`/api/cv/${cvId}/versions/${versionId}/restore`, {
-        method: "POST",
-      });
+      const res = await fetch(
+        `/api/resume/${slug}/versions/${versionId}/restore`,
+        {
+          method: "POST",
+        },
+      );
       const body = await res.json();
       if (!body.success) throw new Error(body.message || "Restore failed");
       onRestore?.(body.data);

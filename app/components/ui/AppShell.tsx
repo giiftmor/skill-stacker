@@ -8,12 +8,12 @@ import Breadcrumb from "@/app/components/ui/Breadcrumb";
 import AppSidebar from "@/app/components/ui/Sidebar";
 import ThemeToggle from "@/app/components/ui/ThemeToggle";
 
-export type ShellSection = "cvs" | "edit" | "preview";
+export type ShellSection = "resumes" | "edit" | "preview";
 
 interface AppShellProps {
   children: ReactNode;
   active?: ShellSection;
-  cvId?: number;
+  slug?: string;
   title?: string;
   onOpenCommand?: () => void;
 }
@@ -35,13 +35,13 @@ function readStoredCollapsed(): boolean | null {
 export default function AppShell({
   children,
   active,
-  cvId,
+  slug,
   title,
   onOpenCommand,
 }: AppShellProps) {
   const crumbs = title
-    ? [{ label: "CVs", href: "/cvs" }, { label: title }]
-    : [{ label: "CVs", href: "/cvs" }];
+    ? [{ label: "Resumes", href: "/resumes" }, { label: title }]
+    : [{ label: "Resumes", href: "/resumes" }];
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     () =>
@@ -71,7 +71,7 @@ export default function AppShell({
     >
       <header className="no-print sticky top-0 z-30 flex h-14 w-full shrink-0 items-center gap-3 border-b border-hairline bg-surface px-4">
         <Link
-          href="/cvs"
+          href="/resumes"
           className="flex shrink-0 items-center gap-2 rounded-md px-1 py-1 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
         >
           <span
@@ -116,7 +116,7 @@ export default function AppShell({
       <div className="flex min-h-0 flex-1 print:block">
         <AppSidebar
           active={active}
-          cvId={cvId}
+          slug={slug}
           collapsed={sidebarCollapsed}
           onToggleCollapsed={toggleSidebar}
         />

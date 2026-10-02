@@ -2,7 +2,7 @@ import { type APIRequestContext, expect, test } from "@playwright/test";
 import { openActions } from "./actions";
 
 async function createCV(request: APIRequestContext) {
-  const res = await request.post("/api/cv", {
+  const res = await request.post("/api/resume", {
     data: {
       personal: {
         fullName: "Inline Edits",
@@ -30,21 +30,22 @@ async function createCV(request: APIRequestContext) {
     },
   });
   expect(res.ok()).toBeTruthy();
-  return (await res.json()).cvId as number;
+  const body = await res.json();
+  return { slug: body.slug as string, cvId: body.cvId as number };
 }
 
 test("inline edit commits to the canvas and autosaves", async ({
   page,
   request,
 }) => {
-  const cvId = await createCV(request);
-  await page.route("**/api/cv/*", async (route) => {
+  const { slug } = await createCV(request);
+  await page.route("**/api/resume/*", async (route) => {
     if (route.request().method() === "PUT") {
       await new Promise((r) => setTimeout(r, 1500));
     }
     await route.continue();
   });
-  await page.goto(`/cvs/${cvId}/edit`);
+  await page.goto(`/resumes/${slug}/edit`);
   await openActions(page);
   await expect(page.getByRole("button", { name: /Preview/ })).toBeVisible({
     timeout: 15000,
@@ -60,11 +61,26 @@ test("inline edit commits to the canvas and autosaves", async ({
     page.locator(".cv-page").getByText(/Now with more words added/),
   ).toBeVisible();
   await expect(page.getByText("Saving…")).toBeVisible({ timeout: 45000 });
+
+  expect(page.url()).toMatch(/\/resumes\/[a-z0-9-]+\/edit$/);
+  const before = page.url();
+
+  await page.locator('[aria-label^="Edit section personal"]').first().click();
+  await page
+    .getByPlaceholder("Enter your full name")
+    .fill("Inline Edits Renamed");
+  await page.getByTestId("section-save").click();
+  await expect(page.getByText("Saving…")).toBeVisible({ timeout: 45000 });
+  await expect(page.getByText("Saved ✓", { exact: true })).toBeVisible({
+    timeout: 45000,
+  });
+
+  expect(page.url()).toBe(before);
 });
 
 test("command menu jumps to a section", async ({ page, request }) => {
-  const cvId = await createCV(request);
-  await page.goto(`/cvs/${cvId}/edit`);
+  const { slug } = await createCV(request);
+  await page.goto(`/resumes/${slug}/edit`);
   await openActions(page);
   await expect(page.getByRole("button", { name: /Preview/ })).toBeVisible({
     timeout: 15000,
@@ -82,8 +98,8 @@ test("command menu jumps to a section", async ({ page, request }) => {
 });
 
 test("template change persists after reload", async ({ page, request }) => {
-  const cvId = await createCV(request);
-  await page.goto(`/cvs/${cvId}/edit`);
+  const { slug } = await createCV(request);
+  await page.goto(`/resumes/${slug}/edit`);
   await openActions(page);
   await expect(page.getByRole("button", { name: /Preview/ })).toBeVisible({
     timeout: 15000,
@@ -101,7 +117,7 @@ test("awaiting rewrite soft state when no safe change", async ({
   page,
   request,
 }) => {
-  const cvId = await createCV(request);
+  const { slug } = await createCV(request);
   await page.route("**/api/tailor", (route) =>
     route.fulfill({
       status: 200,
@@ -109,7 +125,7 @@ test("awaiting rewrite soft state when no safe change", async ({
       body: 'data: {"type":"status","step":"done"}\n\n',
     }),
   );
-  await page.goto(`/cvs/${cvId}/edit`);
+  await page.goto(`/resumes/${slug}/edit`);
   await openActions(page);
   await expect(page.getByRole("button", { name: /Preview/ })).toBeVisible({
     timeout: 15000,

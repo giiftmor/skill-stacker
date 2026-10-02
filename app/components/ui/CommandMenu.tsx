@@ -32,7 +32,7 @@ export function CommandMenu({
     })),
     { type: "action" as const, label: "Export PDF", value: "pdf" },
     { type: "action" as const, label: "Export Word", value: "docx" },
-    { type: "action" as const, label: "Back to CVs", value: "back" },
+    { type: "action" as const, label: "Back to Resumes", value: "back" },
   ].filter((i) => !q || i.label.toLowerCase().includes(q));
 
   return (

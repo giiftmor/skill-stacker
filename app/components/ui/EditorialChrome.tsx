@@ -24,7 +24,7 @@ export function EditorialChrome({
   name,
   onChangeName,
   saveStatus,
-  cvId,
+  slug,
   onHistory,
   onExportPdf,
   onExportDocx,
@@ -34,7 +34,7 @@ export function EditorialChrome({
   name: string;
   onChangeName: (value: string) => void;
   saveStatus: SaveStatus;
-  cvId: number;
+  slug: string;
   onHistory: () => void;
   onExportPdf: () => void;
   onExportDocx: () => void;
@@ -59,15 +59,15 @@ export function EditorialChrome({
     <header className="sticky top-14 z-20 border-b border-hairline bg-surface">
       <div className="flex items-center gap-3 px-4 py-2.5">
         <Link
-          href="/cvs"
+          href="/resumes"
           className="flex min-h-10 items-center gap-1 rounded-md border border-hairline px-2.5 text-sm text-muted hover:bg-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         >
-          <ArrowLeft size={14} aria-hidden="true" /> CVs
+          <ArrowLeft size={14} aria-hidden="true" /> Resumes
         </Link>
         <input
           value={name}
           onChange={(e) => onChangeName(e.target.value)}
-          aria-label="CV name"
+          aria-label="Resume name"
           className="min-h-10 min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-2 font-[family-name:var(--font-heading)] text-lg text-ink outline-none transition hover:border-hairline focus:border-accent"
         />
         <SaveIndicator status={saveStatus} />
@@ -139,7 +139,7 @@ export function EditorialChrome({
           </button>
           <button
             type="button"
-            onClick={() => run(() => router.push(`/cvs/${cvId}/preview`))}
+            onClick={() => run(() => router.push(`/resumes/${slug}/preview`))}
             className={`${ITEM_BASE} outline-2 outline-offset-2 outline-accent hover:border-accent hover:text-accent`}
           >
             <Eye size={14} aria-hidden="true" /> Preview

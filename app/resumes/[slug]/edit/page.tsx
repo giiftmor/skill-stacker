@@ -1,4 +1,4 @@
-// app/cvs/[id]/edit/page.tsx - Edit CV
+// app/resumes/[slug]/edit/page.tsx - Edit Resume
 "use client";
 import { useRouter } from "next/navigation";
 import { use, useCallback, useEffect, useRef, useState } from "react";
@@ -41,14 +41,14 @@ import type {
   Reference,
 } from "../../../types/global";
 
-export default function EditCVPage({
+export default function EditResumePage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }) {
   const resolvedParams = use(params);
   const router = useRouter();
-  const cvId = parseInt(resolvedParams.id, 10);
+  const slug = resolvedParams.slug;
 
   const generateId = useCallback(
     () => Math.random().toString(36).substr(2, 9),
@@ -80,6 +80,7 @@ export default function EditCVPage({
   ]);
   const [additionalInfo, setAdditionalInfo] = useState([""]);
   const [loading, setLoading] = useState(true);
+  const [cvId, setCvId] = useState<number | null>(null);
   const [templateSettings, setTemplateSettings] =
     useState<TemplateSettings | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -98,7 +99,7 @@ export default function EditCVPage({
 
   const loadCV = useCallback(async () => {
     try {
-      const response = await fetch(`/api/cv/${cvId}`);
+      const response = await fetch(`/api/resume/${slug}`);
       const data = await response.json();
       if (data.success && data.cv) {
         const cv = data.cv;
@@ -189,14 +190,15 @@ export default function EditCVPage({
           setTemplateSettings(cv.template_settings);
         }
         setReadyOverride(!!cv.ready_override);
-        setPhotoUrl(`/api/photo/${cvId}`);
+        setCvId(cv.id);
+        setPhotoUrl(`/api/photo/${cv.id}`);
       }
     } catch (err) {
       console.error("Failed to load CV:", err);
     } finally {
       setLoading(false);
     }
-  }, [cvId, generateId]);
+  }, [slug, generateId]);
 
   useEffect(() => {
     loadCV();
@@ -220,7 +222,7 @@ export default function EditCVPage({
   }, []);
 
   const handleSave = async (data: Record<string, unknown>) => {
-    await fetch(`/api/cv/${cvId}`, {
+    await fetch(`/api/resume/${slug}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -246,7 +248,7 @@ export default function EditCVPage({
 
   const handleTailorApply = (update: TailorApplyUpdate) => {
     if (!snapshotDoneRef.current) {
-      fetch(`/api/cv/${cvId}/snapshot`, {
+      fetch(`/api/resume/${slug}/snapshot`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(cvData),
@@ -547,7 +549,9 @@ export default function EditCVPage({
       case "personal":
         return (
           <div className="space-y-4">
-            <UploadPhoto cvId={cvId} onUploadComplete={setPhotoUrl} />
+            {cvId !== null && (
+              <UploadPhoto cvId={cvId} onUploadComplete={setPhotoUrl} />
+            )}
             <PersonalInfoForm
               personal={v.personal as PersonalInfo}
               updatePersonal={(f, val) =>
@@ -804,7 +808,7 @@ export default function EditCVPage({
       fontPair: patch.fontPair ?? templateSettings?.fontPair ?? "default",
     };
     setTemplateSettings(next);
-    await fetch(`/api/cv/${cvId}/template`, {
+    await fetch(`/api/resume/${slug}/template`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(next),
@@ -812,7 +816,7 @@ export default function EditCVPage({
   };
 
   const toggleReady = async () => {
-    await fetch(`/api/cv/${cvId}/ready`, {
+    await fetch(`/api/resume/${slug}/ready`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ready: !readyOverride }),
@@ -872,18 +876,18 @@ export default function EditCVPage({
   return (
     <AppShell
       active="edit"
-      cvId={cvId}
+      slug={slug}
       title={personal.fullName}
       onOpenCommand={() => setCommandOpen(true)}
     >
       <main className="flex min-h-0 flex-1 flex-col bg-desk">
         <EditorialChrome
-          name={personal.fullName || "Untitled CV"}
+          name={personal.fullName || "Untitled Resume"}
           onChangeName={(value) =>
             setPersonal((p) => ({ ...p, fullName: value }))
           }
           saveStatus={status}
-          cvId={cvId}
+          slug={slug}
           onHistory={() => setHistoryOpen(true)}
           onExportPdf={handleExportToPdf}
           onExportDocx={handleExportToDocx}
@@ -950,11 +954,11 @@ export default function EditCVPage({
           onJump={(key) => openSectionEditor(key as SectionKey)}
           onExportPdf={handleExportToPdf}
           onExportDocx={handleExportToDocx}
-          onBack={() => router.push("/cvs")}
+          onBack={() => router.push("/resumes")}
         />
         {historyOpen && (
           <VersionHistory
-            cvId={cvId}
+            slug={slug}
             onRestore={handleRestore}
             onClose={() => setHistoryOpen(false)}
           />

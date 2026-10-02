@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { openActions } from "./actions";
 
 test("guided capture completes to a drafting editor with a partial CV", async ({ page }) => {
-  await page.goto("/cvs/new");
+  await page.goto("/resumes/new");
   await page.getByPlaceholder("Enter your full name").fill("Guided Client");
   await page.getByPlaceholder("e.g., Senior Software Engineer").fill("Consultant");
   await page.getByRole("button", { name: /Continue/i }).click();

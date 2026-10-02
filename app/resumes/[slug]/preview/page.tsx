@@ -1,4 +1,4 @@
-// app/cvs/[id]/preview/page.tsx - Full Screen Preview with Pagination
+// app/resumes/[slug]/preview/page.tsx - Full Screen Preview with Pagination
 "use client";
 import { use, useEffect, useState } from "react";
 import CVPreviewWrapper from "../../../components/CVPreviewWrapper";
@@ -16,13 +16,13 @@ function isTypingTarget(target: EventTarget | null): boolean {
   return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
 }
 
-export default function PreviewCVPage({
+export default function PreviewResumePage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }) {
   const resolvedParams = use(params);
-  const cvId = parseInt(resolvedParams.id, 10);
+  const slug = resolvedParams.slug;
 
   const [personal, setPersonal] = useState({
     fullName: "",
@@ -49,11 +49,11 @@ export default function PreviewCVPage({
 
   useEffect(() => {
     loadCV();
-  }, [cvId]);
+  }, [slug]);
 
   const loadCV = async () => {
     try {
-      const response = await fetch(`/api/cv/${cvId}`);
+      const response = await fetch(`/api/resume/${slug}`);
       const data = await response.json();
       if (data.success && data.cv) {
         const cv = data.cv;
@@ -76,7 +76,7 @@ export default function PreviewCVPage({
         if (cv.template_settings) {
           setTemplateSettings(cv.template_settings);
         }
-        setPhotoUrl(`/api/photo/${cvId}`);
+        setPhotoUrl(`/api/photo/${cv.id}`);
       }
     } catch (err) {
       console.error("Failed to load CV:", err);
@@ -113,7 +113,7 @@ export default function PreviewCVPage({
   }
 
   return (
-    <AppShell active="preview" cvId={cvId} title={personal.fullName}>
+    <AppShell active="preview" slug={slug} title={personal.fullName}>
       <div className="flex min-h-0 flex-1 flex-col bg-canvas print:block">
         <div className="no-print flex flex-1 flex-col">
           <div className="flex items-center justify-end gap-2 px-4 pt-4">

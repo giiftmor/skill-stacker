@@ -17,7 +17,7 @@ function bullets(start: number, count: number) {
 }
 
 async function seedLongCv(request: APIRequestContext) {
-  const res = await request.post("/api/cv", {
+  const res = await request.post("/api/resume", {
     data: {
       personal: {
         fullName: "Pagination Fixture",
@@ -66,11 +66,12 @@ async function seedLongCv(request: APIRequestContext) {
     },
   });
   expect(res.ok()).toBeTruthy();
-  return (await res.json()).cvId as number;
+  const body = await res.json();
+  return { slug: body.slug as string, cvId: body.cvId as number };
 }
 
-async function openPreview(page: Page, cvId: number) {
-  await page.goto(`/cvs/${cvId}/preview`);
+async function openPreview(page: Page, slug: string) {
+  await page.goto(`/resumes/${slug}/preview`);
   await expect(
     page.getByRole("button", { name: "Print / Save PDF" }),
   ).toBeVisible({ timeout: 20_000 });
@@ -115,20 +116,21 @@ async function pdfPageCount(page: Page) {
 }
 
 test.describe("measured A4 pagination", () => {
-  let cvId: number;
+  let slug: string;
 
   test.beforeAll(async ({ request }) => {
-    cvId = await seedLongCv(request);
+    const { slug: seeded } = await seedLongCv(request);
+    slug = seeded;
   });
 
   test.afterAll(async ({ request }) => {
-    if (cvId) {
-      await request.delete(`/api/cv/${cvId}`);
+    if (slug) {
+      await request.delete(`/api/resume/${slug}`);
     }
   });
 
   test("splits a long CV into multiple A4 pages", async ({ page }) => {
-    await openPreview(page, cvId);
+    await openPreview(page, slug);
 
     const total = await slideTotal(page);
     expect(total).toBeGreaterThan(1);
@@ -165,7 +167,7 @@ test.describe("measured A4 pagination", () => {
   });
 
   test("no page overflows its own box", async ({ page }) => {
-    await openPreview(page, cvId);
+    await openPreview(page, slug);
     await expect
       .poll(() => page.locator(`${PRINT_AREA} .cv-page`).count(), {
         timeout: 20_000,
@@ -220,7 +222,7 @@ test.describe("measured A4 pagination", () => {
   });
 
   test("pages stay white in dark mode", async ({ page }) => {
-    await openPreview(page, cvId);
+    await openPreview(page, slug);
     await page.emulateMedia({ colorScheme: "dark" });
 
     expect(
@@ -249,7 +251,7 @@ test.describe("measured A4 pagination", () => {
   test("printed PDF page count equals print tree page count", async ({
     page,
   }) => {
-    await openPreview(page, cvId);
+    await openPreview(page, slug);
 
     const total = await slideTotal(page);
     expect(total).toBeGreaterThan(1);
@@ -269,7 +271,7 @@ test.describe("measured A4 pagination", () => {
   test("measurer and slide hidden in print, print tree visible", async ({
     page,
   }) => {
-    await openPreview(page, cvId);
+    await openPreview(page, slug);
     await settlePrintTree(page, await slideTotal(page));
 
     await expect(page.locator(`${PRINT_AREA} .cv-measurer`)).toBeHidden();
@@ -288,7 +290,7 @@ test.describe("measured A4 pagination", () => {
   });
 
   test("slide shows one page at a time and navigates", async ({ page }) => {
-    await openPreview(page, cvId);
+    await openPreview(page, slug);
 
     const total = await slideTotal(page);
     expect(total).toBeGreaterThan(2);

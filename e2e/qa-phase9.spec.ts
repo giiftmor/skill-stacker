@@ -98,18 +98,18 @@ async function createRichCV(request: Page["request"]) {
       fontPair: "default",
     },
   };
-  const res = await request.post("/api/cv", { data: payload });
+  const res = await request.post("/api/resume", { data: payload });
   const body = await res.json();
   expect(res.ok()).toBeTruthy();
   expect(body.success).toBeTruthy();
-  return body.cvId as number;
+  return { slug: body.slug as string, cvId: body.cvId as number };
 }
 
 test("Phase 9: export multi-page PDF + Word with two-column and theme", async ({
   page,
 }) => {
-  const cvId = await createRichCV(page.request);
-  await page.goto(`/cvs/${cvId}/edit`);
+  const { slug } = await createRichCV(page.request);
+  await page.goto(`/resumes/${slug}/edit`);
   await openActions(page);
   await expect(page.getByRole("button", { name: /Preview/ })).toBeVisible({
     timeout: 15000,
@@ -140,8 +140,8 @@ test("Phase 9: export multi-page PDF + Word with two-column and theme", async ({
 });
 
 test("Phase 9: version snapshot API records row", async ({ page }) => {
-  const cvId = await createRichCV(page.request);
-  const res = await page.request.post(`/api/cv/${cvId}/snapshot`, {
+  const { slug } = await createRichCV(page.request);
+  const res = await page.request.post(`/api/resume/${slug}/snapshot`, {
     data: {
       personal: { fullName: "QA Two Column" },
       profile: "snapshot body",
@@ -161,8 +161,8 @@ test("Phase 9: version snapshot API records row", async ({ page }) => {
 test("Phase 9: photo upload shows in editor, API serves it, generic preview omits it", async ({
   page,
 }) => {
-  const cvId = await createRichCV(page.request);
-  await page.goto(`/cvs/${cvId}/edit`);
+  const { slug, cvId } = await createRichCV(page.request);
+  await page.goto(`/resumes/${slug}/edit`);
   await openActions(page);
   await expect(page.getByRole("button", { name: /Preview/ })).toBeVisible({
     timeout: 15000,
@@ -189,7 +189,7 @@ test("Phase 9: photo upload shows in editor, API serves it, generic preview omit
   const contentType = photoRes.headers()["content-type"] || "";
   expect(contentType.startsWith("image/")).toBeTruthy();
 
-  await page.goto(`/cvs/${cvId}/preview`);
+  await page.goto(`/resumes/${slug}/preview`);
   await expect(page.getByRole("button", { name: /Print/ })).toBeVisible({
     timeout: 15000,
   });
@@ -202,7 +202,7 @@ test("Phase 9: photo upload shows in editor, API serves it, generic preview omit
 test("Phase 9: version restore round-trips data and creates save point", async ({
   page,
 }) => {
-  const cvId = await createRichCV(page.request);
+  const { slug } = await createRichCV(page.request);
 
   const archived = {
     personal: {
@@ -229,7 +229,7 @@ test("Phase 9: version restore round-trips data and creates save point", async (
     reference: [],
     additionalInfo: [],
   };
-  const snapshotRes = await page.request.post(`/api/cv/${cvId}/snapshot`, {
+  const snapshotRes = await page.request.post(`/api/resume/${slug}/snapshot`, {
     data: archived,
   });
   expect((await snapshotRes.json()).success).toBeTruthy();
@@ -238,32 +238,34 @@ test("Phase 9: version restore round-trips data and creates save point", async (
     ...archived,
     personal: { ...archived.personal, fullName: "Live Persona" },
   };
-  const putRes = await page.request.put(`/api/cv/${cvId}`, { data: live });
+  const putRes = await page.request.put(`/api/resume/${slug}`, { data: live });
   expect(putRes.ok()).toBeTruthy();
 
-  const listRes = await page.request.get(`/api/cv/${cvId}/versions`);
+  const listRes = await page.request.get(`/api/resume/${slug}/versions`);
   const listBody = await listRes.json();
   expect(listRes.ok()).toBeTruthy();
   expect(listBody.versions.length).toBeGreaterThanOrEqual(1);
   const restoreId = listBody.versions[0].id;
 
   const restoreRes = await page.request.post(
-    `/api/cv/${cvId}/versions/${restoreId}/restore`,
+    `/api/resume/${slug}/versions/${restoreId}/restore`,
   );
   const restoreBody = await restoreRes.json();
   expect(restoreRes.ok()).toBeTruthy();
   expect(restoreBody.data.personal.fullName).toBe("Archived Persona");
   expect(restoreBody.data.skill).toEqual(["COBOL", "FORTRAN"]);
 
-  const afterRestore = await (await page.request.get(`/api/cv/${cvId}`)).json();
+  const afterRestore = await (
+    await page.request.get(`/api/resume/${slug}`)
+  ).json();
   expect(afterRestore.cv.full_name).toBe("Archived Persona");
   expect(afterRestore.cv.skill).toEqual(["COBOL", "FORTRAN"]);
 
-  const listAgainRes = await page.request.get(`/api/cv/${cvId}/versions`);
+  const listAgainRes = await page.request.get(`/api/resume/${slug}/versions`);
   const listAgain = await listAgainRes.json();
   expect(listAgain.versions.length).toBeGreaterThanOrEqual(2);
 
-  await page.goto(`/cvs/${cvId}/edit`);
+  await page.goto(`/resumes/${slug}/edit`);
   await openActions(page);
   await expect(page.getByRole("button", { name: /Preview/ })).toBeVisible({
     timeout: 15000,
@@ -277,8 +279,8 @@ test("Phase 9: version restore round-trips data and creates save point", async (
 test("Phase 9: version history modal opens and lists versions on edit page", async ({
   page,
 }) => {
-  const cvId = await createRichCV(page.request);
-  await page.goto(`/cvs/${cvId}/edit`);
+  const { slug } = await createRichCV(page.request);
+  await page.goto(`/resumes/${slug}/edit`);
   await openActions(page);
   await expect(page.getByRole("button", { name: /Preview/ })).toBeVisible({
     timeout: 15000,
@@ -296,14 +298,14 @@ test("Phase 9: version history modal opens and lists versions on edit page", asy
 test("Phase 9: auto-save indicator transitions Saving -> Saved", async ({
   page,
 }) => {
-  const cvId = await createRichCV(page.request);
-  await page.route("**/api/cv/*", async (route) => {
+  const { slug } = await createRichCV(page.request);
+  await page.route("**/api/resume/*", async (route) => {
     if (route.request().method() === "PUT") {
       await new Promise((r) => setTimeout(r, 1500));
     }
     await route.continue();
   });
-  await page.goto(`/cvs/${cvId}/edit`);
+  await page.goto(`/resumes/${slug}/edit`);
   await openActions(page);
   await expect(page.getByRole("button", { name: /Preview/ })).toBeVisible({
     timeout: 15000,

@@ -83,7 +83,7 @@ export default function GuidedCapture() {
 
   const createAndOpen = async () => {
     const strip = (items: Array<Record<string, unknown>>) => items.map(({ id: _id, ...rest }) => rest);
-    const res = await fetch("/api/cv", {
+    const res = await fetch("/api/resume", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -100,7 +100,7 @@ export default function GuidedCapture() {
       }),
     });
     const body = await res.json();
-    if (body.success) router.push(`/cvs/${body.cvId}/edit`);
+    if (body.success) router.push(`/resumes/${body.slug}/edit`);
   };
 
   return (

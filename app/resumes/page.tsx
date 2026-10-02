@@ -4,10 +4,10 @@ import { getAllCVs } from "@/app/lib/db";
 
 export const dynamic = "force-dynamic";
 
-export default async function CvsPage() {
+export default async function ResumesPage() {
   const cvs = await getAllCVs();
   return (
-    <AppShell active="cvs">
+    <AppShell active="resumes">
       <Roster
         cvs={cvs.map((cv) => ({
           ...cv,

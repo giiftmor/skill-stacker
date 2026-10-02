@@ -9,6 +9,7 @@ import { exportCVToBlob } from "@/app/lib/export/exportDispatcher";
 
 interface RosterRow {
   id: number;
+  slug: string;
   fullName: string;
   title: string;
   readyOverride: boolean;
@@ -51,7 +52,7 @@ export function Roster({ cvs }: RosterProps) {
 
   const updateReady = async (row: RosterRow, ready: boolean) => {
     setBusy(row.id);
-    await fetch(`/api/cv/${row.id}/ready`, {
+    await fetch(`/api/resume/${row.slug}/ready`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ready }),
@@ -60,8 +61,8 @@ export function Roster({ cvs }: RosterProps) {
     setBusy(null);
   };
 
-  const doDelete = async (id: number) => {
-    await fetch(`/api/cv/${id}`, { method: "DELETE" });
+  const doDelete = async (slug: string) => {
+    await fetch(`/api/resume/${slug}`, { method: "DELETE" });
     setConfirmDeleteId(null);
     setMenuId(null);
     router.refresh();
@@ -69,11 +70,11 @@ export function Roster({ cvs }: RosterProps) {
 
   const duplicate = async (row: RosterRow) => {
     setBusy(row.id);
-    const res = await fetch(`/api/cv/${row.id}`);
+    const res = await fetch(`/api/resume/${row.slug}`);
     const { cv } = await res.json();
     const strip = (items: Array<Record<string, unknown>>) =>
       items.map(({ id: _id, ...rest }) => rest);
-    await fetch("/api/cv", {
+    await fetch("/api/resume", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -95,7 +96,7 @@ export function Roster({ cvs }: RosterProps) {
 
   const quickPdf = async (row: RosterRow) => {
     setBusy(row.id);
-    const res = await fetch(`/api/cv/${row.id}`);
+    const res = await fetch(`/api/resume/${row.slug}`);
     const { cv } = await res.json();
     const blob = await exportCVToBlob("pdf", {
       data: {
@@ -125,11 +126,11 @@ export function Roster({ cvs }: RosterProps) {
   if (cvs.length === 0) {
     return (
       <div className="mx-auto max-w-3xl px-6 py-20 text-center">
-        <h1 data-testid="roster-title" className="font-[family-name:var(--font-heading)] text-3xl text-ink">Client CVs</h1>
+        <h1 data-testid="roster-title" className="font-[family-name:var(--font-heading)] text-3xl text-ink">Client Resumes</h1>
         <p className="mt-3 text-muted">Two steps to a client-ready CV.</p>
         <p className="mt-1 text-sm text-muted">1. Answer a few guided questions · 2. Review and polish the result in the editor.</p>
-        <Link href="/cvs/new" className="mt-6 inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-surface">
-          <Plus size={16} /> Start your first client CV
+        <Link href="/resumes/new" className="mt-6 inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-surface">
+          <Plus size={16} /> Start your first client resume
         </Link>
       </div>
     );
@@ -138,9 +139,9 @@ export function Roster({ cvs }: RosterProps) {
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
       <div className="flex items-center justify-between">
-        <h1 data-testid="roster-title" className="font-[family-name:var(--font-heading)] text-3xl text-ink">Client CVs</h1>
-        <Link href="/cvs/new" className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-surface">
-          <Plus size={16} /> New client CV
+        <h1 data-testid="roster-title" className="font-[family-name:var(--font-heading)] text-3xl text-ink">Client Resumes</h1>
+        <Link href="/resumes/new" className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-surface">
+          <Plus size={16} /> New client Resume
         </Link>
       </div>
 
@@ -163,7 +164,7 @@ export function Roster({ cvs }: RosterProps) {
           return (
             <li
               key={row.id}
-              data-testid={`row-${row.id}`}
+              data-testid={`row-${row.slug}`}
               className="flex items-center gap-4 rounded-lg border border-hairline bg-surface p-4"
             >
               <svg viewBox="0 0 40 52" className="h-14 w-11 shrink-0 rounded-sm border border-hairline bg-white p-1" aria-hidden>
@@ -190,7 +191,7 @@ export function Roster({ cvs }: RosterProps) {
               </div>
               <div className="flex items-center gap-3">
                 <span
-                  data-testid={`ready-dot-${row.id}`}
+                  data-testid={`ready-dot-${row.slug}`}
                   className={
                     st === "ready"
                       ? "inline-flex h-2.5 w-2.5 rounded-full bg-status-good"
@@ -199,7 +200,7 @@ export function Roster({ cvs }: RosterProps) {
                   title={st === "ready" ? "Ready to send" : "Drafting"}
                 />
                 <Link
-                  href={`/cvs/${row.id}/edit`}
+                  href={`/resumes/${row.slug}/edit`}
                   className="rounded-md border border-hairline px-3 py-1.5 text-sm text-ink"
                 >
                   Open
@@ -264,7 +265,7 @@ export function Roster({ cvs }: RosterProps) {
                           Cancel
                         </button>
                         <button
-                          onClick={() => doDelete(row.id)}
+                          onClick={() => doDelete(row.slug)}
                           disabled={busy === row.id}
                           className="rounded-md bg-status-warn px-3 py-1.5 text-sm text-white"
                         >

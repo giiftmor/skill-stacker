@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
-import { getCV, saveCVVersion, updateCV } from "../../../../../../lib/db";
+import {
+  getCV,
+  resolveSlug,
+  saveCVVersion,
+  updateCV,
+} from "../../../../../../lib/db";
 import { logger } from "../../../../../../lib/log";
 import { getVersion } from "../../../../../../lib/versions";
 
@@ -69,8 +74,10 @@ interface CVRow {
   additionalInfo?: string[];
 }
 
-function idFromParams(params: { id: string }): number {
-  const n = parseInt(params.id, 10);
+const VALID_SLUG = /^[a-z0-9-]+$/;
+
+function toVersionId(raw: string): number {
+  const n = parseInt(raw, 10);
   return Number.isNaN(n) ? -1 : n;
 }
 
@@ -113,29 +120,45 @@ function cvRowToData(cv: CVRow): CVData {
   };
 }
 
-// POST /api/cv/123/versions/45/restore - Restore CV 123 to version 45
+// POST /api/resume/jane-doe-2a/versions/45/restore - Restore resume jane-doe-2a to version 45
 export async function POST(
   _: unknown,
-  { params }: { params: Promise<{ id: string; versionId: string }> },
+  { params }: { params: Promise<{ slug: string; versionId: string }> },
 ) {
-  const { id, versionId } = await params;
-  const cvId = idFromParams({ id });
-  const vid = idFromParams({ id: versionId });
-  logger.info("api.cv.restore", "restore requested", { cvId, versionId: vid });
+  const { slug, versionId } = await params;
+  const vid = toVersionId(versionId);
   const t0 = Date.now();
 
   try {
-    if (cvId === -1 || vid === -1) {
-      logger.warn("api.cv.restore", "invalid id", { id, versionId });
+    const cvId = VALID_SLUG.test(slug) ? await resolveSlug(slug) : null;
+    if (cvId === null) {
+      const valid = VALID_SLUG.test(slug);
+      logger.warn("api.resume.restore", "invalid slug", { slug });
       return NextResponse.json(
-        { success: false, message: "Invalid CV or version ID" },
+        {
+          success: false,
+          message: valid ? "Resume not found" : "Invalid resume identifier",
+        },
+        { status: valid ? 404 : 400 },
+      );
+    }
+
+    if (vid === -1) {
+      logger.warn("api.resume.restore", "invalid version id", { versionId });
+      return NextResponse.json(
+        { success: false, message: "Invalid version ID" },
         { status: 400 },
       );
     }
 
+    logger.info("api.resume.restore", "restore requested", {
+      cvId,
+      versionId: vid,
+    });
+
     const version = await getVersion(vid);
     if (!version || version.cvId !== cvId) {
-      logger.warn("api.cv.restore", "version not found", {
+      logger.warn("api.resume.restore", "version not found", {
         cvId,
         versionId: vid,
       });
@@ -154,7 +177,7 @@ export async function POST(
     const data = version.data as CVData;
     await updateCV(cvId, data);
 
-    logger.info("api.cv.restore", "restore returned", {
+    logger.info("api.resume.restore", "restore returned", {
       cvId,
       versionId: vid,
       ms: Date.now() - t0,
@@ -166,9 +189,9 @@ export async function POST(
     );
   } catch (error) {
     logger.error(
-      "api.cv.restore",
+      "api.resume.restore",
       "restore failed",
-      { cvId, versionId: vid, ms: Date.now() - t0 },
+      { slug, versionId: vid, ms: Date.now() - t0 },
       error as Error,
     );
     return NextResponse.json(
