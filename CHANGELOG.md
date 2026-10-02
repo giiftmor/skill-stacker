@@ -5,12 +5,12 @@
 ### Added
 
 - 2026-10-02: resume slug identifier helpers (slugify/slugFromId)
-- 2026-10-02: Added: sidebar footer with account placeholder and bottom collapse toggle (full-height, non-scrollable aside)
-- 2026-10-02: Live gate evidence (Task 5, no code change): full-height non-scrollable `aside` verified at 1440×900 (scrollHeight 844 = clientHeight 844) and 900×700 (644 = 644) with `overflowBy=0` in expanded, collapsed and edit-page states; `sidebar-footer` pinned 8px above the viewport bottom in every state and `sidebar-toggle` flips `aria-pressed` true→false→true. Migration idempotence confirmed: `SELECT count(*), count(slug) FROM resumes` = 153/153 before and after `docker compose restart db app` (0 null/empty, 153 distinct slugs). Measured overflow floor: ~541px viewport on `/resumes`, ~652px on the edit page (extra "This Resume" nav block) — below that the nav's flex `min-height:auto` stops shrinking and pushes the footer off-screen with no scrollbar
+- 2026-10-02: sidebar footer with account placeholder and bottom collapse toggle (full-height, non-scrollable aside)
+- 2026-10-02: Live gate evidence (Task 5, no code change): full-height non-scrollable `aside` verified at 1440×900 (scrollHeight 844 = clientHeight 844) and 900×700 (644 = 644) with `overflowBy=0` in expanded, collapsed and edit-page states; `sidebar-footer` pinned 8px above the viewport bottom in every state and `sidebar-toggle` flips `aria-pressed` true→false→true. Migration idempotence confirmed: `SELECT count(*), count(slug) FROM resumes` = 153/153 before and after `docker compose restart db app` (0 null/empty, 153 distinct slugs). Measured overflow floor ~541–549px viewport on `/resumes` and ~652–660px on the edit page (extra "This Resume" nav block); below that the nav's flex `min-height:auto` stops shrinking and pushes the footer off-screen with no scrollbar
 
 ### Changed
 
-- 2026-10-02: renamed cvs → resumes across routes, API, DB labels; navigation now uses slug URLs (/resumes/jane-doe-2a); photo/upload remain numeric-keyed
+- 2026-10-02: renamed cvs → resumes across public routes, API endpoints, folder structure, and DB tables/columns; navigation now uses slug URLs (`/resumes/jane-doe-2a`) with the slug frozen at creation (edits keep it stable) while the numeric id stays internal for photo/upload/versions; internal numeric names (the GET envelope key `cvs`, `getAllCVs`, `RosterProps.cvs`) intentionally retained
 - 2026-10-02: DB migrated to resumes/resume_photos/resume_versions with resume_id keys and a unique slug column (in-place, data preserved)
 - 2026-10-01: Grouped sidebar into task sections (Workspace / This CV / Coming soon, long tail demoted), added a header collapse toggle with localStorage-persisted icon-rail mode that auto-collapses below 1280px on first visit, and added a discoverable Ctrl-K search button that opens the edit-page CommandMenu.
 
