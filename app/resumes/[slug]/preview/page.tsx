@@ -3,10 +3,14 @@
 import { use, useEffect, useState } from "react";
 import CVPreviewWrapper from "../../../components/CVPreviewWrapper";
 import AppShell from "../../../components/ui/AppShell";
+import { useFitScale } from "../../../hooks/useFitScale";
 import type { TemplateSettings } from "../../../lib/templates/templateDefinitions";
 
 const PAGE_KEYS_FORWARD = new Set(["ArrowRight", "PageDown"]);
 const PAGE_KEYS_BACK = new Set(["ArrowLeft", "PageUp"]);
+
+const A4_WIDTH_PX = 794; // 210mm at 96dpi
+const A4_HEIGHT_PX = 1123; // 297mm at 96dpi
 
 function isTypingTarget(target: EventTarget | null): boolean {
   const el = target as HTMLElement | null;
@@ -46,6 +50,8 @@ export default function PreviewResumePage({
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+
+  const { fitRef, scale } = useFitScale(!loading);
 
   useEffect(() => {
     loadCV();
@@ -149,28 +155,46 @@ export default function PreviewResumePage({
               </button>
 
               <div
-                className="flex flex-1 justify-center"
+                ref={fitRef}
+                className="flex min-w-0 flex-1 justify-center"
                 data-testid="cv-slide"
               >
-                <CVPreviewWrapper
-                  personal={personal}
-                  profile={profile}
-                  competency={competency}
-                  experiences={experiences}
-                  education={education}
-                  certificate={certificate}
-                  skill={skill}
-                  reference={reference}
-                  additionalInfo={additionalInfo}
-                  templateId={templateSettings?.template}
-                  themeId={templateSettings?.theme}
-                  fontPairId={templateSettings?.fontPair}
-                  photoUrl={photoUrl}
-                  currentPage={currentPage}
-                  onPageChange={setCurrentPage}
-                  onTotalPagesChange={setTotalPages}
-                  showAllPages={false}
-                />
+                <div
+                  className="shrink-0"
+                  style={{
+                    width: (A4_WIDTH_PX + 16) * scale,
+                    height: (A4_HEIGHT_PX + 24 + 16) * scale,
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: A4_WIDTH_PX,
+                      transform: `scale(${scale})`,
+                      transformOrigin: "top left",
+                    }}
+                  >
+                    <CVPreviewWrapper
+                      personal={personal}
+                      profile={profile}
+                      competency={competency}
+                      experiences={experiences}
+                      education={education}
+                      certificate={certificate}
+                      skill={skill}
+                      reference={reference}
+                      additionalInfo={additionalInfo}
+                      templateId={templateSettings?.template}
+                      themeId={templateSettings?.theme}
+                      fontPairId={templateSettings?.fontPair}
+                      photoUrl={photoUrl}
+                      currentPage={currentPage}
+                      onPageChange={setCurrentPage}
+                      onTotalPagesChange={setTotalPages}
+                      showAllPages={false}
+                    />
+                  </div>
+                </div>
               </div>
 
               <button

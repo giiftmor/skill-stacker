@@ -21,6 +21,7 @@ import { SectionEditor } from "../../../components/ui/SectionEditor";
 import UploadPhoto from "../../../components/ui/UploadPhoto";
 import VersionHistory from "../../../components/ui/VersionHistory";
 import { useAutoSave } from "../../../hooks/useAutoSave";
+import { useFitScale } from "../../../hooks/useFitScale";
 import { exportCV } from "../../../lib/export/exportDispatcher";
 import {
   cvReadiness,
@@ -40,6 +41,9 @@ import type {
   PersonalInfo,
   Reference,
 } from "../../../types/global";
+
+const A4_WIDTH_PX = 794; // 210mm at 96dpi, matches the fixed .cv-page width
+const A4_HEIGHT_PX = 1123;
 
 export default function EditResumePage({
   params,
@@ -80,6 +84,8 @@ export default function EditResumePage({
   ]);
   const [additionalInfo, setAdditionalInfo] = useState([""]);
   const [loading, setLoading] = useState(true);
+
+  const { fitRef, scale } = useFitScale(!loading);
   const [cvId, setCvId] = useState<number | null>(null);
   const [templateSettings, setTemplateSettings] =
     useState<TemplateSettings | null>(null);
@@ -916,27 +922,49 @@ export default function EditResumePage({
             />
           </div>
           <div className="col-span-8">
-            <div className="mx-auto w-full max-w-[794px] rounded-md bg-white p-4 shadow-sm">
-              <CVPreview
-                personal={personal}
-                profile={profile}
-                competency={competency}
-                experiences={experiences}
-                education={education}
-                certificate={certificate}
-                skill={skill}
-                reference={reference}
-                additionalInfo={additionalInfo}
-                templateId={templateSettings?.template}
-                themeId={templateSettings?.theme}
-                fontPairId={templateSettings?.fontPair}
-                photoUrl={photoUrl}
-                currentPage={currentPage}
-                onPageChange={setCurrentPage}
-                onTotalPagesChange={setTotalPages}
-                onSectionClick={(key) => openSectionEditor(key as SectionKey)}
-                highlightKey={highlightKey}
-              />
+            <div
+              ref={fitRef}
+              className="mx-auto w-full max-w-[794px] rounded-md bg-white p-4 shadow-sm"
+            >
+              <div
+                className="mx-auto overflow-hidden"
+                style={{
+                  width: A4_WIDTH_PX * scale,
+                  height: A4_HEIGHT_PX * scale,
+                }}
+              >
+                <div
+                  className="mx-auto"
+                  style={{
+                    width: A4_WIDTH_PX,
+                    transform: `scale(${scale})`,
+                    transformOrigin: "top left",
+                  }}
+                >
+                  <CVPreview
+                    personal={personal}
+                    profile={profile}
+                    competency={competency}
+                    experiences={experiences}
+                    education={education}
+                    certificate={certificate}
+                    skill={skill}
+                    reference={reference}
+                    additionalInfo={additionalInfo}
+                    templateId={templateSettings?.template}
+                    themeId={templateSettings?.theme}
+                    fontPairId={templateSettings?.fontPair}
+                    photoUrl={photoUrl}
+                    currentPage={currentPage}
+                    onPageChange={setCurrentPage}
+                    onTotalPagesChange={setTotalPages}
+                    onSectionClick={(key) =>
+                      openSectionEditor(key as SectionKey)
+                    }
+                    highlightKey={highlightKey}
+                  />
+                </div>
+              </div>
             </div>
             <PageNav
               currentPage={currentPage}
