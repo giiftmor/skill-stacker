@@ -53,7 +53,7 @@ export default function UploadPhoto({ cvId, onUploadComplete }: UploadPhotoProps
         <div className="relative w-32 h-32">
           <img
             src={preview}
-            alt="CV Photo"
+            alt="Resume Photo"
             className="w-32 h-32 object-cover rounded-lg border border-hairline"
           />
           <label className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center text-white cursor-pointer rounded-lg opacity-0 hover:opacity-100 transition-opacity">

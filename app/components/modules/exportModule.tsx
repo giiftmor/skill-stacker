@@ -260,10 +260,10 @@ const CVDocument = ({
 // Export to PDF using @react-pdf/renderer
 export const exportToPdf = async (props: ExportFunctionProps) => {
   try {
-    const fileName = `${(props.personal.fullName || "CV").replace(
+    const fileName = `${(props.personal.fullName || "Resume").replace(
       /\s+/g,
       "_",
-    )}_CV.pdf`;
+    )}.pdf`;
 
     // Generate PDF blob
     const blob = await pdf(<CVDocument {...props} />).toBlob();
@@ -509,10 +509,10 @@ export const exportToDocx = async ({
     });
 
     const blob = await Packer.toBlob(doc);
-    const fileName = `${(personal.fullName || "CV").replace(
+    const fileName = `${(personal.fullName || "Resume").replace(
       /\s+/g,
       "_",
-    )}_CV.docx`;
+    )}.docx`;
     saveAs(blob, fileName);
 
     console.log("Word document exported successfully!");

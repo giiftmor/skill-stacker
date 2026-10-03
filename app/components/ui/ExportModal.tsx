@@ -44,7 +44,7 @@ export default function ExportModal({ data, templateId, themeId, fontPairId, pho
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
       <div className="bg-[#1a1a1a] rounded-lg shadow-xl w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-[#e8e6e3]">Export CV</h2>
+          <h2 className="text-lg font-semibold text-[#e8e6e3]">Export Resume</h2>
           <button onClick={onClose} className="text-[#8a8a8a] hover:text-[#e8e6e3] text-xl">&#x2715;</button>
         </div>
 

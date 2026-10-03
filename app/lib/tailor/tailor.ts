@@ -30,7 +30,7 @@ export function guardNoFabrication(
     });
     return {
       ok: false,
-      reason: `May introduce facts not in your CV: ${invented.slice(0, 5).join(", ")}`,
+      reason: `May introduce facts not in your resume: ${invented.slice(0, 5).join(", ")}`,
     };
   }
   return { ok: true };

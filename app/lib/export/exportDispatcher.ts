@@ -22,7 +22,7 @@ export async function exportCV(
 ): Promise<void> {
   const { data, templateId = "classic", themeId, fontPairId, photoUrl } = options;
   
-  const fileName = `${(data.personal.fullName || "CV").replace(/\s+/g, "_")}_CV`;
+  const fileName = `${(data.personal.fullName || "Resume").replace(/\s+/g, "_")}`;
 
   try {
     if (format === "pdf") {

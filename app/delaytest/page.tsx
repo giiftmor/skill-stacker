@@ -24,7 +24,7 @@ type StreamEvent =
   | { type: "error"; message: string; elapsedMs?: number };
 
 const DEMO_SYSTEM =
-  "You are a CV tailoring assistant. Rewrite text to match JOB REQUIREMENTS. Never invent facts.";
+  "You are a resume tailoring assistant. Rewrite text to match JOB REQUIREMENTS. Never invent facts.";
 const DEMO_PROMPT = `JOB REQUIREMENTS:
 - MUST: React
 - MUST: TypeScript

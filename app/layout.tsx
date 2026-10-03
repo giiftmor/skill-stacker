@@ -17,7 +17,7 @@ const fraunces = Fraunces({
 
 export const metadata: Metadata = {
   title: "Spectres | Skill Stack",
-  description: "AI-Powered CV Builder",
+  description: "AI-Powered Resume Builder",
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },

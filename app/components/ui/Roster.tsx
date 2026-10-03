@@ -117,7 +117,7 @@ export function Roster({ cvs }: RosterProps) {
     });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `${(cv.full_name || "CV").replace(/\s+/g, "_")}.pdf`;
+    a.download = `${(cv.full_name || "Resume").replace(/\s+/g, "_")}.pdf`;
     a.click();
     URL.revokeObjectURL(a.href);
     setBusy(null);
@@ -127,7 +127,7 @@ export function Roster({ cvs }: RosterProps) {
     return (
       <div className="mx-auto max-w-3xl px-6 py-20 text-center">
         <h1 data-testid="roster-title" className="font-[family-name:var(--font-heading)] text-3xl text-ink">Client Resumes</h1>
-        <p className="mt-3 text-muted">Two steps to a client-ready CV.</p>
+        <p className="mt-3 text-muted">Two steps to a client-ready resume.</p>
         <p className="mt-1 text-sm text-muted">1. Answer a few guided questions · 2. Review and polish the result in the editor.</p>
         <Link href="/resumes/new" className="mt-6 inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-surface">
           <Plus size={16} /> Start your first client resume
@@ -141,7 +141,7 @@ export function Roster({ cvs }: RosterProps) {
       <div className="flex items-center justify-between">
         <h1 data-testid="roster-title" className="font-[family-name:var(--font-heading)] text-3xl text-ink">Client Resumes</h1>
         <Link href="/resumes/new" className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-surface">
-          <Plus size={16} /> New client Resume
+          <Plus size={16} /> New client resume
         </Link>
       </div>
 
@@ -183,7 +183,7 @@ export function Roster({ cvs }: RosterProps) {
               </svg>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="truncate font-medium text-ink">{row.fullName || "Untitled CV"}</span>
+                  <span className="truncate font-medium text-ink">{row.fullName || "Untitled Resume"}</span>
                   {manual && <span className="rounded-full bg-accent-soft px-2 py-0.5 text-xs text-accent">manual</span>}
                 </div>
                 <p className="truncate text-sm text-muted">{row.title || "No headline yet"}</p>
@@ -255,7 +255,7 @@ export function Roster({ cvs }: RosterProps) {
                       data-testid="confirm-delete"
                       className="absolute right-0 top-9 z-10 w-56 rounded-lg border border-hairline bg-surface p-3 shadow-lg"
                     >
-                      <p className="text-sm text-ink">Delete this CV?</p>
+                      <p className="text-sm text-ink">Delete this resume?</p>
                       <p className="mt-1 text-xs text-muted">This cannot be undone.</p>
                       <div className="mt-3 flex justify-end gap-2">
                         <button

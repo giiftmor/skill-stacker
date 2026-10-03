@@ -17,7 +17,7 @@ function initialsFor(name: string): string {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("");
-  return letters || "CV";
+  return letters || "R";
 }
 
 export function EditorialChrome({

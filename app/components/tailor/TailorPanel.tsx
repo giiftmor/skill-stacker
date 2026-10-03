@@ -88,7 +88,7 @@ export function TailorPanel({
     idle: "Ready",
     scraping: "Reading job ad…",
     extracting: "Extracting requirements…",
-    tailoring: "Tailoring your CV…",
+    tailoring: "Tailoring your resume…",
     done: "Done",
     error: "Error",
   };
