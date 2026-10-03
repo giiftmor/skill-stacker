@@ -1,3 +1,6 @@
+import json
+import urllib.request
+
 from playwright.sync_api import sync_playwright
 
 with sync_playwright() as p:
@@ -7,7 +10,10 @@ with sync_playwright() as p:
     page.on("console", lambda m: logs.append(f"{m.type}: {m.text}"))
     page.on("pageerror", lambda e: logs.append(f"PAGEERROR: {e}"))
 
-    page.goto("http://localhost:5252/cvs/8/edit")
+    with urllib.request.urlopen("http://localhost:5252/api/resume") as resp:
+        listing = json.load(resp)
+    slug = listing["cvs"][0]["slug"]
+    page.goto(f"http://localhost:5252/resumes/{slug}/edit")
     page.wait_for_load_state("networkidle")
     page.wait_for_timeout(1200)
 
