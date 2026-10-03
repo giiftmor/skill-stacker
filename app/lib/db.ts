@@ -5,7 +5,7 @@ import {
   hasFlagsToSections, readinessFromSections,
   type SectionKey,
 } from "./readiness";
-import { slugFromId } from "./slug";
+import { slugFromId, VALID_SLUG } from "./slug";
 
 let pool: Pool | null = null;
 
@@ -74,6 +74,28 @@ export async function initDb() {
         END IF;
         IF to_regclass('public.resumes') IS NOT NULL THEN
           ALTER TABLE resumes ADD COLUMN IF NOT EXISTS slug TEXT;
+        END IF;
+      END $$;
+    `);
+
+    // 1b. Drop duplicate legacy indexes and rename legacy pkey constraints
+    await client.query(`
+      DO $$
+      BEGIN
+        DROP INDEX IF EXISTS idx_cvs_full_name;
+        DROP INDEX IF EXISTS idx_cvs_email;
+        DROP INDEX IF EXISTS idx_cv_versions_cv_id;
+        IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'cvs_pkey')
+           AND NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'resumes_pkey') THEN
+          ALTER TABLE resumes RENAME CONSTRAINT cvs_pkey TO resumes_pkey;
+        END IF;
+        IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'cv_photos_pkey')
+           AND NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'resume_photos_pkey') THEN
+          ALTER TABLE resume_photos RENAME CONSTRAINT cv_photos_pkey TO resume_photos_pkey;
+        END IF;
+        IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'cv_versions_pkey')
+           AND NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'resume_versions_pkey') THEN
+          ALTER TABLE resume_versions RENAME CONSTRAINT cv_versions_pkey TO resume_versions_pkey;
         END IF;
       END $$;
     `);
@@ -342,6 +364,30 @@ export async function saveCV(data: {
 
   try {
     await client.query("BEGIN");
+
+    // Normalize partial payloads so a missing section never crashes the insert
+    data = {
+      personal: {
+        ...{
+          fullName: "",
+          title: "",
+          phone: "",
+          email: "",
+          location: "",
+          linkedin: "",
+        },
+        ...data.personal,
+      },
+      profile: data.profile ?? "",
+      competency: data.competency ?? [],
+      experiences: data.experiences ?? [],
+      education: data.education ?? [],
+      certificate: data.certificate ?? [],
+      skill: data.skill ?? [],
+      reference: data.reference ?? [],
+      additionalInfo: data.additionalInfo ?? [],
+      templateSettings: data.templateSettings,
+    };
 
     // Insert CV personal information
     const idSeq = await client.query(
@@ -922,4 +968,22 @@ export async function resolveSlug(slug: string): Promise<number | null> {
     return null;
   }
   return result.rows[0].id as number;
+}
+
+// Validate a slug and resolve it, distinguishing invalid vs unknown
+export async function resolveSlugParam(
+  slug: string,
+): Promise<
+  | { status: "ok"; cvId: number }
+  | { status: "invalid" }
+  | { status: "not_found" }
+> {
+  if (!VALID_SLUG.test(slug)) {
+    return { status: "invalid" };
+  }
+  const cvId = await resolveSlug(slug);
+  if (cvId === null) {
+    return { status: "not_found" };
+  }
+  return { status: "ok", cvId };
 }
