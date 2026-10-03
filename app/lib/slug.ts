@@ -8,3 +8,5 @@ export function slugify(text: string): string {
 export function slugFromId(fullName: string, id: number): string {
   return `${slugify(fullName) || "resume"}-${id.toString(16)}`;
 }
+
+export const VALID_SLUG = /^[a-z0-9-]+$/;

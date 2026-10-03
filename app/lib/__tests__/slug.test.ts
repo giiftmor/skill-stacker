@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { slugify, slugFromId } from "../slug";
+import { slugify, slugFromId, VALID_SLUG } from "../slug";
 
 describe("slugify", () => {
   it("lowercases and merges non-alphanumeric runs into single dashes", () => {
@@ -23,5 +23,18 @@ describe("slugFromId", () => {
   it("falls back to resume-<hex> when the name slugifies empty", () => {
     expect(slugFromId("", 5)).toBe("resume-5");
     expect(slugFromId("   ", 7)).toBe("resume-7");
+  });
+});
+
+describe("VALID_SLUG", () => {
+  it("accepts lowercase letters, digits and single dashes", () => {
+    expect(VALID_SLUG.test("jane-doe-2a")).toBe(true);
+    expect(VALID_SLUG.test("resume-295")).toBe(true);
+  });
+
+  it("rejects uppercase, spaces and characters outside the class", () => {
+    expect(VALID_SLUG.test("Not-A-Slug")).toBe(false);
+    expect(VALID_SLUG.test("jane doe")).toBe(false);
+    expect(VALID_SLUG.test("a_b")).toBe(false);
   });
 });
