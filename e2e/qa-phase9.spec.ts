@@ -118,7 +118,7 @@ test("Phase 9: export multi-page PDF + Word with two-column and theme", async ({
   const pdfDownloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "Quick PDF", exact: true }).click();
   const pdfDownload = await pdfDownloadPromise;
-  expect(pdfDownload.suggestedFilename()).toBe("QA_Two_Column_CV.pdf");
+  expect(pdfDownload.suggestedFilename()).toBe("QA_Two_Column.pdf");
   const pdfPath = path.join(EVIDENCE_DIR, "two-column.pdf");
   fs.mkdirSync(path.dirname(pdfPath), { recursive: true });
   await pdfDownload.saveAs(pdfPath);
@@ -132,7 +132,7 @@ test("Phase 9: export multi-page PDF + Word with two-column and theme", async ({
   await openActions(page);
   await page.getByRole("button", { name: "Word", exact: true }).click();
   const docxDownload = await docxDownloadPromise;
-  expect(docxDownload.suggestedFilename()).toBe("QA_Two_Column_CV.docx");
+  expect(docxDownload.suggestedFilename()).toBe("QA_Two_Column.docx");
   const docxPath = path.join(EVIDENCE_DIR, "two-column.docx");
   await docxDownload.saveAs(docxPath);
   const docxBytes = fs.readFileSync(docxPath);
@@ -177,7 +177,7 @@ test("Phase 9: photo upload shows in editor, API serves it, generic preview omit
     mimeType: "image/png",
     buffer: Buffer.from(PNG_1PX, "base64"),
   });
-  const previewImg = page.locator('img[alt="CV Photo"]');
+  const previewImg = page.locator('img[alt="Resume Photo"]');
   await expect(previewImg).toBeVisible({ timeout: 15000 });
   await page.screenshot({
     path: path.join(EVIDENCE_DIR, "photo-upload.png"),

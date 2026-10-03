@@ -103,7 +103,7 @@ describe("TailorPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "Analyze" }));
 
     expect(
-      await screen.findByText(/May introduce facts not in your CV/),
+      await screen.findByText(/May introduce facts not in your resume/),
     ).toBeInTheDocument();
   });
 

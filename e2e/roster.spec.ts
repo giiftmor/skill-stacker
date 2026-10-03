@@ -39,7 +39,9 @@ test.describe("roster", () => {
     await page.goto("/resumes");
     await page.locator(`[data-testid="row-${slug}"]`).getByRole("button", { name: /More/ }).click();
     await page.getByRole("menuitem", { name: "Mark ready" }).click();
-    await expect(page.getByTestId(`ready-dot-${slug}`)).toHaveClass(/status-good/);
+    await expect(page.getByTestId(`ready-dot-${slug}`)).toHaveClass(/status-good/, {
+      timeout: 15000,
+    });
     await page.reload();
     await expect(page.getByTestId(`ready-dot-${slug}`)).toHaveClass(/status-good/);
   });

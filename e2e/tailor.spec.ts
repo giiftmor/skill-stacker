@@ -54,7 +54,7 @@ test("tailor for job via pasted URL shows diffs and apply works", async ({
 
   await expect(page.getByText(/Reading job ad/)).toBeVisible();
   await expect(page.getByText(/Extracting requirements/)).toBeVisible();
-  await expect(page.getByText(/Tailoring your CV/)).toBeVisible({
+  await expect(page.getByText(/Tailoring your resume/)).toBeVisible({
     timeout: 180_000,
   });
   await expect(page.getByRole("button", { name: "Apply" }).first()).toBeVisible(

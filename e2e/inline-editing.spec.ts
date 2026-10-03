@@ -106,6 +106,13 @@ test("template change persists after reload", async ({ page, request }) => {
   });
   await page.getByRole("button", { name: /^Style/ }).click();
   await page.getByRole("button", { name: /^Executive/ }).click();
+  await page.waitForResponse(
+    (r) =>
+      r.url().includes("/api/resume/") &&
+      r.url().includes("/template") &&
+      r.request().method() === "PATCH" &&
+      r.status() === 200,
+  );
   await page.reload();
   await page.getByRole("button", { name: /^Style/ }).click();
   await expect(page.getByRole("button", { name: /^Executive/ })).toHaveClass(
