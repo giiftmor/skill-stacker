@@ -17,6 +17,35 @@
 
 ## [0.3.1] - 2026-10-03
 
+Follow-up session (2026-10-03): finished all outstanding backlog items — sidebar footer, shared slug resolution, DB legacy cleanup, testid/copy sweep, and full verification gate.
+
+### Added
+
+- 2026-10-03: exported `VALID_SLUG` regex contract and shared `resolveSlugParam` helper (ok/invalid/not_found) used by every resume route; 400 vs 404 now use accurate "Invalid resume identifier"/"Resume not found" log labels
+
+### Changed
+
+- 2026-10-03: finished the CV→Resume copy sweep — export filenames are now `<Name>.pdf`/`.docx` (no `_CV` suffix, "Resume" fallback) in both `exportDispatcher` and `exportModule`; Roster, EditorialChrome, ExportModal, UploadPhoto, TailorPanel, layout meta and delaytest strings renamed; sidebar-nav testids renamed (`nav-resumes`/`nav-new-resume`/`nav-edit-resume`)
+- 2026-10-03: sidebar nav scoped with `min-h-0 overflow-hidden` so the footer stays pinned with no overflow at 1440×900, 1280×700 and 1024×600 (nav scrollHeight == clientHeight in all three, footer pinned, coming-soon tail visible)
+
+### Fixed
+
+- 2026-10-03: dropped duplicate legacy indexes `idx_cvs_full_name`/`idx_cvs_email`/`idx_cv_versions_cv_id` and renamed legacy pkeys `cvs_pkey`→`resumes_pkey`, `cv_photos_pkey`→`resume_photos_pkey`, `cv_versions_pkey`→`resume_versions_pkey` (idempotent; verified live, 0 legacy remain)
+- 2026-10-03: `saveCV` now normalizes partial payloads (nested `personal` defaults + `?? []` for all array fields) so array-less POSTs no longer crash
+- 2026-10-03: `initDb()` now runs on all resume write routes (POST /api/resume, PUT/DELETE [slug], ready, template, snapshot, restore) so a cold container no longer 500s on first write
+
+### Removed
+
+- 2026-10-03: `_CV` suffix removed from the exported-filename builders
+
+### Deprecated
+
+### Security
+
+### Tests
+
+- 2026-10-03: ready route test rewritten against `NextRequest` + mocked `initDb`/`setCVReady`/`resolveSlugParam`; `VALID_SLUG` contract tests added; e2e synchronized to new copy (QA_Two_Column.pdf/.docx, `img[alt="Resume Photo"]`, New client resume) and race-proofed (template persist awaits the PATCH response; ready-dot poll raised to 15s) — 19/19 runnable specs green, 140/140 unit tests, lint at baseline
+
 
 ### Added
 
