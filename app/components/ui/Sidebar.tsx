@@ -82,14 +82,18 @@ export default function AppSidebar({
       data-testid="app-sidebar"
       className={`no-print sticky top-14 h-[calc(100vh-3.5rem)] ${collapsed ? "w-14" : "w-44"} shrink-0 self-start border-r border-hairline bg-surface p-2 transition-[width] duration-200 flex flex-col`}
     >
-      <nav aria-label="Sidebar" className="flex flex-1 flex-col gap-2">
+      <nav
+        aria-label="Sidebar"
+        data-testid="app-sidebar-nav"
+        className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden"
+      >
         <div>
           {!collapsed && <p className={SECTION_HEADING}>Workspace</p>}
           <ul className="flex flex-col gap-0.5">
             <li>
               <Link
                 href="/resumes"
-                data-testid="nav-my-cvs"
+                data-testid="nav-resumes"
                 title={collapsed ? "My Resumes" : undefined}
                 aria-current={
                   isActive("resumes", "/resumes") ? "page" : undefined
@@ -104,7 +108,7 @@ export default function AppSidebar({
             <li>
               <Link
                 href="/resumes/new"
-                data-testid="nav-new-cv"
+                data-testid="nav-new-resume"
                 title={collapsed ? "New Resume" : undefined}
                 className={`mt-1.5 flex min-h-10 items-center justify-center gap-1.5 rounded-md border border-dashed border-hairline px-2 text-sm font-semibold text-accent transition-colors hover:bg-accent-soft focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none ${collapsed ? "mt-0" : ""}`}
               >
@@ -122,7 +126,7 @@ export default function AppSidebar({
               <li>
                 <Link
                   href={editHref}
-                  data-testid="nav-edit-cv"
+                  data-testid="nav-edit-resume"
                   title={collapsed ? "Edit Resume" : undefined}
                   aria-current={isActive("edit", editHref) ? "page" : undefined}
                   className={navLinkClass("edit", editHref)}

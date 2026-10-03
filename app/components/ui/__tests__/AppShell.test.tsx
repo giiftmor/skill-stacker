@@ -56,7 +56,7 @@ describe("AppSidebar", () => {
     render(<AppSidebar active="resumes" />);
 
     expect(screen.queryByText("This Resume")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("nav-edit-cv")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("nav-edit-resume")).not.toBeInTheDocument();
     expect(screen.queryByTestId("nav-preview")).not.toBeInTheDocument();
   });
 
@@ -82,7 +82,7 @@ describe("AppSidebar", () => {
   it("collapsed mode keeps 40px hit targets and sr-only labels", () => {
     render(<AppSidebar active="resumes" collapsed />);
 
-    const myCvs = screen.getByTestId("nav-my-cvs");
+    const myCvs = screen.getByTestId("nav-resumes");
     expect(myCvs).toHaveClass("min-h-10");
     expect(within(myCvs).getByText("My Resumes")).toHaveClass("sr-only");
     expect(screen.queryByText("Workspace")).not.toBeInTheDocument();
@@ -94,6 +94,8 @@ describe("AppSidebar", () => {
     const aside = screen.getByTestId("app-sidebar");
     expect(aside).toHaveClass("h-[calc(100vh-3.5rem)]");
     expect(aside).not.toHaveClass("overflow-y-auto");
+    const nav = screen.getByTestId("app-sidebar-nav");
+    expect(nav).toHaveClass("min-h-0", "overflow-hidden");
     expect(screen.getByTestId("sidebar-footer")).toBeInTheDocument();
     expect(screen.getByTestId("account-container")).toBeInTheDocument();
   });
