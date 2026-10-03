@@ -1,18 +1,21 @@
+import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/app/lib/db", () => ({
+  initDb: vi.fn(),
   setCVReady: vi.fn(),
-  resolveSlug: vi.fn(),
+  resolveSlugParam: vi.fn(),
 }));
 
-import { resolveSlug, setCVReady } from "@/app/lib/db";
+import { initDb, resolveSlugParam, setCVReady } from "@/app/lib/db";
 import { POST } from "../ready/route";
 
+const mockInitDb = vi.mocked(initDb);
+const mockResolveSlugParam = vi.mocked(resolveSlugParam);
 const mockSetCVReady = vi.mocked(setCVReady);
-const mockResolveSlug = vi.mocked(resolveSlug);
 
-function req(path: string, body: unknown): Request {
-  return new Request(`http://localhost${path}`, {
+function req(path: string, body: unknown): NextRequest {
+  return new NextRequest(`http://localhost${path}`, {
     method: "POST",
     body: JSON.stringify(body),
     headers: { "Content-Type": "application/json" },
@@ -21,12 +24,13 @@ function req(path: string, body: unknown): Request {
 
 describe("POST /api/resume/[slug]/ready", () => {
   beforeEach(() => {
+    mockInitDb.mockReset();
     mockSetCVReady.mockClear();
-    mockResolveSlug.mockReset();
+    mockResolveSlugParam.mockReset();
   });
 
   it("toggles ready_override and returns cvId", async () => {
-    mockResolveSlug.mockResolvedValue(7);
+    mockResolveSlugParam.mockResolvedValue({ status: "ok", cvId: 7 });
     mockSetCVReady.mockResolvedValue({ success: true, cvId: 7 });
     const res = await POST(
       req("/api/resume/jane-doe-1/ready", { ready: true }),
@@ -40,17 +44,17 @@ describe("POST /api/resume/[slug]/ready", () => {
   });
 
   it("rejects a malformed slug without touching the db", async () => {
+    mockResolveSlugParam.mockResolvedValue({ status: "invalid" });
     const res = await POST(
       req("/api/resume/Not-A-Slug/ready", { ready: true }),
       { params: Promise.resolve({ slug: "Not-A-Slug" }) },
     );
     expect(res.status).toBe(400);
-    expect(mockResolveSlug).not.toHaveBeenCalled();
     expect(mockSetCVReady).not.toHaveBeenCalled();
   });
 
   it("404s an unknown but well-formed slug without touching the db", async () => {
-    mockResolveSlug.mockResolvedValue(null);
+    mockResolveSlugParam.mockResolvedValue({ status: "not_found" });
     const res = await POST(req("/api/resume/ghost-99/ready", { ready: true }), {
       params: Promise.resolve({ slug: "ghost-99" }),
     });
@@ -59,7 +63,7 @@ describe("POST /api/resume/[slug]/ready", () => {
   });
 
   it("defaults a missing ready flag to false", async () => {
-    mockResolveSlug.mockResolvedValue(1);
+    mockResolveSlugParam.mockResolvedValue({ status: "ok", cvId: 1 });
     mockSetCVReady.mockResolvedValue({ success: true, cvId: 1 });
     await POST(req("/api/resume/jane-doe-1/ready", {}), {
       params: Promise.resolve({ slug: "jane-doe-1" }),

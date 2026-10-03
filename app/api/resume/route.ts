@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
   const t0 = Date.now();
 
   try {
+    await initDb();
     const data = await request.json();
     const result = await saveCV(data);
     logger.info("api.resume", "create returned", {

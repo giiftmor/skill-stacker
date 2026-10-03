@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import {
   getCV,
-  resolveSlug,
+  initDb,
+  resolveSlugParam,
   saveCVVersion,
   updateCV,
 } from "../../../../../../lib/db";
@@ -74,8 +75,6 @@ interface CVRow {
   additionalInfo?: string[];
 }
 
-const VALID_SLUG = /^[a-z0-9-]+$/;
-
 function toVersionId(raw: string): number {
   const n = parseInt(raw, 10);
   return Number.isNaN(n) ? -1 : n;
@@ -130,18 +129,24 @@ export async function POST(
   const t0 = Date.now();
 
   try {
-    const cvId = VALID_SLUG.test(slug) ? await resolveSlug(slug) : null;
-    if (cvId === null) {
-      const valid = VALID_SLUG.test(slug);
-      logger.warn("api.resume.restore", "invalid slug", { slug });
+    await initDb();
+    const resolved = await resolveSlugParam(slug);
+    if (resolved.status !== "ok") {
+      const notFound = resolved.status === "not_found";
+      logger.warn(
+        "api.resume.restore",
+        notFound ? "resume not found" : "invalid resume identifier",
+        { slug },
+      );
       return NextResponse.json(
         {
           success: false,
-          message: valid ? "Resume not found" : "Invalid resume identifier",
+          message: notFound ? "Resume not found" : "Invalid resume identifier",
         },
-        { status: valid ? 404 : 400 },
+        { status: notFound ? 404 : 400 },
       );
     }
+    const cvId = resolved.cvId;
 
     if (vid === -1) {
       logger.warn("api.resume.restore", "invalid version id", { versionId });

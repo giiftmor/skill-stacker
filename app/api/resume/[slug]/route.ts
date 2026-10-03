@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
-import { deleteCV, getCV, resolveSlug, updateCV } from "@/app/lib/db";
+import {
+  deleteCV,
+  getCV,
+  initDb,
+  resolveSlugParam,
+  updateCV,
+} from "@/app/lib/db";
 import { logger } from "../../../lib/log";
-
-const VALID_SLUG = /^[a-z0-9-]+$/;
 
 // GET /api/resume/jane-doe-2a - Get resume with slug jane-doe-2a
 export async function GET(
@@ -13,18 +17,23 @@ export async function GET(
   const t0 = Date.now();
 
   try {
-    const cvId = VALID_SLUG.test(slug) ? await resolveSlug(slug) : null;
-    if (cvId === null) {
-      const valid = VALID_SLUG.test(slug);
-      logger.warn("api.resume.item", "invalid slug", { slug });
+    const resolved = await resolveSlugParam(slug);
+    if (resolved.status !== "ok") {
+      const notFound = resolved.status === "not_found";
+      logger.warn(
+        "api.resume.item",
+        notFound ? "resume not found" : "invalid resume identifier",
+        { slug },
+      );
       return NextResponse.json(
         {
           success: false,
-          message: valid ? "Resume not found" : "Invalid resume identifier",
+          message: notFound ? "Resume not found" : "Invalid resume identifier",
         },
-        { status: valid ? 404 : 400 },
+        { status: notFound ? 404 : 400 },
       );
     }
+    const cvId = resolved.cvId;
     logger.info("api.resume.item", "fetch requested", { cvId });
 
     const cv = await getCV(cvId);
@@ -82,18 +91,24 @@ export async function PUT(
   const t0 = Date.now();
 
   try {
-    const cvId = VALID_SLUG.test(slug) ? await resolveSlug(slug) : null;
-    if (cvId === null) {
-      const valid = VALID_SLUG.test(slug);
-      logger.warn("api.resume.item", "invalid slug", { slug });
+    await initDb();
+    const resolved = await resolveSlugParam(slug);
+    if (resolved.status !== "ok") {
+      const notFound = resolved.status === "not_found";
+      logger.warn(
+        "api.resume.item",
+        notFound ? "resume not found" : "invalid resume identifier",
+        { slug },
+      );
       return NextResponse.json(
         {
           success: false,
-          message: valid ? "Resume not found" : "Invalid resume identifier",
+          message: notFound ? "Resume not found" : "Invalid resume identifier",
         },
-        { status: valid ? 404 : 400 },
+        { status: notFound ? 404 : 400 },
       );
     }
+    const cvId = resolved.cvId;
     logger.info("api.resume.item", "update requested", { cvId });
 
     const data = await request.json();
@@ -148,18 +163,24 @@ export async function DELETE(
   const t0 = Date.now();
 
   try {
-    const cvId = VALID_SLUG.test(slug) ? await resolveSlug(slug) : null;
-    if (cvId === null) {
-      const valid = VALID_SLUG.test(slug);
-      logger.warn("api.resume.item", "invalid slug", { slug });
+    await initDb();
+    const resolved = await resolveSlugParam(slug);
+    if (resolved.status !== "ok") {
+      const notFound = resolved.status === "not_found";
+      logger.warn(
+        "api.resume.item",
+        notFound ? "resume not found" : "invalid resume identifier",
+        { slug },
+      );
       return NextResponse.json(
         {
           success: false,
-          message: valid ? "Resume not found" : "Invalid resume identifier",
+          message: notFound ? "Resume not found" : "Invalid resume identifier",
         },
-        { status: valid ? 404 : 400 },
+        { status: notFound ? 404 : 400 },
       );
     }
+    const cvId = resolved.cvId;
     logger.info("api.resume.item", "delete requested", { cvId });
 
     await deleteCV(cvId);

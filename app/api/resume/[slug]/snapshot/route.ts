@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
-import { resolveSlug, saveCVVersion } from "@/app/lib/db";
+import { initDb, resolveSlugParam, saveCVVersion } from "@/app/lib/db";
 import { logger } from "../../../../lib/log";
-
-const VALID_SLUG = /^[a-z0-9-]+$/;
 
 interface SnapshotRequest {
   json: () => Promise<Record<string, unknown>>;
@@ -16,18 +14,24 @@ export async function POST(
   const t0 = Date.now();
 
   try {
-    const cvId = VALID_SLUG.test(slug) ? await resolveSlug(slug) : null;
-    if (cvId === null) {
-      const valid = VALID_SLUG.test(slug);
-      logger.warn("api.resume.snapshot", "invalid slug", { slug });
+    await initDb();
+    const resolved = await resolveSlugParam(slug);
+    if (resolved.status !== "ok") {
+      const notFound = resolved.status === "not_found";
+      logger.warn(
+        "api.resume.snapshot",
+        notFound ? "resume not found" : "invalid resume identifier",
+        { slug },
+      );
       return NextResponse.json(
         {
           success: false,
-          message: valid ? "Resume not found" : "Invalid resume identifier",
+          message: notFound ? "Resume not found" : "Invalid resume identifier",
         },
-        { status: valid ? 404 : 400 },
+        { status: notFound ? 404 : 400 },
       );
     }
+    const cvId = resolved.cvId;
 
     const data = await request.json();
     const version = await saveCVVersion(cvId, data);
