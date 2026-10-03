@@ -4,9 +4,14 @@
 
 ### Added
 
+- 2026-10-03: `scripts/seed.sh` — idempotent seeder that POSTs the 5 sample resumes from `scripts/sample-cvs.json` through the real `/api/resume` path (triggers `initDb`, exercises `saveCV` slug/normalization), reads `HOST_PORT`, and skips when the DB already has resumes; documented in AGENTS.md so every DB remake is followed by reseeding. Verified: truncate → seed → 5 fresh slugs.
+
 ### Changed
 
 ### Fixed
+
+- 2026-10-03: preview page no longer overflows its container — the fixed 210mm A4 sheet (plus the prev/next arrows) is now fit-scaled via `transform: scale` (new `useFitScale` hook, `min-w-0` slide) so scroll width equals viewport width at any size (verified 1440→900). Layout stays at 794px so measurer/print pagination is unchanged (pagination.spec "print count == print tree" still passes).
+- 2026-10-03: edit page no longer overflows its container — the A4 sheet previously hung out of the white card and past the viewport on narrow windows (`scrollWidth` 1372@1280, 1287@1024). The sheet is now fit-scaled by the same `useFitScale` hook (measuring content width, padding-aware); sheet sits exactly inside the card at 1440/1280/1024 and `scrollWidth == viewport` at all three.
 
 ### Removed
 

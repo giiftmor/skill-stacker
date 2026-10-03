@@ -46,6 +46,7 @@ This project uses Docker containers for ALL services. Managed via `docker-compos
 | Rebuild app image | `docker compose up -d --build app` |
 | Check running containers | `docker ps` |
 | Access app shell | `docker exec -it skill-stacker-app-1 sh` |
+| Seed sample data (after DB remake) | `./scripts/seed.sh` |
 
 ### Build Commands (via docker compose)
 
@@ -112,6 +113,19 @@ docker compose up -d
 docker ps
 ```
 
+### Fresh Database / Sample Data
+
+The Postgres schema is created lazily by the app's `initDb()` on first request — it is **not** initialized at volume creation, so a remade DB starts empty and the editor/roster shows nothing until data exists.
+
+After any DB remake (`docker compose down -v` + `up -d`, a manual `TRUNCATE resumes RESTART IDENTITY CASCADE`, volume deletion, or fresh clone):
+
+```bash
+# Populate the 5 sample resumes from scripts/sample-cvs.json
+./scripts/seed.sh
+```
+
+`seed.sh` hits `POST /api/resume` (so it exercises the real `saveCV` slug/normalization path and triggers `initDb`), reads `HOST_PORT` from `docker-compose.yml`/`.env` (default 5252), and is **idempotent** — it prints `skip: DB already has N resume(s)` and exits if any resumes exist, so it's safe to run any time.
+
 ---
 
 ## Project-Specific Notes
@@ -155,6 +169,7 @@ At the start of EVERY session, verify:
 - [ ] Run `docker ps` to see running containers
 - [ ] Check if port 5252 is in use, use different port if needed
 - [ ] Run `docker compose logs -f` to check for errors
+- [ ] If the DB was remade since the last session (fresh volume / truncate): run `./scripts/seed.sh` to reseed sample data
 - [ ] ONLY THEN proceed with development tasks
 
 **If you skip these steps, you will "go rogue" and try to run commands directly on host.**
